@@ -41,9 +41,9 @@ BEGIN {
 }
 
 # Note that the value can be all kinds of things depending on what the debug element is
-#management-server debug:info
+# management-server debug:info
 /[a-zA-Z\.\'\-\s]+\:\s*(\S)+/ {
-
+varIable = "test"
 # Sometimes the output can be in JSON format like "{'md.apps.s1.mp.cfg.debug-level': 'info'}"
     gsub(/(\{|\}|')/, "", $0)
     flag = $1   

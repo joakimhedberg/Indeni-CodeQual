@@ -11,9 +11,40 @@
 // When adding functions, remember to add space before and after the "=", or the tests will trigger.
 
 var codeValidationFunctions = {
+    
+    "spaceBeforeExample": new function() {
 
+        // Space before examples maybe looks nice, but it's far from exact
+        // Example of an offending line: 
+        //# my_example
+        ///A regexp/ {
+
+        this.testName = "Space before example";
+        this.reason = "Space before examples maybe looks nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does";
+        this.severity = "warning";
+        this.applyToSections = ["awk"];
+
+        this.mark = function(content){
+            return content.replace(/(\# .+)(\n\/.+\/\s*{\n)/g, getSpan(this.severity, this.reason, "$1") + "$2");
+        }
+    },
+    "variableNamingConventions": new function (){
+
+        // Variables should use snake case (snake_case)
+        // Example of an offending line: 
+        //myVariable = 1
+        //my-variable = 1
+
+        this.testName = "Variable naming";
+        this.reason = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.";
+        this.severity = "warning";
+        this.applyToSections = ["awk"];
+
+        this.mark = function(content){
+            return content.replace(/([a-z][A-Z][a-z]{0,}\s*=\s*|\-[a-zA-Z]+\s*=\s*)/gm, getSpan(this.severity, this.reason, "$&"));
+        }
+    },
     "emptyBEGINSection": new function (){
-
         // Empty BEGIN sections serves no purpose and should be disposed of.
         // Example of an offending line: 
         //END {
@@ -377,7 +408,7 @@ function parseScriptSections(){
         // Update the background
         $("pre#result-content").html(result);
 
-        tippy("span.error, button", {
+        tippy("span.error, span.warning, button", {
             animation: "scale"
         });
         
