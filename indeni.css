@@ -1,0 +1,76 @@
+span.error {
+	background-color: red;
+	color: white;
+}
+span.warning {
+    background-color: orange;
+    color: white;
+}
+span#exceptions {
+    color:red;
+    font-size:14px;
+}
+button {
+    -webkit-border-radius: 9;
+    -moz-border-radius: 9;
+    border-radius: 9px;
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 12px;
+    padding: 5px 10px 5px 10px;
+    text-decoration: none;
+}
+button.error {
+    background-color: #a80000;
+    color: white;  
+}
+button.error:hover {
+    background-color: red;
+}
+button.warning {
+    background-color: #db8300;
+    color: white;  
+}
+button.warning:hover {
+    background-color: orange;
+}
+button.compliant {
+    background-color: #006607;
+    color: white;  
+}
+button.compliant:hover {
+    background-color: green;
+}
+div.wrapper {
+    display: grid;
+    grid-template-columns: 1fr 10fr;
+    align-items: top;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #e7e7e7;
+}
+div#script-div {
+    padding: 0 10 0 0px;
+    max-height:90%;
+}
+textarea#script-textare {
+
+}
+div#result-div {
+    padding: 5 0 0 0px;
+    border: 1px #ccc solid;
+    max-height:800;
+    overflow-y: scroll;
+}
+pre#result-content {
+    margin: 0px;
+}
+div.header {
+    padding: 10 0 0 0px ;
+    font-size: 20px;
+    font-weight: bold;
+}
+div.test-result-header {
+    font-size:16px;
+    font-weight: bold;
+    margin: 10 0 4 0px;
+}

@@ -1,0 +1,103 @@
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-latest.js"></script>
+		<script src="./tippy.js"></script>
+		<script src="./indeni.js"></script>
+        <link href="./indeni.css" rel="stylesheet" type="text/css">
+	</head>
+</html>
+	<body>
+        <div class="wrapper">
+            <div class="header">
+                Paste your script here
+            </div>
+            <div class="header">
+                Click on one of the test results the non-compliance highlighted:
+            </div>
+    		<div id="script-div">
+    			<textarea id="script-textarea" cols=50 rows=20>
+#! META
+name: panos-debug-status-management-server-show
+description: grab the debug status of management-server
+type: monitoring
+monitoring_interval: 61 minutes  
+requires:
+    vendor: paloaltonetworks
+    os.name: panos
+
+#! COMMENTS
+debug-status:
+    skip-documentation: true
+trailing-space:
+    skip-documentation: true     
+
+#! REMOTE::SSH
+debug management-server show
+
+#! PARSER::AWK
+BEGIN {
+    # For each flag this command supports, we list what a "normal" value is
+    normal["management-server"] = "info"
+}
+
+# Note that the value can be all kinds of things depending on what the debug element is
+#management-server debug:info
+/[a-zA-Z\.\'\-\s]+\:\s*(\S)+/ {
+
+# Sometimes the output can be in JSON format like "{'md.apps.s1.mp.cfg.debug-level': 'info'}"
+    gsub(/(\{|\}|')/, "", $0)
+    flag = $1   
+    sub(/:$/, "",flag)
+	
+    if(i = 1){
+        thiswillalwayshappen = 2
+    }
+
+    if (flag~/^test/){
+        #Valid if
+        if(value ~ /test/){
+            writeDebug(test)
+        }
+        if(value ~ "test"){
+            writeDebug(test)
+        }
+    }
+	
+    debugValue = $2 == 1
+
+    #debug:info
+    sub(/.+:/, "", debugValue)
+    
+    if (flag in normal) {
+        debugtags["name"] =flag
+
+        if (normal[flag] ==debugValue) {
+          state = 0
+        } else {
+          state = 1
+        }
+  
+    writeDoubleMetric("debug-status", debugtags,"gauge", 3600, state)
+    }
+}
+
+                </textarea>
+                <div id="check-statuses">
+                    <div class="header">Test results:</div>
+                    <div class="test-result-header">Compliant:</div>
+                    <div id="compliant"></div>
+                    <div class="test-result-header">Non-compliant (<span style="color:red">Error</span>, <span style="color:orange">Warning</span>):</div>
+                    <div id="noncompliant"></div>
+                    <div class="test-result-header">Not executed:</div>
+                    <div id="notexecuted"></div>
+                    <div id="exceptions"><h4>Exceptions thrown then parsing:</h4><span id="exceptions"></span></div>
+                </div>
+        	</div>
+        	<div id="result-div">
+        		<pre id="result-content">
+        		</pre>
+        	</div>
+
+        </div>
+	</body>
+</html>
