@@ -12,10 +12,10 @@
                 Paste your script here
             </div>
             <div class="header">
-                Click on one of the test results the non-compliance highlighted:
+                Click on one of the test results to have the non-compliance highlighted:
             </div>
     		<div id="script-div">
-    			<textarea id="script-textarea" cols=50 rows=20>
+    			<textarea id="script-textarea" cols=100 rows=20>
 #! META
 name: panos-debug-status-management-server-show
 description: grab the debug status of management-server
@@ -83,12 +83,12 @@ varIable = "test"
 
                 </textarea>
                 <div id="check-statuses">
-                    <div class="header">Test results (click to view):</div>
-                    <div class="test-result-header">Compliant:</div>
+                    <div class="test-result-header">Test results (click to view):</div>
+                    <div class="test-result-section-header">Compliant:</div>
                     <div id="compliant"></div>
-                    <div class="test-result-header">Non-compliant (<span style="color:red">Error</span>, <span style="color:orange">Warning</span>):</div>
+                    <div class="test-result-section-header">Non-compliant (<span style="color:red">Error</span>, <span style="color:orange">Warning</span>):</div>
                     <div id="noncompliant"></div>
-                    <div class="test-result-header">Not executed:</div>
+                    <div class="test-result-section-header">Not executed:</div>
                     <div id="notexecuted"></div>
                     <div id="exceptions"><h4>Exceptions thrown then parsing:</h4><span id="exceptions"></span></div>
                 </div>

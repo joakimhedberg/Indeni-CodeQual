@@ -1,3 +1,6 @@
+body {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIElEQVQoU2Osmby1viXXu5GBAGAkpAAmP6oQb0gRHTwAYc8EC0Cy7OMAAAAASUVORK5CYII=) repeat,linear-gradient(90deg,#1f5881 0,#284678 12%,#2d4e88 41%,#335696 83%,#2a6aaf)
+}
 span.error {
 	background-color: red;
 	color: white;
@@ -41,35 +44,51 @@ button.compliant {
 button.compliant:hover {
     background-color: green;
 }
+button.notexecuted {
+    background: #ddd;
+    color: #000;
+}
+button.notexecuted:hover {
+    background:#eee;
+}
 div.wrapper {
     display: grid;
     grid-template-columns: 1fr 10fr;
     align-items: top;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #e7e7e7;
+    font-family: Roboto,Helvetica Neue,Helvetica,Liberation Sans,Arial,sans-serif;
+    background: #e7f0f9;
+    padding:20px;
 }
 div#script-div {
     padding: 0 10 0 0px;
+    margin: 10 0 0 10px;
     max-height:90%;
 }
-textarea#script-textare {
-
+textarea#script-textarea {
+    box-shadow: 0.3em 0.2em 0.2em rgba(0,0,0,.1)
 }
 div#result-div {
-    padding: 5 0 0 0px;
     border: 1px #ccc solid;
-    max-height:800;
+    max-height:800px;
     overflow-y: scroll;
+    margin: 10 0 0 10px;
 }
 pre#result-content {
     margin: 0px;
+    background-color: #fff;
 }
 div.header {
-    padding: 10 0 0 0px ;
+    padding: 10 0 0 0px;
+    margin: 0 0 0 10px;
     font-size: 20px;
     font-weight: bold;
 }
 div.test-result-header {
+    padding: 10 0 0 0px;
+    font-size: 20px;
+    font-weight: bold;
+}
+div.test-result-section-header {
     font-size:16px;
     font-weight: bold;
     margin: 10 0 4 0px;

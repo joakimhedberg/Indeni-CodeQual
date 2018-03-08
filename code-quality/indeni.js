@@ -308,25 +308,25 @@ function getScriptSections(){
     var regexResult = /#! META\n([.\S\s]+?)#!/g.exec(content);
 
     if(regexResult != null && regexResult.length == 2){
-        section.meta = regexResult[1];
-    } else {
-        section.meta = "";
+        section.meta = {};
+        section.meta.content = regexResult[1];
+        section.meta.apply = ["yaml", "meta"];
     }
     
     var regexResult = /#! COMMENTS\n([.\S\s]+?)#!/g.exec(content);
 
     if(regexResult != null && regexResult.length == 2){
-        section.comments = regexResult[1];
-    } else {
-        section.comments = "";
+        section.comments = {};
+        section.comments.content = regexResult[1];
+        section.comments.apply = ["yaml", "comments"];
     }
 
     var regexResult = /#! PARSER::AWK.*\n([.\S\s]+?)$/g.exec(content)
 
     if(regexResult != null && regexResult.length == 2){
-        section.awk = regexResult[1];
-    } else {
-        section.awk = "";
+        section.awk = {};
+        section.awk.content = regexResult[1];
+        section.awk.apply = ["awk"]
     }
 
     return section;
@@ -347,19 +347,23 @@ for(f in codeValidationFunctions){
 function resetApplication(){
     for(f in codeValidationFunctions){
         codeValidationFunctions[f].compliant = true;
-        codeValidationFunctions[f].executed = true;
+        codeValidationFunctions[f].executed = false;
     }
 
     // Reset test results
     $("div#notexecuted").html("");
     $("div#noncompliant").html("");
     $("div#compliant").html("");
+    $("pre#result-content").html($("textarea#script-textarea").val());
 
 }
 
 
 function parseScriptSections(){
     
+    //Get the active button, if any
+    var activeButton = $("div button#noncompliant[active = 'true']").attr("id")
+
     // Reset the test function properties and the test results
     resetApplication();
 
@@ -381,7 +385,7 @@ function parseScriptSections(){
         } else if (!f.compliant) {
             $("div#noncompliant").append("<button title = \"" + f.reason + "\" class=\"" + f.severity + "\" id=\"" + name + "\">" + f.testName + "</button>");
         } else {
-            $("div#notexecuted").append("<button title = \"" + f.reason + "\" class=\"unknown\" DISABLED>" + f.testName + "</button>");
+            $("div#notexecuted").append("<button title = \"" + f.reason + "\" class=\"notexecuted\" DISABLED>" + f.testName + "</button>");
         }
 
     };
@@ -389,6 +393,9 @@ function parseScriptSections(){
     // Bind the test result buttons to the click value
     $("div#noncompliant button").on("click", function(){
         
+        $("div button").attr("active", "false");
+        $(this).attr("active", "true");
+
         // Get the function that "spawned" this button
         var sections = getScriptSections();
 
@@ -399,9 +406,10 @@ function parseScriptSections(){
 
         // For each executed section, mark the non-compliant content by replacing 
         // it with a span that has a non-compliance css class
-        f.applyToSections.map(function(section){
-            if(sections.hasOwnProperty(section)){
-                result = sourceScript.replace(sections[section], f.mark(sections[section]));
+        f.applyToSections.map(function(type){
+            if(sections.hasOwnProperty(type)){
+                var sectionContent = sections[type].content;
+                result = sourceScript.replace(sectionContent, f.mark(sectionContent));
             }
         });
 
@@ -415,8 +423,12 @@ function parseScriptSections(){
     });
 
     // Trigger a click value (technically this triggers all, but I was lazy)
-    $("div#noncompliant button").trigger("click");
 
+    if(activeButton !== undefined){
+        $("div button#" + activeButton).trigger("click");
+    } else {
+        $("div#noncompliant button").last().trigger("click");
+    }
 
 }
 
@@ -426,35 +438,38 @@ function validateSections(sections){
         
         // section could be ie. "awk" here
         // sectionContent is the content of the awk parser
-        sectionContent = sections[section];
+        sectionContent = sections[section].content;
         
         // Loop through the codeValidationFunctions and run each one that
         // has ie. "awk" in the applyToSections array
 
-        for(name in codeValidationFunctions){
+        sections[section].apply.map(function(type){
 
-            f = codeValidationFunctions[name];
+            for(name in codeValidationFunctions){
 
-            if(f.applyToSections.indexOf(section) !== -1){
-                try {
+                f = codeValidationFunctions[name];
 
-                    // Mark the function as executed. This is so we don't mark JSON parser functions
-                    // as successful in the awk parser
-                    f.executed = true;
+                if(f.applyToSections.indexOf(type) !== -1){
+                    try {
 
-                    // Check if the function found something already
-                    // If not, run the tests
-                    if (f.compliant){
-                        f.compliant = f.isCompliant(sectionContent);
+                        // Mark the function as executed. This is so we don't mark JSON parser functions
+                        // as successful in the awk parser
+                        f.executed = true;
+
+                        // Check if the function found something already
+                        // If not, run the tests
+                        if (f.compliant){
+                            f.compliant = f.isCompliant(sectionContent);
+                        }
+
+                    } catch (e) {
+                        console.log(e);
+                        $("span#exceptions").append("Failed to execute " + f.name + "<br>");
                     }
 
-                } catch (e) {
-                    console.log(e);
-                    $("span#exceptions").append("Failed to execute " + f.name + "<br>");
                 }
 
             }
-
-        }
+        });
     }
 }
