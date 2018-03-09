@@ -51,6 +51,12 @@ button.notexecuted {
 button.notexecuted:hover {
     background:#eee;
 }
+button.show-all-noncompliances {
+    background: #00a8f7;
+}
+button.show-all-noncompliances:hover {
+    background: #4cc1f9;
+}
 div.wrapper {
     display: grid;
     grid-template-columns: 1fr 10fr;

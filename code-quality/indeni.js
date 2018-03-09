@@ -8,7 +8,7 @@
 // 5. mark = A function which takes section content as parameter and returns modified matched content.
 
 // Note:
-// When adding functions, remember to add space before and after the "=", or the tests will trigger.
+// When adding functions, remember to add space before and after the "=", or the tests might trigger when using the "show all button"
 
 var codeValidationFunctions = {
     
@@ -299,14 +299,24 @@ $(document).ready( function(){
 // This function gets the different sections from the script
 // A section could be meta, comments, awk, json, xml.
 // This function needs some coding love.
-function getScriptSections(){
+function getScriptSections(content){
     
-    var content = $("textarea#script-textarea").val();
-
     var section = {};
 
+    // The section variable contains the content of the different sections
+    // and some meta data about them.
+
+    // Example:
+    // section.meta = {}
+    // section.meta.content = <Content of the script META section>
+    // section.meta.apply = <List of the type of checks you want to apply to this section>
+
+    //Note: The apply section is later matched to the function property "applyToSections" above.
+
+    // Parse for the META section
     var regexResult = /#! META\n([.\S\s]+?)#!/g.exec(content);
 
+    // Verify that we got the match we're looking for
     if(regexResult != null && regexResult.length == 2){
         section.meta = {};
         section.meta.content = regexResult[1];
@@ -358,20 +368,7 @@ function resetApplication(){
 
 }
 
-
-function parseScriptSections(){
-    
-    //Get the active button, if any
-    var activeButton = $("div button#noncompliant[active = 'true']").attr("id")
-
-    // Reset the test function properties and the test results
-    resetApplication();
-
-    // Get the sections
-    var sections = getScriptSections();
-
-    // Generate test results
-    validateSections(sections);
+function updateTestResultButtons() {
 
     // Check each function to see if it found a non-compliance in the code
     // Update the test results accordingly
@@ -390,44 +387,123 @@ function parseScriptSections(){
 
     };
 
-    // Bind the test result buttons to the click value
-    $("div#noncompliant button").on("click", function(){
-        
-        $("div button").attr("active", "false");
-        $(this).attr("active", "true");
+    // Add the show all button
+    if ($("div#noncompliant button").length > 0){
+        $("div#noncompliant").prepend("<button title = \"This button highlights all the non-compliances, it SHOULD work but could yield some unpredictable results due to content being changed by multiple parsings. \" class=\"show-all-noncompliances\" id=\"show-all-noncompliances\">Highlight all non-compliances</button>");
+    }
+}
 
-        // Get the function that "spawned" this button
-        var sections = getScriptSections();
+// Executes the functions in testFunctions
+// Used as a an onClick event below
 
-        var f = codeValidationFunctions[$(this).attr("id")]
+function executeAndMark (testFunctions){
 
-        // Get the source script pasted by the user        
-        var sourceScript = $("textarea#script-textarea").val();
+    // Get the source script pasted by the user        
+    var result = $("textarea#script-textarea").val();
+
+    testFunctions.map(function(f){
 
         // For each executed section, mark the non-compliant content by replacing 
         // it with a span that has a non-compliance css class
+        
+        // Let's say we have a function that is applied to awk and yaml, in that case
+        // the first round would contain type == "awk". 
+        // Next step would be to verify that there actually is a section named "awk".
+        // If there is, the content of the section will be replaced by the mark function.
+
         f.applyToSections.map(function(type){
+
+            // Get the content of the sections in the script ("meta", "comments", "awk")
+            var sections = getScriptSections(result);
+            
+            // Verify that the parsed sections contains the type
             if(sections.hasOwnProperty(type)){
                 var sectionContent = sections[type].content;
-                result = sourceScript.replace(sectionContent, f.mark(sectionContent));
+                result = result.replace(sectionContent, f.mark(sectionContent));
             }
         });
 
-        // Update the background
-        $("pre#result-content").html(result);
+    })
 
-        tippy("span.error, span.warning, button", {
-            animation: "scale"
-        });
-        
+    // Update the content of the result window
+    $("pre#result-content").html(result);
+
+    // Re-create the tippy tool tips
+    tippy("span.error, span.warning, button", {
+        animation: "scale"
     });
 
-    // Trigger a click value (technically this triggers all, but I was lazy)
+}
 
-    if(activeButton !== undefined){
-        $("div button#" + activeButton).trigger("click");
+function setActiveTest (b){
+
+    // Mark any active button as false
+    $("div#noncompliant button[active = 'true'").attr("active", "false");
+    b.attr("active", "true");
+}
+
+
+// Executes the test associated with a button and highlights the results in the results div
+// Used as a an onClick event below
+
+function testButtonClicked(){
+
+    var button = $(this);
+    setActiveTest(button);
+
+    var buttonID = button.attr("id");
+
+    // Get the function that matches the button
+    var f = codeValidationFunctions[buttonID]
+
+    executeAndMark([f]);
+    
+}
+
+function markAllNonCompliances(){
+
+    var button = $(this);
+    setActiveTest(button);
+
+    var functions = [];
+
+    for(var f in codeValidationFunctions){
+        functions.push(codeValidationFunctions[f])
+    }
+
+    executeAndMark(functions);
+
+}
+
+
+function parseScriptSections(){
+    
+    //Get the active button, if any
+    var activeButton = $("div#noncompliant button[active = 'true']").attr("id")
+
+    // Reset the test function properties and the test results
+    resetApplication();
+
+    // Get the sections
+    var sections = getScriptSections($("textarea#script-textarea").val());
+
+    // Run the tests
+    validateSections(sections);
+
+    // Generate the results
+    updateTestResultButtons();
+
+    // Create event handlers for the test result buttons
+    var nonCompliantButtons = $("div#noncompliant button.error, div#noncompliant button.warning")
+    
+    nonCompliantButtons.on("click", testButtonClicked);
+    $("div#noncompliant button#show-all-noncompliances").on("click", markAllNonCompliances);
+        
+    // Trigger the first test if no test has been selected by the user
+    if(activeButton === undefined){
+        nonCompliantButtons.first().trigger("click");
     } else {
-        $("div#noncompliant button").last().trigger("click");
+        $("div#noncompliant button#" + activeButton).trigger("click");
     }
 
 }
