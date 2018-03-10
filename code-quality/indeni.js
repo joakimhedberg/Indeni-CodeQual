@@ -12,56 +12,6 @@
 
 var codeValidationFunctions = {
 
-    "verifyAwkDocumentation": new function() {
-
-        // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
-        this.testName = "Undocumented/Unused metrics";
-        this.reason = "The documentation section should have one entry per metric used in the script and the script should use all documented metrics.";
-        this.severity = "error";
-        this.applyToSections = ["script"];
-
-        this.getDocumentedMetrics = function (content){
-
-            var scriptSections = getScriptSections(content);
-            var documentationSection = scriptSections.comments.content;
-            var documentedMetrics = [];
-
-            documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
-                documentedMetrics.push(m);
-            })
-
-            return documentedMetrics;
-        }
-
-        this.mark = function(content){
-
-            var documentedMetrics = this.getDocumentedMetrics(content);
-            var matches = content.match(/writeDoubleMetric\(\"[^\"]+/gm);
-            var usedMetrics = [];
-
-            // Check if there are any metrics being used that has not been documented
-            matches.map(function(m){
-
-                var metric = m.replace(/.+\(\"/, "");
-                usedMetrics.push(metric);
-
-                if(documentedMetrics.indexOf(metric) === -1){
-                    content = content.replace(metric, getSpan(this.severity, "This metric has not been documented in the COMMENTS section.", "$&"));
-                }
-
-            }, this);
-
-            // Check if there's any metrics that has been documented, but not used
-            documentedMetrics.map(function(m){
-                if(usedMetrics.indexOf(m) === -1){
-                    content = content.replace(m, getSpan(this.severity, "This metric is documented but not used in the script, please consider removing it", "$&"));
-                }
-            }, this);
-
-            return content;
-        }
-    
-    },
     "spaceBeforeExample": new function() {
 
         // Space before examples maybe looks nice, but it's far from exact
@@ -328,6 +278,58 @@ var codeValidationFunctions = {
 
             return content.replace(/([6-9][1-9][0-9]*? (minute)[s]{0,1})|([2-9][0-9]*? hour[s]{0,1})/gm, getSpan(this.severity, this.reason, "$&"))
         }
+    },
+ "verifyAwkDocumentation": new function() {
+
+        // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
+        // If you're looking for examples, this is not it
+        
+        this.testName = "Undocumented/Unused metrics";
+        this.reason = "The documentation section should have one entry per metric used in the script and the script should use all documented metrics.";
+        this.severity = "error";
+        this.applyToSections = ["script"];
+
+        this.getDocumentedMetrics = function (content){
+
+            var scriptSections = getScriptSections(content);
+            var documentationSection = scriptSections.comments.content;
+            var documentedMetrics = [];
+
+            documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
+                documentedMetrics.push(m);
+            })
+
+            return documentedMetrics;
+        }
+
+        this.mark = function(content){
+
+            var documentedMetrics = this.getDocumentedMetrics(content);
+            var matches = content.match(/writeDoubleMetric\(\"[^\"]+/gm);
+            var usedMetrics = [];
+
+            // Check if there are any metrics being used that has not been documented
+            matches.map(function(m){
+
+                var metric = m.replace(/.+\(\"/, "");
+                usedMetrics.push(metric);
+
+                if(documentedMetrics.indexOf(metric) === -1){
+                    content = content.replace(metric, getSpan(this.severity, "This metric has not been documented in the COMMENTS section.", "$&"));
+                }
+
+            }, this);
+
+            // Check if there's any metrics that has been documented, but not used
+            documentedMetrics.map(function(m){
+                if(usedMetrics.indexOf(m) === -1){
+                    content = content.replace(m, getSpan(this.severity, "This metric is documented but not used in the script, please consider removing it", "$&"));
+                }
+            }, this);
+
+            return content;
+        }
+    
     }
 }
 
