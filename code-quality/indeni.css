@@ -9,6 +9,9 @@ span.warning {
     background-color: orange;
     color: white;
 }
+span.recommendation {
+    background: #00a8f7;
+}
 span#exceptions {
     color:red;
     font-size:14px;
@@ -51,10 +54,10 @@ button.notexecuted {
 button.notexecuted:hover {
     background:#eee;
 }
-button.show-all-noncompliances {
+button.recommendation {
     background: #00a8f7;
 }
-button.show-all-noncompliances:hover {
+button.recommendation:hover {
     background: #4cc1f9;
 }
 div.wrapper {

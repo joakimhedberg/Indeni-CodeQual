@@ -3,7 +3,7 @@
 // Each function must have the following properties.
 // 1. testName: Shown in the test results.
 // 2. reason: Shown in the popup.
-// 3. severity: Which color the test result should have.
+// 3. severity: Which color the test result should have (recommendation = blue, warning = orange, error = red)
 // 4. applyToSections: Which sections the function should apply to.
 // 5. mark = A function which takes section content as parameter and returns modified matched content.
 
@@ -12,6 +12,23 @@
 
 var codeValidationFunctions = {
 
+    "genericSpaceBeforeAndAfter": new function(){
+        // Space before and after curly brackets and parenthesis makes the code less compact and more readable
+        // This is just a recommendation.
+        // Example of an offending line: 
+        //#if(something == "1"){
+        ///A regexp/ {
+
+        this.testName = "Space around curly brackets";
+        this.reason = "Space after curly brackets makes the code look nicer";
+        this.severity = "recommendation";
+        this.applyToSections = ["awk"];
+
+        this.mark = function(content){
+            console.log(content.replace(/if\(|\){|}}else|else{/g, getSpan(this.severity, this.reason, "$&")))
+            return content.replace(/if\(|\){|}else|else{/g, getSpan(this.severity, this.reason, "$&"));
+        }
+    },
     "spaceBeforeExample": new function() {
 
         // Space before examples maybe looks nice, but it's far from exact
@@ -553,7 +570,7 @@ function parseScriptSections(){
     updateTestResultButtons();
 
     // Create event handlers for the test result buttons
-    var nonCompliantButtons = $("div#noncompliant button.error, div#noncompliant button.warning")
+    var nonCompliantButtons = $("div#noncompliant button.error, div#noncompliant button.warning, div#noncompliant button.recommendation")
     
     nonCompliantButtons.on("click", testButtonClicked);
     //$("div#noncompliant button#show-all-noncompliances").on("click", markAllNonCompliances);
