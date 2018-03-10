@@ -10,8 +10,42 @@
 // Note:
 // When adding functions, remember to add space before and after the "=", or the tests might trigger when using the "show all button"
 
-var codeValidationFunctions = {
+// This list contains valid name prefixes for scripts
+var indeniScriptNamePrefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"]
 
+var codeValidationFunctions = {
+    "validScriptNamePrefix": new function(){
+
+        // Prefixes is important not only to distinguish which type of device the script is executed on
+        // but also to avoid script name collisions. 
+        // This is just a recommendation.
+        // Example of an offending line: 
+        //name: sausage-metric
+
+        this.testName = "Valid script name prefix";
+        this.reason = "Prefixes is important not only to distinguish which type of device the script is executed on but also to avoid script name collisions";
+        this.severity = "error";
+        this.applyToSections = ["meta"];
+
+        this.mark = function(content){
+
+            var scriptNameRow = content.match(/^name:.*$/m);
+
+            if(scriptNameRow.length == 1){
+
+                var scriptName = scriptNameRow[0].split(" ")[1];
+                var prefix = scriptName.replace(/-.+$/, "");
+
+                if(indeniScriptNamePrefixes.indexOf(prefix) === -1){
+                    var re = new RegExp(scriptName);
+                    content = content.replace(re, getSpan(this.severity, this.reason, "$&"));
+                    console.log(content)
+                }
+            }
+
+            return content;
+        }
+    },
     "genericSpaceBeforeAndAfter": new function(){
 
         // Space before and after curly brackets and parenthesis makes the code less compact and more readable
@@ -26,7 +60,6 @@ var codeValidationFunctions = {
         this.applyToSections = ["awk"];
 
         this.mark = function(content){
-            console.log(content.replace(/if\(|\){|}}else|else{/g, getSpan(this.severity, this.reason, "$&")))
             return content.replace(/if\(|\){|}else|else{/g, getSpan(this.severity, this.reason, "$&"));
         }
     },
@@ -297,7 +330,7 @@ var codeValidationFunctions = {
             return content.replace(/([6-9][1-9][0-9]*? (minute)[s]{0,1})|([2-9][0-9]*? hour[s]{0,1})/gm, getSpan(this.severity, this.reason, "$&"))
         }
     },
- "verifyAwkDocumentation": new function() {
+    "verifyAwkDocumentation": new function() {
 
         // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
         // If you're looking for examples, this is not it
@@ -307,29 +340,16 @@ var codeValidationFunctions = {
         this.severity = "error";
         this.applyToSections = ["script"];
 
-        this.getDocumentedMetrics = function (content){
-
-            var scriptSections = getScriptSections(content);
-            var documentationSection = scriptSections.comments.content;
-            var documentedMetrics = [];
-
-            documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
-                documentedMetrics.push(m);
-            })
-
-            return documentedMetrics;
-        }
-
         this.mark = function(content){
 
-            var documentedMetrics = this.getDocumentedMetrics(content);
-            var matches = content.match(/writeDoubleMetric\(\"[^\"]+/gm);
+            var documentedMetrics = getDocumentedMetrics(content);
+            var matches = content.match(/writeDoubleMetric\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
             var usedMetrics = [];
 
             // Check if there are any metrics being used that has not been documented
             matches.map(function(m){
 
-                var metric = m.replace(/.+\(\"/, "");
+                var metric = m.replace(/.+\(\"|im\.name\":\s*_constant:\s\"/, "");
                 usedMetrics.push(metric);
 
                 if(documentedMetrics.indexOf(metric) === -1){
@@ -347,9 +367,114 @@ var codeValidationFunctions = {
 
             return content;
         }
-    
+    },
+    "onlyWriteMetricOnce": new function() {
+
+        // Metrics should only be written once according to:
+        // https://indeni.atlassian.net/wiki/spaces/IKP/pages/81794466/Code+Review+Pull+Requests
+
+        this.testName = "Metric written more than once";
+        this.reason = "Each metric should only be written in one place. If the metric has been written more than once this test fails.";
+        this.severity = "error";
+        this.applyToSections = ["awk", "json"];
+
+        this.mark = function(content){
+
+            var matches = content.match(/writeDoubleMetric\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
+            var usedMetrics = [];
+
+            // Check if there are any metrics being used that has not been documented
+            matches.map(function(m){
+
+                var metric = m.replace(/.+\(\"|im\.name\":\s*_constant:\s\"/, "");
+
+                if(usedMetrics.indexOf(metric) !== -1){
+
+                    //This metric has already been written. Mark it.
+                    var re = new RegExp(metric, "g");
+                    content = content.replace(re, getSpan(this.severity, this.reason, "$&"));
+
+                }
+
+                usedMetrics.push(metric);
+
+            }, this);
+
+            return content;
+        }
+    },
+    "resourceDataCheck": new function(){
+
+        // includes_resource_data means that the script is always executed by indeni, even during high CPU usage
+        // but also to avoid script name collisions. 
+        // This is just a recommendation.
+        // Example of an offending line: 
+        //name: sausage-metric
+
+        this.testName = "Resource data validation";
+        this.reason = "includes_resource_data means that the script is always executed by indeni, even during high CPU usage. It has to be included for scripts including cpu usage or memory usage metrics.<br><br>\
+                       If this check fails it means that you have specified includes_resource_data, but not used the tags, or that you have included cpu usage or memory usage without including it in the meta section";
+        this.severity = "error";
+        this.applyToSections = ["script"];
+
+        this.mark = function(content){
+
+            var sections = getScriptSections(content);
+
+            if (sections.hasOwnProperty("meta")){
+
+                // Check if the script meta section has resource data
+                var hasIncludesResourceData = sections["meta"].content.match(/^includes_resource_data:\s*true$/m) !== null;
+                var parserData = sections["json"] || sections["awk"]
+
+                if (parserData !== undefined){
+                    
+                    var parserContent = parserData.content;
+
+                    var matches = content.match(/writeDoubleMetric\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
+                    var usedMetrics = [];
+
+                    // Check if there are any metrics being used that has not been documented
+                    matches.map(function(m){
+
+                        var metric = m.replace(/.+\(\"|im\.name\":\s*_constant:\s\"/, "");
+
+                        if ((metric === "cpu-usage" || metric === "memory-usage") && !hasIncludesResourceData){
+                            content = content.replace(/cpu\-usage|memory\-usage/g, getSpan(this.severity, "This tag would normally require include_resource_data in the meta section.", "$&"))
+                        }
+
+                        usedMetrics.push(metric);
+
+                    }, this);
+
+                }
+
+                // If include resource data  has been used but no resource data metric has been defined
+                if (hasIncludesResourceData && usedMetrics.indexOf("cpu-usage") === -1 && usedMetrics.indexOf("memory-usage") === -1) {
+                    console.log("No metrics");
+                    content = content.replace(/^includes_resource_data:.+$/m, getSpan(this.severity, "Resource data has been used but no metrics that require it seems to exist", "$&"));
+                }
+
+            }
+
+            return content 
+        }
     }
 }
+
+function getDocumentedMetrics(content){
+
+    var scriptSections = getScriptSections(content);
+    var documentationSection = scriptSections.comments.content;
+    var documentedMetrics = [];
+
+    documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
+        documentedMetrics.push(m);
+    })
+
+    return documentedMetrics;
+}
+
 
 // Returns a span element with the severity, reason and content that was specified in the parameters
 function getSpan(severity, reason, content){
@@ -412,6 +537,14 @@ function getScriptSections(content){
         section.awk = {};
         section.awk.content = regexResult[1];
         section.awk.apply = ["awk"]
+    }
+
+    var regexResult = /#! PARSER::JSON.*\n([.\S\s]+?)$/g.exec(content)
+
+    if(regexResult != null && regexResult.length == 2){
+        section.json = {};
+        section.json.content = regexResult[1];
+        section.json.apply = ["json", "yaml"]
     }
 
     return section;
@@ -491,11 +624,16 @@ function executeAndMark (testFunctions){
 
             // Get the content of the sections in the script ("meta", "comments", "awk")
             var sections = getScriptSections(result);
-            
-            // Verify that the parsed sections contains the type
-            if(sections.hasOwnProperty(type)){
-                var sectionContent = sections[type].content;
-                result = result.replace(sectionContent, f.mark(sectionContent));
+
+            for(var s in sections){
+
+                if(sections[s].apply.indexOf(type) !== -1){
+
+                    // Verify that the parsed sections contains the type
+                    var sectionContent = sections[s].content;
+                    result = result.replace(sectionContent, f.mark(sectionContent));
+
+                }
             }
 
         });
