@@ -427,9 +427,6 @@ var codeValidationFunctions = {
                 var hasIncludesResourceData = sections["meta"].content.match(/^includes_resource_data:\s*true$/m) !== null;
                 var parserData = sections["json"] || sections["awk"] || sections["xml"]
 
-                console.log(sections)
-
-                console.log(parserData);
                 if (parserData !== undefined){
                     
                     var parserContent = parserData.content;
@@ -454,13 +451,12 @@ var codeValidationFunctions = {
 
                 // If include resource data  has been used but no resource data metric has been defined
                 if (hasIncludesResourceData && usedMetrics.indexOf("cpu-usage") === -1 && usedMetrics.indexOf("memory-usage") === -1) {
-                    console.log("No metrics");
                     content = content.replace(/^includes_resource_data:.+$/m, getSpan(this.severity, "Resource data has been used but no metrics that require it seems to exist", "$&"));
                 }
 
             }
 
-            return content 
+            return content
         }
     }
 }
@@ -468,12 +464,17 @@ var codeValidationFunctions = {
 function getDocumentedMetrics(content){
 
     var scriptSections = getScriptSections(content);
-    var documentationSection = scriptSections.comments.content;
     var documentedMetrics = [];
 
-    documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
-        documentedMetrics.push(m);
-    })
+    if (scriptSections.hasOwnProperty("comments")) {
+        
+        var documentationSection = scriptSections.comments.content;
+
+        documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
+            documentedMetrics.push(m);
+        })
+
+    }
 
     return documentedMetrics;
 }
@@ -745,34 +746,36 @@ function validateSections(sections){
         // Loop through the codeValidationFunctions and run each one that
         // has ie. "awk" in the applyToSections array
 
-        sections[section].apply.map(function(type){
+        if(sectionContent !== ""){
+            sections[section].apply.map(function(type){
 
-            for(name in codeValidationFunctions){
+                for(name in codeValidationFunctions){
 
-                f = codeValidationFunctions[name];
+                    f = codeValidationFunctions[name];
 
-                if(f.applyToSections.indexOf(type) !== -1){
+                    if(f.applyToSections.indexOf(type) !== -1){
 
-                    try {
+                        try {
 
-                        // Mark the function as executed. This is so we don't mark JSON parser functions
-                        // as successful in the awk parser
-                        f.executed = true;
+                            // Mark the function as executed. This is so we don't mark JSON parser functions
+                            // as successful in the awk parser
+                            f.executed = true;
 
-                        // Check if the function found something already
-                        // If not, run the tests
-                        if (f.compliant){
-                            f.compliant = f.isCompliant(sectionContent);
+                            // Check if the function found something already
+                            // If not, run the tests
+                            if (f.compliant){
+                                f.compliant = f.isCompliant(sectionContent);
+                            }
+
+                        } catch (e) {
+                            console.log(e);
+                            $("span#exceptions").append("Failed to execute " + f.name + "<br>");
                         }
 
-                    } catch (e) {
-                        console.log(e);
-                        $("span#exceptions").append("Failed to execute " + f.name + "<br>");
                     }
 
                 }
-
-            }
-        });
+            });
+        }
     }
 }
