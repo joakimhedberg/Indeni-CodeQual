@@ -13,14 +13,15 @@
 var codeValidationFunctions = {
 
     "genericSpaceBeforeAndAfter": new function(){
+
         // Space before and after curly brackets and parenthesis makes the code less compact and more readable
         // This is just a recommendation.
         // Example of an offending line: 
         //#if(something == "1"){
         ///A regexp/ {
 
-        this.testName = "Space around curly brackets";
-        this.reason = "Space after curly brackets makes the code look nicer";
+        this.testName = "Space <3";
+        this.reason = "Space in certain places makes the code look nicer";
         this.severity = "recommendation";
         this.applyToSections = ["awk"];
 
