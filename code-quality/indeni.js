@@ -425,8 +425,11 @@ var codeValidationFunctions = {
 
                 // Check if the script meta section has resource data
                 var hasIncludesResourceData = sections["meta"].content.match(/^includes_resource_data:\s*true$/m) !== null;
-                var parserData = sections["json"] || sections["awk"]
+                var parserData = sections["json"] || sections["awk"] || sections["xml"]
 
+                console.log(sections)
+
+                console.log(parserData);
                 if (parserData !== undefined){
                     
                     var parserContent = parserData.content;
@@ -495,7 +498,7 @@ $(document).ready( function(){
 // A section could be meta, comments, awk, json, xml.
 // This function needs some coding love.
 function getScriptSections(content){
-    
+
     var section = {};
 
     // The section variable contains the content of the different sections
@@ -545,6 +548,14 @@ function getScriptSections(content){
         section.json = {};
         section.json.content = regexResult[1];
         section.json.apply = ["json", "yaml"]
+    }
+
+    var regexResult = /#! PARSER::XML.*\n([.\S\s]+?)$/g.exec(content)
+
+    if(regexResult != null && regexResult.length == 2){
+        section.xml = {};
+        section.xml.content = regexResult[1];
+        section.xml.apply = ["xml", "yaml"]
     }
 
     return section;
