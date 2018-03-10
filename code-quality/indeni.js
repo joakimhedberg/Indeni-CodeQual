@@ -11,7 +11,57 @@
 // When adding functions, remember to add space before and after the "=", or the tests might trigger when using the "show all button"
 
 var codeValidationFunctions = {
+
+    "verifyAwkDocumentation": new function() {
+
+        // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
+        this.testName = "Undocumented/Unused metrics";
+        this.reason = "The documentation section should have one entry per metric used in the script and the script should use all documented metrics.";
+        this.severity = "error";
+        this.applyToSections = ["script"];
+
+        this.getDocumentedMetrics = function (content){
+
+            var scriptSections = getScriptSections(content);
+            var documentationSection = scriptSections.comments.content;
+            var documentedMetrics = [];
+
+            documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
+                documentedMetrics.push(m);
+            })
+
+            return documentedMetrics;
+        }
+
+        this.mark = function(content){
+
+            var documentedMetrics = this.getDocumentedMetrics(content);
+            var matches = content.match(/writeDoubleMetric\(\"[^\"]+/gm);
+            var usedMetrics = [];
+
+            // Check if there are any metrics being used that has not been documented
+            matches.map(function(m){
+
+                var metric = m.replace(/.+\(\"/, "");
+                usedMetrics.push(metric);
+
+                if(documentedMetrics.indexOf(metric) === -1){
+                    content = content.replace(metric, getSpan(this.severity, "This metric has not been documented in the COMMENTS section.", "$&"));
+                }
+
+            }, this);
+
+            // Check if there's any metrics that has been documented, but not used
+            documentedMetrics.map(function(m){
+                if(usedMetrics.indexOf(m) === -1){
+                    content = content.replace(m, getSpan(this.severity, "This metric is documented but not used in the script, please consider removing it", "$&"));
+                }
+            }, this);
+
+            return content;
+        }
     
+    },
     "spaceBeforeExample": new function() {
 
         // Space before examples maybe looks nice, but it's far from exact
@@ -99,12 +149,12 @@ var codeValidationFunctions = {
         //if (variable = 1) { 
 
         this.testName = "If statement with single equal sign";
-        this.reason = "Found an if statement contains a single equal sign. Since this is most likely an accident and it'd always return true it could cause strange bugs in the code. Consider replacing with '=='";
+        this.reason = "Found an if statement contains a single equal sign. Since this is most likely an accident and it'd always return true it could cause strange bugs in the code. Consider replacing with double equal signs.";
         this.severity = "error";
         this.applyToSections = ["awk"];
 
         this.mark = function(content){
-            return content.replace(/if\s*?\([^=]+={1}[^=].+\)/gm, getSpan(this.severity, this.reason, "$&"));
+            return content.replace(/if\s*?\([^=]+[^=!]={1}[^=].+\)/gm, getSpan(this.severity, this.reason, "$&"));
         }    
     },
     "columnVariableManipulation": new function (){
@@ -166,7 +216,7 @@ var codeValidationFunctions = {
         this.applyToSections = ["awk"];
 
         this.mark = function(content){
-            return content.replace(/([^ =\n]{1}(={1,2})[^ =\n]{1})|(([^ =\n]{1})(={1,2}))|((={1,2})[^ =\n]{1})/gm, getSpan(this.severity, this.reason, "$&"));
+            return content.replace(/([^ =!\n]{1}(={1,2})[^ =\n]{1})|(([^ =!\n]{1})(={1,2}))|((={1,2})[^ =\n]{1})/gm, getSpan(this.severity, this.reason, "$&"));
         }
 
     },
@@ -303,6 +353,10 @@ function getScriptSections(content){
     
     var section = {};
 
+    section.script = {};
+    section.script.content = content;
+    section.script.apply = ["script"];
+
     // The section variable contains the content of the different sections
     // and some meta data about them.
 
@@ -421,6 +475,7 @@ function executeAndMark (testFunctions){
                 var sectionContent = sections[type].content;
                 result = result.replace(sectionContent, f.mark(sectionContent));
             }
+
         });
 
     })
@@ -526,6 +581,7 @@ function validateSections(sections){
                 f = codeValidationFunctions[name];
 
                 if(f.applyToSections.indexOf(type) !== -1){
+
                     try {
 
                         // Mark the function as executed. This is so we don't mark JSON parser functions

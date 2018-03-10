@@ -76,7 +76,7 @@ varIable = "test"
         } else {
           state = 1
         }
-  
+    writeDoubleMetric("undocumented-metric", debugtags,"gauge", 3600, state)
     writeDoubleMetric("debug-status", debugtags,"gauge", 3600, state)
     }
 }
