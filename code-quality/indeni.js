@@ -283,7 +283,7 @@ var codeValidationFunctions = {
 
         // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
         // If you're looking for examples, this is not it
-        
+
         this.testName = "Undocumented/Unused metrics";
         this.reason = "The documentation section should have one entry per metric used in the script and the script should use all documented metrics.";
         this.severity = "error";
@@ -355,10 +355,6 @@ function getScriptSections(content){
     
     var section = {};
 
-    section.script = {};
-    section.script.content = content;
-    section.script.apply = ["script"];
-
     // The section variable contains the content of the different sections
     // and some meta data about them.
 
@@ -368,6 +364,11 @@ function getScriptSections(content){
     // section.meta.apply = <List of the type of checks you want to apply to this section>
 
     //Note: The apply section is later matched to the function property "applyToSections" above.
+
+    // This is for parsing that is applied to the whole script
+    section.script = {};
+    section.script.content = content;
+    section.script.apply = ["script"];
 
     // Parse for the META section
     var regexResult = /#! META\n([.\S\s]+?)#!/g.exec(content);
@@ -444,9 +445,10 @@ function updateTestResultButtons() {
     };
 
     // Add the show all button
-    if ($("div#noncompliant button").length > 0){
+    /*if ($("div#noncompliant button").length > 0){
         $("div#noncompliant").prepend("<button title = \"This button highlights all the non-compliances, it SHOULD work but could yield some unpredictable results due to content being changed by multiple parsings. \" class=\"show-all-noncompliances\" id=\"show-all-noncompliances\">Highlight all non-compliances</button>");
     }
+    */
 }
 
 // Executes the functions in testFunctions
@@ -554,7 +556,7 @@ function parseScriptSections(){
     var nonCompliantButtons = $("div#noncompliant button.error, div#noncompliant button.warning")
     
     nonCompliantButtons.on("click", testButtonClicked);
-    $("div#noncompliant button#show-all-noncompliances").on("click", markAllNonCompliances);
+    //$("div#noncompliant button#show-all-noncompliances").on("click", markAllNonCompliances);
         
     // Trigger the first test if no test has been selected by the user
     if(activeButton === undefined){
