@@ -376,7 +376,7 @@ var codeValidationFunctions = {
         this.testName = "Metric written more than once";
         this.reason = "Each metric should only be written in one place. If the metric has been written more than once this test fails.";
         this.severity = "error";
-        this.applyToSections = ["awk", "json"];
+        this.applyToSections = ["awk"];
 
         this.mark = function(content){
 
@@ -492,6 +492,12 @@ function getSpan(severity, reason, content){
 $(document).ready( function(){
     $("textarea#script-textarea").on("keyup onpaste", parseScriptSections);
     $("textarea#script-textarea").trigger("keyup");
+    
+    // Create the tippy tool tips
+    tippy("button.notexecuted", {
+        animation: "scale"
+    });
+
 });
 
 
@@ -602,7 +608,7 @@ function updateTestResultButtons() {
         } else if (!f.compliant) {
             $("div#noncompliant").append("<button title = \"" + f.reason + "\" class=\"" + f.severity + "\" id=\"" + name + "\">" + f.testName + "</button>");
         } else {
-            $("div#notexecuted").append("<button title = \"" + f.reason + "\" class=\"notexecuted\" DISABLED>" + f.testName + "</button>");
+            $("div#notexecuted").append("<button title = \"" + f.reason + "\" class=\"notexecuted\">" + f.testName + "</button>");
         }
 
     };
