@@ -1,0 +1,8 @@
+{
+  "name": "indeni-enhancements",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "tape": "^4.9.0"
+  }
+}
