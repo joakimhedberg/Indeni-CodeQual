@@ -375,7 +375,7 @@ var codeValidationFunctions = {
 
         this.testName = "Metric written more than once";
         this.reason = "Each metric should only be written in one place. If the metric has been written more than once this test fails.";
-        this.severity = "error";
+        this.severity = "recommendation";
         this.applyToSections = ["awk"];
 
         this.mark = function(content){
