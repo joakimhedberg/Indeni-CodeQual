@@ -343,7 +343,7 @@ var codeValidationFunctions = {
         this.mark = function(content){
 
             var documentedMetrics = getDocumentedMetrics(content);
-            var matches = content.match(/writeDoubleMetric\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
+            var matches = content.match(/write(Double|Complex)[^\(]+\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
             var usedMetrics = [];
 
             // Check if there are any metrics being used that has not been documented
@@ -380,7 +380,7 @@ var codeValidationFunctions = {
 
         this.mark = function(content){
 
-            var matches = content.match(/writeDoubleMetric\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
+            var matches = content.match(/write(Double|Complex)[^\(]+\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
             var usedMetrics = [];
 
             // Check if there are any metrics being used that has not been documented
@@ -431,7 +431,7 @@ var codeValidationFunctions = {
 
                     var parserContent = parserData.content;
 
-                    var matches = content.match(/writeDoubleMetric\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
+                    var matches = content.match(/write(Double|Complex)[^\(]+\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
                     var usedMetrics = [];
 
                     // Check if there are any metrics being used that has not been documented
