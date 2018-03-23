@@ -23,7 +23,7 @@ var codeValidationFunctions = {
         //name: sausage-metric
 
         this.testName = "Valid script name prefix";
-        this.reason = "Prefixes is important not only to distinguish which type of device the script is executed on but also to avoid script name collisions";
+        this.reason = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.";
         this.severity = "error";
         this.applyToSections = ["meta"];
 
@@ -55,7 +55,7 @@ var codeValidationFunctions = {
         ///A regexp/ {
 
         this.testName = "Space <3";
-        this.reason = "Space in certain places makes the code look nicer";
+        this.reason = "Space in certain places makes the code look nicer.";
         this.severity = "recommendation";
         this.applyToSections = ["awk"];
 
@@ -71,7 +71,7 @@ var codeValidationFunctions = {
         ///A regexp/ {
 
         this.testName = "Space before example";
-        this.reason = "Space before examples maybe looks nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does";
+        this.reason = "Space before examples maybe looks nice, but it's far from exact, unless the input file actually has one. Consider removing this space unless yours does.";
         this.severity = "warning";
         this.applyToSections = ["awk"];
 
@@ -135,7 +135,7 @@ var codeValidationFunctions = {
         //writeDebug("this is a debug")
 
         this.testName = "writeDebug()";
-        this.reason = "writeDebug is great for troubleshooting, but code with that command should never reach customers.";
+        this.reason = "writeDebug() is great for troubleshooting, but code with that function should never reach customers.";
         this.severity = "error";
         this.applyToSections = ["awk"];
 
@@ -150,7 +150,7 @@ var codeValidationFunctions = {
         //if (variable = 1) { 
 
         this.testName = "If statement with single equal sign";
-        this.reason = "Found an if statement contains a single equal sign. Since this is most likely an accident and it'd always return true it could cause strange bugs in the code. Consider replacing with double equal signs.";
+        this.reason = "Found an if statement that contains a single equals sign. Since this is most likely an accident (and it'd always return true) it could cause strange bugs in the code. Consider replacing with double equal signs.";
         this.severity = "error";
         this.applyToSections = ["awk"];
 
@@ -165,7 +165,7 @@ var codeValidationFunctions = {
         // variable = test   
 
         this.testName = "Column variable manipulation";
-        this.reason = "Changing column values (ie. $0, $1) could easily lead to unexpected behaviors.<br>It is highly recommended to instead save the column value to a variable and change that instead.";
+        this.reason = "Changing column values (ie. $0, $1) could easily lead to unexpected behaviors.<br>It is highly recommended to instead save the column value to a variable and change that.";
         this.severity = "warning";
         this.applyToSections = ["awk"];
 
@@ -180,7 +180,7 @@ var codeValidationFunctions = {
         // variable = test   
 
         this.testName = "Trailing White-Space";
-        this.reason = "Trailing white space serves no purpose and should be removed";
+        this.reason = "Trailing white space serves no purpose and should be removed.";
         this.severity = "error";
         this.applyToSections = ["awk", "yaml"];
 
@@ -196,7 +196,7 @@ var codeValidationFunctions = {
         //  variable = test
 
         this.testName = "Leading tabs";
-        this.reason = "Tabs should not be used for indentation, please configure your editor to use space for indentation";
+        this.reason = "Tabs should not be used for indentation, please configure your editor to use space for indentation.";
         this.severity = "error";
         this.applyToSections = ["awk", "yaml"];
 
@@ -212,7 +212,7 @@ var codeValidationFunctions = {
         // variable=test
 
         this.testName = "Equals sign without space";
-        this.reason = "The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts";
+        this.reason = "The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.";
         this.severity = "error";
         this.applyToSections = ["awk"];
         this.pattern = /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm;
@@ -228,7 +228,7 @@ var codeValidationFunctions = {
         // writeDoubleMetric("debug-status",debugtags,"gauge",3600,state)
 
         this.testName = "Comma without space";
-        this.reason = "Commas signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts";
+        this.reason = "Commas signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.";
         this.severity = "error";
         this.applyToSections = ["awk"];
 
@@ -244,7 +244,7 @@ var codeValidationFunctions = {
         // writeDoubleMetric("debug-status",debugtags,"gauge",3600,state)
 
         this.testName = "Tilde without space";
-        this.reason = "Tilde signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp";
+        this.reason = "Tilde signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp.";
         this.severity = "error";
         this.applyToSections = ["awk"];
 
@@ -260,7 +260,7 @@ var codeValidationFunctions = {
         // writeDoubleMetric("debug-status",debugtags,"gauge",3600,state)
 
         this.testName = "Tilde without regexp notation";
-        this.reason = "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/)";
+        this.reason = "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).";
         this.severity = "warning";
         this.applyToSections = ["awk"];
 
@@ -279,7 +279,7 @@ var codeValidationFunctions = {
         //       skip-documentation: true
 
         this.testName = "Invalid YAML white-space";
-        this.reason = "Since indentation in YAML is 4 spaces having a number not divideable by 4 would cause an error in most cases.";
+        this.reason = "Since indentation in YAML is 4 spaces having a number not divisible by 4 would cause an error in most cases.";
         this.severity = "error";
         this.applyToSections = ["yaml"];
 
@@ -304,7 +304,7 @@ var codeValidationFunctions = {
         // description: grab some data from the device
 
         this.testName = "Description begins in lower case";
-        this.reason = "In the english language it's good practice to begin sentences with upper case.";
+        this.reason = "In the english language, it's good practice to begin sentences with upper case.";
         this.severity = "error";
         this.applyToSections = ["meta"];
 
@@ -336,7 +336,7 @@ var codeValidationFunctions = {
         // If you're looking for examples, this is not it
 
         this.testName = "Undocumented/Unused metrics";
-        this.reason = "The documentation section should have one entry per metric used in the script and the script should use all documented metrics.";
+        this.reason = "The documentation section should have one entry per metric used in the script, and the script should use all documented metrics.";
         this.severity = "error";
         this.applyToSections = ["script"];
 
@@ -361,7 +361,7 @@ var codeValidationFunctions = {
             // Check if there's any metrics that has been documented, but not used
             documentedMetrics.map(function(m){
                 if(usedMetrics.indexOf(m) === -1){
-                    content = content.replace(m, getSpan(this.severity, "This metric is documented but not used in the script, please consider removing it", "$&"));
+                    content = content.replace(m, getSpan(this.severity, "This metric is documented but not used in the script. Please consider removing it.", "$&"));
                 }
             }, this);
 
@@ -412,8 +412,8 @@ var codeValidationFunctions = {
         //name: sausage-metric
 
         this.testName = "Resource data validation";
-        this.reason = "includes_resource_data means that the script is always executed by indeni, even during high CPU usage. It has to be included for scripts including cpu usage or memory usage metrics.<br><br>\
-                       If this check fails it means that you have specified includes_resource_data, but not used the tags, or that you have included cpu usage or memory usage without including it in the meta section";
+        this.reason = "includes_resource_data means that the script is always executed by indeni, even during high CPU usage. It has to be included for scripts using the cpu-usage and/or memory-usage metrics.<br><br>\
+                       If this check fails it means that you have specified includes_resource_data, but not used the metrics, or that you have used cpu-usage and/or memory-usage without including includes_resource_data in the meta section.";
         this.severity = "error";
         this.applyToSections = ["script"];
 
@@ -451,7 +451,7 @@ var codeValidationFunctions = {
 
                 // If include resource data  has been used but no resource data metric has been defined
                 if (hasIncludesResourceData && usedMetrics.indexOf("cpu-usage") === -1 && usedMetrics.indexOf("memory-usage") === -1) {
-                    content = content.replace(/^includes_resource_data:.+$/m, getSpan(this.severity, "Resource data has been used but no metrics that require it seems to exist", "$&"));
+                    content = content.replace(/^includes_resource_data:.+$/m, getSpan(this.severity, "Resource data has been used but no metrics that require it seem to exist.", "$&"));
                 }
 
             }
