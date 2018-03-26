@@ -231,9 +231,10 @@ var codeValidationFunctions = {
         this.reason = "Commas signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts";
         this.severity = "error";
         this.applyToSections = ["awk"];
+        this.pattern = /(,)[^ \/]/gm;
 
         this.mark = function(content){
-            return content.replace(/(,)[^ ]/gm, getSpan(this.severity, this.reason, "$&"))
+            return content.replace(this.pattern, getSpan(this.severity, this.reason, "$&"))
         }
 
     },
