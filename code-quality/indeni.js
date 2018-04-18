@@ -224,7 +224,7 @@ function validateSections(sections){
                             console.log(f);
                             console.log("Exception:")
                             console.log(e);
-                            $("span#exceptions").append("Failed to execute " + f.name + "<br>");
+                            $("span#exceptions").append("Failed to execute " + f.testName + ". Check the browser javascript console for details.<br>");
                         }
 
                     }
