@@ -219,6 +219,10 @@ function validateSections(sections){
                             }
 
                         } catch (e) {
+                            console.log("Failed in section " + section);
+                            console.log("Function:")
+                            console.log(f);
+                            console.log("Exception:")
                             console.log(e);
                             $("span#exceptions").append("Failed to execute " + f.name + "<br>");
                         }
