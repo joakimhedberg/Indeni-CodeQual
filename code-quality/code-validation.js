@@ -1,3 +1,4 @@
+'use strict';
 
 // Adding functions:
 // Each function must have the following properties.
@@ -341,9 +342,9 @@ var codeValidationFunctions = {
         this.severity = "error";
         this.applyToSections = ["script"];
 
-        this.mark = function(content){
+        this.mark = function(content, getSections){
 
-            var documentedMetrics = getDocumentedMetrics(content);
+            var documentedMetrics = getDocumentedMetrics(content, getSections);
             var matches = content.match(/write(Double|Complex)[^\(]+\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
             var usedMetrics = [];
 
@@ -418,9 +419,9 @@ var codeValidationFunctions = {
         this.severity = "error";
         this.applyToSections = ["script"];
 
-        this.mark = function(content){
+        this.mark = function(content, getSections){
 
-            var sections = getScriptSections(content);
+            var sections = getSections(content);
 
             if (sections.hasOwnProperty("meta")){
 
@@ -430,7 +431,7 @@ var codeValidationFunctions = {
 
                 if (parserData !== undefined){
 
-                    var parserContent = parserData.content;
+                    //var parserContent = parserData.content;
 
                     var matches = content.match(/write(Double|Complex)[^\(]+\(\"[^\"]+|im\.name\":\s*_constant:\s\"[^\"]+/gm) || [];
                     var usedMetrics = [];
@@ -460,11 +461,11 @@ var codeValidationFunctions = {
             return content
         }
     }
-}
+};
 
-function getDocumentedMetrics(content){
+function getDocumentedMetrics(content, getSections){
 
-    var scriptSections = getScriptSections(content);
+    var scriptSections = getSections(content);
     var documentedMetrics = [];
 
     if (scriptSections.hasOwnProperty("comments")) {
