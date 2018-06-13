@@ -1,5 +1,6 @@
 'use strict';
 
+// Note: passing the 'getSections' function in here makes it possible to test this function in isolation.
 var marker = function(testFunctions, fullScriptContent, getSections) {
     testFunctions.map(function(f){
 
@@ -17,10 +18,9 @@ var marker = function(testFunctions, fullScriptContent, getSections) {
             var sections = getSections(fullScriptContent);
 
             for(var s in sections){
-
+                // Verify that the parsed sections contains the type
                 if(sections[s].apply.indexOf(type) !== -1){
-
-                    // Verify that the parsed sections contains the type
+                    
                     var sectionContent = sections[s].content;
                     fullScriptContent = fullScriptContent.replace(sectionContent, f.mark(sectionContent, getSections));
 
@@ -32,7 +32,9 @@ var marker = function(testFunctions, fullScriptContent, getSections) {
     return fullScriptContent;
 };
 
-// exports code validation functions if we're using node (for testing)
+// These lines are to support the unit test framework. That framework uses node.js, which uses "requires" to import
+// code. Since we're not using node for the actual web code, we need to protect this use of "exports", otherwise
+// we'll get an error on page load. Take a look at the test cases in /test to see how we use this.
 if (typeof(exports) !== 'undefined' && exports !== null)
 {
     exports.marker = marker;

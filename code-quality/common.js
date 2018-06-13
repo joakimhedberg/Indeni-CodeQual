@@ -4,7 +4,6 @@
 // A section could be meta, comments, awk, json, xml.
 // This function needs some coding love.
 var getScriptSections = function(content){
-    console.log(content);
     var section = {};
 
     // The section variable contains the content of the different sections
@@ -67,7 +66,9 @@ var getScriptSections = function(content){
     return section;
 };
 
-// exports code validation functions if we're using node (for testing)
+// These lines are to support the unit test framework. That framework uses node.js, which uses "requires" to import
+// code. Since we're not using node for the actual web code, we need to protect this use of "exports", otherwise
+// we'll get an error on page load. Take a look at the test cases in /test to see how we use this.
 if (typeof(exports) !== 'undefined' && exports !== null)
 {
     exports.getScriptSections = getScriptSections;
