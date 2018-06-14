@@ -60,3 +60,19 @@ test('test comparison operators without spaces', function (t) {
 
     t.end();
 });
+
+
+test('test ignoring comments', function (t) {
+
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("# x=y"), "# x=y", "# x=y");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("x = y # somecomment j=k"), "x = y # somecomment j=k", "x = y # somecomment j=k");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    #somecomment x=y"), "    #somecomment x=y", "    #somecomment x=y");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("\t#somecomment x=y"), "\t#somecomment x=y", "\t#somecomment x=y");
+
+    // make sure we match on the first bad part (x=y), but not the one in the comments (j=k).
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("x=y  # somecomment j=k"), 
+        "<span class = \"error\" title = \"The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.\">x=y</span>  # somecomment j=k", 
+        "x=y  # somecomment j=k");
+
+    t.end();
+});

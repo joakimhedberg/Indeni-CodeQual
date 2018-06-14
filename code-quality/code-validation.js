@@ -187,7 +187,6 @@ var codeValidationFunctions = {
         this.mark = function(content){
             return content.replace(/[ \t]+$/gm, getSpan(this.severity, this.reason, "$&"))
         }
-
     },
     "leadingTab": new function () {
 
@@ -203,7 +202,6 @@ var codeValidationFunctions = {
         this.mark = function(content){
             return content.replace(/^[\t]+/gm, getSpan(this.severity, this.reason, "$&"))
         }
-
     },
     "comparisonOperatorNoSpace": new function () {
 
@@ -217,9 +215,8 @@ var codeValidationFunctions = {
         this.applyToSections = ["awk"];
         this.pattern = /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm;
         this.mark = function(content){
-            return content.replace(this.pattern, getSpan(this.severity, this.reason, "$&"));
+            return markLineByLine(content, this.pattern, this.severity, this.reason);
         }
-
     },
     "commaWithoutSpace": new function () {
 
@@ -236,7 +233,6 @@ var codeValidationFunctions = {
         this.mark = function(content){
             return content.replace(this.pattern, getSpan(this.severity, this.reason, "$&"))
         }
-
     },
     "tildeWithoutSpace": new function () {
 
@@ -252,7 +248,6 @@ var codeValidationFunctions = {
         this.mark = function(content){
             return content.replace(/([^ \n]{1}(~)[^ \n]{1})|(([^ \n]{1})(~))|((~)[^ \n]{1})/, getSpan(this.severity, this.reason, "$&"));
         }
-
     },
     "tildeWithoutRegexpNotation": new function (){
 
@@ -327,7 +322,7 @@ var codeValidationFunctions = {
         this.applyToSections = ["meta"];
 
         this.mark = function(content){
-
+            // TODO: Why isn't this matching on '^monitoring_interval:'?
             return content.replace(/([6-9][1-9][0-9]*? (minute)[s]{0,1})|([2-9][0-9]*? hour[s]{0,1})/gm, getSpan(this.severity, this.reason, "$&"))
         }
     },
@@ -394,7 +389,6 @@ var codeValidationFunctions = {
                     //This metric has already been written. Mark it.
                     var re = new RegExp(metric, "g");
                     content = content.replace(re, getSpan(this.severity, this.reason, "$&"));
-
                 }
 
                 usedMetrics.push(metric);
@@ -447,14 +441,12 @@ var codeValidationFunctions = {
                         usedMetrics.push(metric);
 
                     }, this);
-
                 }
 
                 // If include resource data  has been used but no resource data metric has been defined
                 if (hasIncludesResourceData && usedMetrics.indexOf("cpu-usage") === -1 && usedMetrics.indexOf("memory-usage") === -1) {
                     content = content.replace(/^includes_resource_data:.+$/m, getSpan(this.severity, "Resource data has been used but no metrics that require it seem to exist.", "$&"));
                 }
-
             }
 
             return content
@@ -474,7 +466,6 @@ function getDocumentedMetrics(content, getSections){
         documentationSection.match(/^[a-zA-Z0-9\-]+/gm).map(function(m){
             documentedMetrics.push(m);
         })
-
     }
 
     return documentedMetrics;
@@ -484,6 +475,36 @@ function getDocumentedMetrics(content, getSections){
 // Returns a span element with the severity, reason and content that was specified in the parameters
 function getSpan(severity, reason, content){
     return "<span class = \"" + severity + "\" title = \"" + reason + "\">" + content + "</span>"
+}
+
+function markLineByLine(content, pattern, severity, reason) {
+    const lines = content.split("\n");
+    var markedContent = "";
+    lines.map(function (line) {
+        var markedLine = "";
+        
+        const poundIndex = line.indexOf("#");
+        if (poundIndex !== -1) {
+            markedLine = handleLineComments(poundIndex,line, pattern, severity, reason);
+        } else {
+            markedLine = line.replace(pattern, getSpan(severity, reason, "$&"));
+        }
+
+        markedContent += markedLine + "\n";
+    });
+    return markedContent.substring(0, markedContent.length - 1);  // remove the trailing newline
+}
+
+function handleLineComments(poundIndex, line, pattern, severity, reason) {
+    if (poundIndex === 0) {                       //# x=y
+        return line;
+    } else if (/^\s+#/g.exec(line) !== null) {    //    #somecomment
+        return line;
+    } else if (poundIndex !== -1) {               //x = y # somecomment
+        const comment = line.substring(poundIndex);
+        const firstPart = line.substring(0, poundIndex);
+        return firstPart.replace(pattern, getSpan(severity, reason, "$&")) + comment;
+    }
 }
 
 // These lines are to support the unit test framework. That framework uses node.js, which uses "requires" to import
