@@ -24,6 +24,14 @@ test('test a full script where everything is good', function (t) {
     });
 });
 
+test('test a full script that includes all of the lines we are trying to exclude from markup', function (t) {
+    fs.readFile('./resources/full-script-exclusions.ind', "utf8", function (err, data) {
+        t.equals(mark.marker(setup(), data, sections.getScriptSections), data, "exclusions: nothing should get marked up");
+        t.end();
+    });
+});
+
+
 test('test a full script that has every error, warning, and suggestion', function (t) {
     fs.readFile('./resources/full-script-every-error-warning-suggestion.ind', "utf8", function (err1, inputScript) {
         fs.readFile('./resources/baselines/full-script-every-error-warning-suggestion_marked.ind', "utf8", function (err2, expectedScript) {

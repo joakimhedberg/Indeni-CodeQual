@@ -39,7 +39,7 @@ BEGIN {
 	dnsServer = $NF
     if (dnsServer = "::"){
         dns_server_count++
-        dns_servers[dnsServerCount<span class = "error" title = "Commas signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.">,"</span>ipaddress"] =dnsServer    
+        dns_servers[dnsServerCount<span class = "error" title = "Commas signs should be followed by space.<br>Exceptions to this are regexp and bash scripts.">,"</span>ipaddress"] =dnsServer    
     }
 
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
@@ -57,7 +57,7 @@ BEGIN {
 # secondary           : 208.91.112.52
 /^(primary|secondary|ip6-primary|ip6-secondary)/ {
     sub(/foo/, "bar", $1)
-    if ($1 <span class = "error" title = "The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.">~/</span>bad idea/) {
+    if ($1 <span class = "error" title = "The equals sign and other comparison operators should be followed by space.<br>Exceptions to this are regexp and bash scripts.">~/</span>bad idea/) {
         debug("who cares?")
     } else if ($2 ~ "bonkers") {
         writeDebug("huh?")
@@ -65,7 +65,7 @@ BEGIN {
 	dnsServer = $NF
     if (dnsServer = "::"){
         dns_server_count++
-        dns_servers[dnsServerCount,"ipaddress"] <span class = "error" title = "The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.">=d</span>nsServer    
+        dns_servers[dnsServerCount,"ipaddress"] <span class = "error" title = "The equals sign and other comparison operators should be followed by space.<br>Exceptions to this are regexp and bash scripts.">=d</span>nsServer    
     }
 
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
@@ -422,7 +422,7 @@ BEGIN {
 # secondary           : 208.91.112.52
 /^(primary|secondary|ip6-primary|ip6-secondary)/ {
     sub(/foo/, "bar", $1)
-    if ($1 <span class = "error" title = "Tilde signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp.">~/</span>bad idea/) {
+    if ($1 <span class = "error" title = "Tilde signs should be followed by space.<br>Exceptions to this are regexp.">~/</span>bad idea/) {
         debug("who cares?")
     } else if ($2 ~ "bonkers") {
         writeDebug("huh?")

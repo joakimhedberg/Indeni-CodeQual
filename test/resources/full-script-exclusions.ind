@@ -1,0 +1,49 @@
+#! META
+name: fortios-get-system-dns
+description: Display the configured DNS servers in the Indeni UI
+type: monitoring
+monitoring_interval: 30 minutes
+requires:
+    vendor: fortinet
+
+#! COMMENTS
+dns-servers:
+    why: |
+        DNS allows a device to resolve a name to an IP address.
+    how: |
+        Using the built-in "get system dns" command.
+    without-indeni: |
+        An administrator could login and manually run the command.
+    can-with-snmp: true
+    can-with-syslog: false
+
+#! REMOTE::SSH
+get system dns
+
+#! PARSER::AWK
+BEGIN {
+    dns_server_count = 0
+}
+
+# FOR TEST: don't hit this line: "="
+# FOR TEST: don't his this line: x,y
+#secondary           : 208.91.112.52
+/^(primary|secondary|ip6-primary|ip6-secondary)/ {
+    # don't hit these functions, even though the break the 'space around comparison operators' rule
+    split(line, toArray, "=")
+    gsub(">", "<", string, )
+    sub(">", "<", string, )
+    index(string, "!=")
+    match(string, ">=")
+    join(array, "=")
+
+    # don't hit the '!("
+    is_enabled = !(($0 ~ /not enabled/) || ($0 ~ /disabled/))
+
+    # don't hit the "!/"
+    !/\s(Proxy ARP |Local Proxy )/{
+}
+
+END {
+    writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
+}

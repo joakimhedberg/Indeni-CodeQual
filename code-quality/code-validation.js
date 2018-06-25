@@ -12,7 +12,7 @@
 // When adding functions, remember to add space before and after the "=", or the tests might trigger when using the "show all button"
 
 // This list contains valid name prefixes for scripts
-var indeniScriptNamePrefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
+const indeniScriptNamePrefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
 
 var codeValidationFunctions = {
     "validScriptNamePrefix": new function(){
@@ -210,12 +210,26 @@ var codeValidationFunctions = {
         // variable=test
 
         this.testName = "Equals sign without space";
-        this.reason = "The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.";
+        this.reason = "The equals sign and other comparison operators should be followed by space.<br>Exceptions to this are regexp and bash scripts.";
         this.severity = "error";
         this.applyToSections = ["awk"];
         this.pattern = /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm;
+        // Order matters in this list (hence the array): comment exclusion should come last. A list of possible patterns 
+        // in a line that will exclude the line (or part of the line) from markup.
+        this.excludeList = [
+            [ "split", doNotMark ],
+            [ "gsub", doNotMark ],
+            [ "sub", doNotMark ],
+            [ "index", doNotMark ],
+            [ "match", doNotMark ],
+            [ "join", doNotMark ],
+            [ "!(", doNotMark ],
+            [ "!/", doNotMark ],
+            [ "#", handleLineComments ]
+        ];
+
         this.mark = function(content){
-            return markLineByLine(content, this.pattern, this.severity, this.reason);
+            return markLineByLine(content, this);
         }
     },
     "commaWithoutSpace": new function () {
@@ -225,13 +239,15 @@ var codeValidationFunctions = {
         // writeDoubleMetric("debug-status",debugtags,"gauge",3600,state)
 
         this.testName = "Comma without space";
-        this.reason = "Commas signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.";
+        this.reason = "Commas signs should be followed by space.<br>Exceptions to this are regexp and bash scripts.";
         this.severity = "error";
         this.applyToSections = ["awk"];
         this.pattern = /(,)[^ \/]/gm;
+        this.excludeList = [ [ "#", handleLineComments ] ];
 
         this.mark = function(content){
-            return content.replace(this.pattern, getSpan(this.severity, this.reason, "$&"))
+            //return content.replace(this.pattern, getSpan(this.severity, this.reason, "$&"))
+            return markLineByLine(content, this);
         }
     },
     "tildeWithoutSpace": new function () {
@@ -241,7 +257,7 @@ var codeValidationFunctions = {
         // writeDoubleMetric("debug-status",debugtags,"gauge",3600,state)
 
         this.testName = "Tilde without space";
-        this.reason = "Tilde signs should be followed by space to make the code more readable.<br>Exceptions to this are regexp.";
+        this.reason = "Tilde signs should be followed by space.<br>Exceptions to this are regexp.";
         this.severity = "error";
         this.applyToSections = ["awk"];
 
@@ -477,25 +493,35 @@ function getSpan(severity, reason, content){
     return "<span class = \"" + severity + "\" title = \"" + reason + "\">" + content + "</span>"
 }
 
-function markLineByLine(content, pattern, severity, reason) {
+function markLineByLine(content, context) {
     const lines = content.split("\n");
     var markedContent = "";
     lines.map(function (line) {
-        var markedLine = "";
-        
-        const poundIndex = line.indexOf("#");
-        if (poundIndex !== -1) {
-            markedLine = handleLineComments(poundIndex,line, pattern, severity, reason);
-        } else {
-            markedLine = line.replace(pattern, getSpan(severity, reason, "$&"));
-        }
+        var markedLine = excludeHandler(line, context);
+        if (markedLine == null)
+            markedLine = line.replace(context.pattern, getSpan(context.severity, context.reason, "$&"));
 
         markedContent += markedLine + "\n";
     });
     return markedContent.substring(0, markedContent.length - 1);  // remove the trailing newline
 }
 
-function handleLineComments(poundIndex, line, pattern, severity, reason) {
+function excludeHandler(line, context) {
+    for (var i = 0; i < context.excludeList.length; i++) {
+        const exclusion = context.excludeList[i];
+        const foundIndex = line.indexOf(exclusion[0]);
+        if (foundIndex !== -1) {
+            return exclusion[1](line, context.pattern, context.severity, context.reason, foundIndex);
+        }
+    }
+    return null;
+}
+
+function doNotMark(line) {
+    return line;
+}
+
+function handleLineComments(line, pattern, severity, reason, poundIndex) {
     if (poundIndex === 0) {                       //# x=y
         return line;
     } else if (/^\s+#/g.exec(line) !== null) {    //    #somecomment

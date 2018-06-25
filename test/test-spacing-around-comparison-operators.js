@@ -61,9 +61,17 @@ test('test comparison operators without spaces', function (t) {
     t.end();
 });
 
+test('test ignoring certain patterns, spacing around comparison operators', function (t) {
+    // test that we don't mark any problems with 'mistakes' in comments
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("foo = !(condition)"), "foo = !(condition)", "foo = !(condition)");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("!/pattern/"), "!/pattern/", "!/pattern/");
 
-test('test ignoring comments', function (t) {
+    t.end();
+});
 
+
+test('test ignoring comments, spacing around comparison operators', function (t) {
+    // test that we don't mark any problems with 'mistakes' in comments
     t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("# x=y"), "# x=y", "# x=y");
     t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("x = y # somecomment j=k"), "x = y # somecomment j=k", "x = y # somecomment j=k");
     t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    #somecomment x=y"), "    #somecomment x=y", "    #somecomment x=y");
@@ -71,8 +79,20 @@ test('test ignoring comments', function (t) {
 
     // make sure we match on the first bad part (x=y), but not the one in the comments (j=k).
     t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("x=y  # somecomment j=k"), 
-        "<span class = \"error\" title = \"The equals sign and other comparison operators should be followed by space to make the code more readable.<br>Exceptions to this are regexp and bash scripts.\">x=y</span>  # somecomment j=k", 
+        "<span class = \"error\" title = \"The equals sign and other comparison operators should be followed by space.<br>Exceptions to this are regexp and bash scripts.\">x=y</span>  # somecomment j=k", 
         "x=y  # somecomment j=k");
+
+    t.end();
+});
+
+test('test ignoring string manipulation functions', function (t) {
+    // test that we don't mark any problems with 'mistakes' in string manipulation functions
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    split(line, toArray, \"=\")"), "    split(line, toArray, \"=\")", "    split(line, toArray, \"=\")");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    gsub(\">\", \"<\", string, )"), "    gsub(\">\", \"<\", string, )", "    gsub(\">\", \"<\", string, )");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    sub(\">\", \"<\", string, )"), "    sub(\">\", \"<\", string, )", "    sub(\">\", \"<\", string, )");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    index(string, \"!~\")"), "    index(string, \"!~\")", "    index(string, \"!~\")");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    match(string, \">=\")"), "    match(string, \">=\")", "    match(string, \">=\")");
+    t.equals(valid.validationFuncs.comparisonOperatorNoSpace.mark("    join(array, \"=\")"), "    join(array, \"=\")", "    join(array, \"=\")");
 
     t.end();
 });
