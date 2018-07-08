@@ -11,6 +11,16 @@ $(document).ready( function(){
         animation: "scale"
     });
 
+    // This function handles the section buttons on the top left corner of the page
+    $("div#obfuscation-wrapper").hide();
+    $("div.menu a").on("click", function(){
+        $("div.wrapper").hide();
+        $("div#" + $(this).attr("data-section")).show();
+    });
+
+    //Initiate obfuscations
+    initiateObfuscations();
+
 });
 
 

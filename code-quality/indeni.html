@@ -4,20 +4,24 @@
 		<script src="./tippy.js"></script>
         <script src="./common.js"></script>
         <script src="./code-validation.js"></script>
+        <script src="./obfuscation.js"></script>
         <script src="./indeni-js-support.js"></script>
 		<script src="./indeni.js"></script>
         <link href="./indeni.css" rel="stylesheet" type="text/css">
 	</head>
 </html>
 	<body>
-        <div class="wrapper">
+        <div class="menu">
+                <img src="logo.png"><a href="javascript:void(0)" data-section="codequal-wrapper"><span>Code Qual</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="javascript:void(0)" data-section="obfuscation-wrapper">Input Obfuscation</a></span>
+        </div>
+        <div class="wrapper" id="codequal-wrapper">
             <div class="header">
                 Paste your script here
             </div>
             <div class="header">
                 Click on one of the test results to have the non-compliance highlighted:
             </div>
-    		<div id="script-div">
+    		<div class="input-div">
     			<textarea id="script-textarea" cols=100 rows=20></textarea>
                 <div id="check-statuses">
                     <div class="test-result-header">Test results (click to view):</div>
@@ -30,11 +34,32 @@
                     <div id="exceptions"><h4>Exceptions thrown then parsing:</h4><span id="exceptions"></span></div>
                 </div>
         	</div>
-        	<div id="result-div">
+        	<div class="result-div">
         		<pre id="result-content">
         		</pre>
         	</div>
-
+        </div>
+        <div class="wrapper" id="obfuscation-wrapper">
+            <div class="header">
+                Paste your input here
+            </div>
+            <div class="header">
+                See the obfuscated result below
+            </div>
+            <div class="input-div">
+                <textarea id="input-textarea" cols=100 rows=20>
+                    192.168.10.1
+                    10.20.2.1
+                    no ip
+                </textarea>
+                <div id="obfuscation-types">
+                    <div class="test-result-header">Obfuscations:</div>
+                </div>
+            </div>
+            <div class="result-div">
+                <pre id="obfuscation-result-content">
+                </pre>
+            </div>
         </div>
 	</body>
 </html>

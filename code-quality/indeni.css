@@ -5,7 +5,7 @@ span.error {
 	background-color: red;
 	color: white;
 }
-span.warning {
+span.warning, span.obfuscated {
     background-color: orange;
     color: white;
 }
@@ -60,6 +60,20 @@ button.recommendation {
 button.recommendation:hover {
     background: #4cc1f9;
 }
+div.menu {
+    margin: 10 10 10 10px;
+    color: #fff;
+    vertical-align: middle;
+}
+div.menu a {
+    color: #fff;
+    text-decoration: none;
+}
+div.menu img {
+    vertical-align: middle;
+    margin: 0 15 0 0px;
+}
+
 div.wrapper {
     display: grid;
     grid-template-columns: 1fr 10fr;
@@ -68,15 +82,16 @@ div.wrapper {
     background: #e7f0f9;
     padding:20px;
 }
-div#script-div {
+
+div.input-div {
     padding: 0 10 0 0px;
     margin: 10 0 0 10px;
     max-height:90%;
 }
-textarea#script-textarea {
+textarea#script-textarea, textarea#input-textarea {
     box-shadow: 0.3em 0.2em 0.2em rgba(0,0,0,.1)
 }
-div#result-div {
+div.result-div {
     border: 1px #ccc solid;
     max-height:800px;
     overflow-y: scroll;
