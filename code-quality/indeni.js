@@ -28,7 +28,7 @@ $(document).ready( function(){
 // Add a prototype to each codeValidation function
 // that checks if the code has changed or not.
 // If it has changed it means that the code is non-compliant.
-for(const f in codeValidationFunctions){
+for(var f in codeValidationFunctions){
     codeValidationFunctions[f].isCompliant = function (line, getSections){
         return line === this.mark(line, getSections);
     }
@@ -37,7 +37,7 @@ for(const f in codeValidationFunctions){
 // Each time the user is updating the source text area the checks must be executed again
 // This function resets all the necessary values
 function resetApplication(){
-    for(const f in codeValidationFunctions){
+    for(var f in codeValidationFunctions){
         codeValidationFunctions[f].compliant = true;
         codeValidationFunctions[f].executed = false;
     }
@@ -55,9 +55,9 @@ function updateTestResultButtons() {
     // Check each function to see if it found a non-compliance in the code
     // Update the test results accordingly
 
-    for(const name in codeValidationFunctions){
+    for(var name in codeValidationFunctions){
 
-        const f = codeValidationFunctions[name];
+        var f = codeValidationFunctions[name];
 
         if(f.compliant && f.executed){    
             $("div#compliant").append("<button title = \"" + f.reason + "\" class=\"compliant\" id=\"" + name + "\">" + f.testName + "</button>");
@@ -168,7 +168,7 @@ function parseScriptSections(){
 
 function validateSections(sections){
 
-    for (const section in sections){
+    for (var section in sections){
         
         // section could be ie. "awk" here
         // sectionContent is the content of the awk parser
@@ -180,9 +180,9 @@ function validateSections(sections){
         if(sectionContent !== ""){
             sections[section].apply.map(function(type){
 
-                for(const name in codeValidationFunctions){
+                for(var name in codeValidationFunctions){
 
-                    const f = codeValidationFunctions[name];
+                    var f = codeValidationFunctions[name];
 
                     if(f.applyToSections.indexOf(type) !== -1){
 

@@ -8,9 +8,9 @@ function initiateObfuscations(){
     $("textarea#input-textarea").trigger("keyup");
     
     // Build the obfuscation options from the obfuscate functions
-    for(const name in obfuscateFunctions){
+    for(var name in obfuscateFunctions){
 
-        const f = obfuscateFunctions[name];
+        var f = obfuscateFunctions[name];
         //Append the functions input data
         $("div#obfuscation-types").append("<div id=\"" + name + "\">" + f.obfuscationOptionData + "</div>")
         // Apply the handlers
