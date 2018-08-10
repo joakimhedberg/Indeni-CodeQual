@@ -15,7 +15,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -41,7 +41,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount<span class = "error" title = "Commas signs should be followed by space.<br>Exceptions to this are regexp and bash scripts.">,"</span>ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -67,7 +67,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] <span class = "error" title = "The equals sign and other comparison operators should be followed by space.<br>Exceptions to this are regexp and bash scripts.">=d</span>nsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -93,7 +93,7 @@ emptyBEGINSection: awk
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -119,7 +119,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -145,7 +145,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -171,7 +171,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -224,7 +224,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -303,7 +303,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("<span class = "recommendation" title = "Each metric should only be written in one place. If the metric has been written more than once this test fails.">dns-servers</span>", null, dns_servers, "DNS Servers")
     writeDoubleMetric("<span class = "recommendation" title = "Each metric should only be written in one place. If the metric has been written more than once this test fails.">dns-servers</span>", null, "gauge", 0, 1)
 }
@@ -354,7 +354,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -380,7 +380,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -406,7 +406,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -432,7 +432,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -458,7 +458,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer<span class = "error" title = "Trailing white space serves no purpose and should be removed.">    </span>
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -519,12 +519,12 @@ BEGIN {
     } else if ($2 ~ "bonkers") {
         writeDebug("huh?")
     }
-	dn<span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">sServer = </span>$NF
-    if (dn<span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">sServer = </span>"::"){
+	<span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">dnsServer</span> = $NF
+    if (<span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">dnsServer</span> = "::"){
         dns_server_count++
-        dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
+        dns_servers[<span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">dnsServerCount</span>,"ipaddress"] =<span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">dnsServer</span>    
     }
-
+    <span class = "warning" title = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.">kebab-case-var-name-bad</span>["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -575,7 +575,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }
@@ -601,7 +601,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }

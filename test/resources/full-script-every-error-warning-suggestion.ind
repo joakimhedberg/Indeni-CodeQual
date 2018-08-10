@@ -39,7 +39,7 @@ BEGIN {
         dns_server_count++
         dns_servers[dnsServerCount,"ipaddress"] =dnsServer    
     }
-
+    kebab-case-var-name-bad["kebab-fine-in-quotes"] = "meaningless"
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
     writeDoubleMetric("dns-servers", null, "gauge", 0, 1)
 }

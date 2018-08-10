@@ -20,6 +20,10 @@ dns-servers:
 #! REMOTE::SSH
 get system dns
 
+# don't mark camelCase for functions, only variables
+function camelCaseForFunctionsIsOK(meaningless_name) {
+}
+
 #! PARSER::AWK
 BEGIN {
     dns_server_count = 0
@@ -30,7 +34,7 @@ BEGIN {
 #secondary           : 208.91.112.52
 /^(primary|secondary|ip6-primary|ip6-secondary)/ {
     # don't hit these functions, even though the break the 'space around comparison operators' rule
-    split(line, toArray, "=")
+    split(line, to_array, "=")
     gsub(">", "<", string, )
     sub(">", "<", string, )
     index(string, "!=")
@@ -42,8 +46,12 @@ BEGIN {
 
     # don't hit the "!/"
     !/\s(Proxy ARP |Local Proxy )/{
+
+    # don't mark camelCase for functions, only variables
+    camelCaseForFunctionsIsOK(dummy_param)
 }
 
 END {
+    # kebab-case is fine in quotes
     writeComplexMetricObjectArrayWithLiveConfig("dns-servers", null, dns_servers, "DNS Servers")
 }

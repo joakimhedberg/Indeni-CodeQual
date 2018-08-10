@@ -86,13 +86,32 @@ var codeValidationFunctions = {
         //myVariable = 1
         //my-variable = 1
 
+        /*  https://www.gnu.org/software/gawk/manual/html_node/Using-Variables.html
+        The name of a variable must be a sequence of letters, digits, or underscores, and it may not begin with a digit. 
+        Here, a letter is any one of the 52 upper- and lowercase English letters. Other characters that may be defined 
+        as letters in non-English locales are not valid in variable names. Case is significant in variable names; a and A are distinct variables.
+         */
         this.testName = "Variable naming";
         this.reason = "Most people use snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.";
         this.severity = "warning";
         this.applyToSections = ["awk"];
+        
+        /*
+        This one is a little weird. 'this.pattern' only handles camelCase problems -- it does not match for kebab-case.
+        Kebab-case is handled as an "exclusion" (probably need to rename the 'exclude lis') -- it just uses the
+        'exclude' feature to do some custom parsing to handle kebab-case.  
+         */
+        // This pattern contains a 'negative lookahead' (?!.*\() that filters out function definitions and calls -- i.e.,
+        // any line where you find a '('
+        this.pattern = /(?!.*\()([a-z0-9]+([A-Z0-9][a-z0-9]+)+)/g;
+        this.excludeList = [
+            [ /\//, doNotMark ],
+            [ /#/, handleLineComments ],
+            [ "([a-z0-9]+\\-)+[a-z0-9]+", handleKebabCase ]  // intentionally quoted -- will build into regex obj later
+        ];
 
         this.mark = function(content){
-            return content.replace(/([a-z][A-Z][a-z]{0,}\s*=\s*|\-[a-zA-Z]+\s*=\s*)/gm, getSpan(this.severity, this.reason, "$&"));
+            return markLineByLine(content, this);
         }
     },
     "emptyBEGINSection": new function (){
@@ -217,15 +236,15 @@ var codeValidationFunctions = {
         // Order matters in this list (hence the array): comment exclusion should come last. A list of possible patterns 
         // in a line that will exclude the line (or part of the line) from markup.
         this.excludeList = [
-            [ "split", doNotMark ],
-            [ "gsub", doNotMark ],
-            [ "sub", doNotMark ],
-            [ "index", doNotMark ],
-            [ "match", doNotMark ],
-            [ "join", doNotMark ],
-            [ "!(", doNotMark ],
-            [ "!/", doNotMark ],
-            [ "#", handleLineComments ]
+            [ /split/, doNotMark ],
+            [ /gsub/, doNotMark ],
+            [ /sub/, doNotMark ],
+            [ /index/, doNotMark ],
+            [ /match/, doNotMark ],
+            [ /join/, doNotMark ],
+            [ /\!\(/, doNotMark ],
+            [ /\!\//, doNotMark ],
+            [ /#/, handleLineComments ]
         ];
 
         this.mark = function(content){
@@ -243,10 +262,9 @@ var codeValidationFunctions = {
         this.severity = "error";
         this.applyToSections = ["awk"];
         this.pattern = /(,)[^ \/]/gm;
-        this.excludeList = [ [ "#", handleLineComments ] ];
+        this.excludeList = [ [ /#/, handleLineComments ] ];
 
         this.mark = function(content){
-            //return content.replace(this.pattern, getSpan(this.severity, this.reason, "$&"))
             return markLineByLine(content, this);
         }
     },
@@ -493,6 +511,9 @@ function getSpan(severity, reason, content){
     return "<span class = \"" + severity + "\" title = \"" + reason + "\">" + content + "</span>"
 }
 
+// Split the input content into individual lines and process them one-by-one. This allows us to have a more fine-grained
+// processing of the content, instead of doing a multi-line replace. This way, we can, e.g., filter out lines starting
+// with a comment marker ('#'). The lines are processed by functions passed in the 'context' parameter.
 function markLineByLine(content, context) {
     const lines = content.split("\n");
     var markedContent = "";
@@ -509,9 +530,9 @@ function markLineByLine(content, context) {
 function excludeHandler(line, context) {
     for (var i = 0; i < context.excludeList.length; i++) {
         const exclusion = context.excludeList[i];
-        const foundIndex = line.indexOf(exclusion[0]);
+        const foundIndex = line.search(exclusion[0]);
         if (foundIndex !== -1) {
-            return exclusion[1](line, context.pattern, context.severity, context.reason, foundIndex);
+            return exclusion[1](line, context.pattern, context.severity, context.reason, foundIndex, exclusion[0]);
         }
     }
     return null;
@@ -532,6 +553,34 @@ function handleLineComments(line, pattern, severity, reason, poundIndex) {
         return firstPart.replace(pattern, getSpan(severity, reason, "$&")) + comment;
     }
 }
+
+function handleKebabCase(line, pattern, severity, reason, firstMatchIndex, noQuotesKebabPattern) {
+    // Note: the exclusion patter which gets us here has already matched on any line which contains a kebab-case
+    // string, quoted or not. So, everything that follows here is essentially surrounded by an if statement: "if the string
+    // contains kebab-case, then...
+
+    // Turns out it's quite hard to create a single regex that both matches kebab-case, but not kebab-case surrounded by
+    // quotes. The 'quotesExcluder' pattern uses group matching to 'filter out' quoted kebab-case.
+    
+    // if the line has some kebab case surrounded by quotes
+    if (/"([a-z0-9]+\-)+[a-z0-9]+"/g.test(line)) {
+        var quotesExcluder = /"[^"]+"|(([a-z0-9]+\-)+[a-z0-9]+)/g;
+        return line.replace(quotesExcluder, function(match, group1) {
+            if (group1) {
+                // 'group 1' should be an unquoted kebab-case -- flag it as incorrect
+                return getSpan(severity, reason, group1);
+            }
+            else {
+                return match;  // i.e., do nothing: replace the match with itself
+            }
+        });
+    } else {
+        var globalNoQuotes = new RegExp(noQuotesKebabPattern, "g");
+        return line.replace(globalNoQuotes, getSpan(severity, reason, "$&"));
+    }
+}
+
+
 
 // These lines are to support the unit test framework. That framework uses node.js, which uses "requires" to import
 // code. Since we're not using node for the actual web code, we need to protect this use of "exports", otherwise
