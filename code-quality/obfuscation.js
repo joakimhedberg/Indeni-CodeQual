@@ -24,7 +24,7 @@ var obfuscateFunctions = {
 
         // Obfuscates IP adresses
         this.obfuscationOptionData = "Replaces IP addresses with the following /24 prefix (ie. 192.168.1): <input></input>";
-        this.obfuscationType = "input"
+        this.obfuscationType = "input";
 
         this.run = function(){
 
