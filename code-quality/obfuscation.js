@@ -2,7 +2,7 @@
 function initiateObfuscations(){
 
     // On each update the result field should be reset
-    var inputTextArea = $("textarea#input-textarea");
+    var inputTextArea = $("textarea#obfuscation-input-textarea");
     inputTextArea.on("keyup", function(){
         $("pre#obfuscation-result-content").html(inputTextArea.val());
     });
@@ -29,7 +29,7 @@ var obfuscateFunctions = {
 
         this.run = function(){
 
-            var content = $("textarea#input-textarea").val();
+            var content = $("textarea#obfuscation-input-textarea").val();
             var subnet = $(this).val();
 
             // Validate the input data
@@ -41,7 +41,7 @@ var obfuscateFunctions = {
 
                 // Replace the subnets in the input file with the input value
                 content = content.replace(/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/g, "<span class=\"obfuscated\">" + subnet + "</span>");
-                $("pre#obfuscation-result-content").html(content);
+                $("pre#obfuscation-result-content").html(convtent);
 
             } else {
 
