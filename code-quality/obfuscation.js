@@ -12,7 +12,7 @@ function initiateObfuscations(){
 
         var f = obfuscateFunctions[name];
         //Append the functions input data
-        $("div#obfuscation-types").append("<div id=\"" + name + "\">" + f.obfuscationOptionData + "</div>")
+        $("div#obfuscation-types").append("<div id=\"" + name + "\">" + f.obfuscationOptionData + "</div>");
         // Apply the handlers
         f.applyHandler(name);
     }
