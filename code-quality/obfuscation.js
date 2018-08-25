@@ -2,10 +2,11 @@
 function initiateObfuscations(){
 
     // On each update the result field should be reset
-    $("textarea#input-textarea").on("keyup", function(){
-        $("pre#obfuscation-result-content").html($("textarea#input-textarea").val());
+    var inputTextArea = $("textarea#input-textarea");
+    inputTextArea.on("keyup", function(){
+        $("pre#obfuscation-result-content").html(inputTextArea.val());
     });
-    $("textarea#input-textarea").trigger("keyup");
+    inputTextArea.trigger("keyup");
     
     // Build the obfuscation options from the obfuscate functions
     for(var name in obfuscateFunctions){
