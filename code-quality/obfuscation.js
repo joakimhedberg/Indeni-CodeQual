@@ -6,6 +6,7 @@ function initiateObfuscations(){
     inputTextArea.on("keyup", function(){
         $("pre#obfuscation-result-content").html(inputTextArea.val());
     });
+    
     inputTextArea.trigger("keyup");
     
     // Build the obfuscation options from the obfuscate functions
@@ -16,6 +17,7 @@ function initiateObfuscations(){
         $("div#obfuscation-types").append("<div id=\"" + name + "\">" + f.obfuscationOptionData + "</div>");
         // Apply the handlers
         f.applyHandler(name);
+
     }
 }
 
@@ -41,7 +43,7 @@ var obfuscateFunctions = {
 
                 // Replace the subnets in the input file with the input value
                 content = content.replace(/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/g, "<span class=\"obfuscated\">" + subnet + "</span>");
-                $("pre#obfuscation-result-content").html(convtent);
+                $("pre#obfuscation-result-content").html(content);
 
             } else {
 
