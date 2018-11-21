@@ -4,6 +4,7 @@ import { Sections } from "./code-quality-base/Section";
 import { SpecialCase } from "./code-quality-base/SpecialCase";
 
 const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
+const resource_metrics = ["cpu-usage", "memory-usage"];
 
 export function get_functions() {
     var functions : CodeValidation[] = [];
@@ -265,8 +266,6 @@ function resource_data_mark(content : string, sections : Sections) : MarkerResul
         return result;
     }
     
-    let resource_metrics = ["cpu-usage", "memory-usage"];
-
     let parser = sections.awk || sections.json || sections.xml;
 
     if (parser !== undefined && parser !== null) {

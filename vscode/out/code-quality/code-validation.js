@@ -4,6 +4,7 @@ const CodeValidation_1 = require("./code-quality-base/CodeValidation");
 const MarkerResult_1 = require("./code-quality-base/MarkerResult");
 const SpecialCase_1 = require("./code-quality-base/SpecialCase");
 const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
+const resource_metrics = ["cpu-usage", "memory-usage"];
 function get_functions() {
     var functions = [];
     // Space before examples maybe looks nice, but it's far from exact
@@ -225,7 +226,6 @@ function resource_data_mark(content, sections) {
         // No meta section, opt out
         return result;
     }
-    let resource_metrics = ["cpu-usage", "memory-usage"];
     let parser = sections.awk || sections.json || sections.xml;
     if (parser !== undefined && parser !== null) {
         let metrics = parser.get_metrics();
