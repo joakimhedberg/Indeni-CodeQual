@@ -3,9 +3,12 @@
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
     "version": "0.0.1",
-    "publisher": "none",
+    "publisher": "hedberg-jonsson",
     "engines": {
         "vscode": "^1.29.0"
+    },
+    "repository": {
+        "url": "https://github.com/epacke/Indeni-CodeQual"
     },
     "categories": [
         "Other"
