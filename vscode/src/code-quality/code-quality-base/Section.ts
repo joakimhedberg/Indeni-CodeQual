@@ -1,5 +1,5 @@
-import { CodeValidation } from "./CodeValidation";
 import { MarkerResult } from "./MarkerResult";
+import { CodeValidations } from "../code-validation";
 
 
 
@@ -25,10 +25,10 @@ export class Section {
         this.apply = apply;
     }
 
-    get_marks(validations : CodeValidation[], sections: Sections) : MarkerResult[] {
+    get_marks(validations : CodeValidations, sections: Sections) : MarkerResult[] {
         let result : MarkerResult[] = [];
 
-        for (let validation of validations) {
+        for (let validation of validations.functions) {
             if (validation.mark === null) {
                 continue;
             }
@@ -46,10 +46,10 @@ export class Section {
             }
 
             if (can_apply) {
-                var marks = validation.mark(this.content, sections);
+                var marks = validation.do_mark(this.content, sections);
                 if (marks.length > 0) {
                     for (let mark of marks) {
-                        result.push(this.modify_mark(mark)); // this.create_mark(mark, validation.severity, validation.reason, validation.offset_handled));
+                        result.push(this.modify_mark(mark));
                     }
                 }
             }
@@ -108,7 +108,7 @@ export class AwkSection extends Section {
     public get_metrics() : [string, number][] {
         let result : [string, number][] = [];
 
-        let regex = /^\s{0,}[^\#]\s{0,}write.*Metric\w+\(\"(.*?)\".+$/gm;
+        let regex = /^\s{0,}[^\#]\s{0,}write.*Metric\w*\(\"(.*?)\".+$/gm;
         
         let match;
         while (match = regex.exec(this.content))

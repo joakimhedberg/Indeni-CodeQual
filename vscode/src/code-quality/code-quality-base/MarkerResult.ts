@@ -1,4 +1,4 @@
-import { FunctionSeverity } from "./CodeValidation";
+import { FunctionSeverity, CodeValidation } from "./CodeValidation";
 
 export class MarkerResult {
     start_pos : number;
@@ -6,6 +6,7 @@ export class MarkerResult {
     tooltip : string;
     offset_handled : boolean;
     severity : FunctionSeverity;
+    code_validation : CodeValidation | undefined = undefined;
     constructor(start_pos : number, end_pos : number, tooltip : string, severity : FunctionSeverity, offset_handled : boolean) {
         this.start_pos = start_pos;
         this.end_pos = end_pos;

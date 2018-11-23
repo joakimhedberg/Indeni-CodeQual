@@ -21,7 +21,7 @@ class Section {
     }
     get_marks(validations, sections) {
         let result = [];
-        for (let validation of validations) {
+        for (let validation of validations.functions) {
             if (validation.mark === null) {
                 continue;
             }
@@ -38,10 +38,10 @@ class Section {
                 }
             }
             if (can_apply) {
-                var marks = validation.mark(this.content, sections);
+                var marks = validation.do_mark(this.content, sections);
                 if (marks.length > 0) {
                     for (let mark of marks) {
-                        result.push(this.modify_mark(mark)); // this.create_mark(mark, validation.severity, validation.reason, validation.offset_handled));
+                        result.push(this.modify_mark(mark));
                     }
                 }
             }
@@ -87,7 +87,7 @@ class AwkSection extends Section {
     }
     get_metrics() {
         let result = [];
-        let regex = /^\s{0,}[^\#]\s{0,}write.*Metric\w+\(\"(.*?)\".+$/gm;
+        let regex = /^\s{0,}[^\#]\s{0,}write.*Metric\w*\(\"(.*?)\".+$/gm;
         let match;
         while (match = regex.exec(this.content)) {
             if (match.length > 1) {

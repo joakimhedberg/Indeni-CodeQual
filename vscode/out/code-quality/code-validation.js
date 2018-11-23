@@ -5,6 +5,17 @@ const MarkerResult_1 = require("./code-quality-base/MarkerResult");
 const SpecialCase_1 = require("./code-quality-base/SpecialCase");
 const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
+class CodeValidations {
+    constructor() {
+        this.functions = get_functions();
+    }
+    reset() {
+        for (let validation of this.functions) {
+            validation.reset();
+        }
+    }
+}
+exports.CodeValidations = CodeValidations;
 function get_functions() {
     var functions = [];
     // Space before examples maybe looks nice, but it's far from exact
@@ -182,7 +193,6 @@ function get_functions() {
     functions.push(comparison_operator_no_space);
     return functions;
 }
-exports.get_functions = get_functions;
 function verify_yaml_indent(content, sections) {
     let lines = content.split("\n");
     let result = [];

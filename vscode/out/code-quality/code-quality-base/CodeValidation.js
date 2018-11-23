@@ -15,12 +15,30 @@ const MarkerResult_1 = require("./MarkerResult");
 */
 class CodeValidation {
     constructor(name, reason, severity, apply_to_sections) {
+        this.applied_markers = [];
         this.offset_handled = false;
         this.name = name;
         this.reason = reason;
         this.severity = severity;
         this.apply_to_sections = apply_to_sections;
         this.mark = null;
+    }
+    has_triggered() {
+        return this.applied_markers.length > 0;
+    }
+    reset() {
+        this.applied_markers.length = 0;
+    }
+    do_mark(content, sections) {
+        if (this.mark === null) {
+            return [];
+        }
+        let result = this.mark(content, sections);
+        for (let marker of result) {
+            marker.code_validation = this;
+            this.applied_markers.push(marker);
+        }
+        return result;
     }
 }
 exports.CodeValidation = CodeValidation;
@@ -101,8 +119,8 @@ class CodeValidationByLine extends CodeValidationRegex {
 exports.CodeValidationByLine = CodeValidationByLine;
 var FunctionSeverity;
 (function (FunctionSeverity) {
-    FunctionSeverity[FunctionSeverity["information"] = 0] = "information";
-    FunctionSeverity[FunctionSeverity["warning"] = 1] = "warning";
-    FunctionSeverity[FunctionSeverity["error"] = 2] = "error";
+    FunctionSeverity["information"] = "information";
+    FunctionSeverity["warning"] = "warning";
+    FunctionSeverity["error"] = "error";
 })(FunctionSeverity = exports.FunctionSeverity || (exports.FunctionSeverity = {}));
 //# sourceMappingURL=CodeValidation.js.map

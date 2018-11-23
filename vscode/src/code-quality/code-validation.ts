@@ -6,7 +6,20 @@ import { SpecialCase } from "./code-quality-base/SpecialCase";
 const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 
-export function get_functions() {
+export class CodeValidations {
+    public functions : CodeValidation[];
+    constructor() {
+        this.functions = get_functions();
+    }
+
+    public reset() {
+        for (let validation of this.functions) {
+            validation.reset();
+        }
+    }
+}
+
+function get_functions() {
     var functions : CodeValidation[] = [];
 
     // Space before examples maybe looks nice, but it's far from exact
@@ -139,7 +152,7 @@ export function get_functions() {
     let verify_metric_documentation = new CodeValidation("Undocumented/unused metrics", "The documentation section should have one entry per metric used in the script, and the script should use all documented metrics.", FunctionSeverity.error, ["script"]);
     verify_metric_documentation.mark = verify_metric_marker;
     verify_metric_documentation.offset_handled = true;
-
+    
     // Metrics should only be written once according to:
     // https://indeni.atlassian.net/wiki/spaces/IKP/pages/81794466/Code+Review+Pull+Requests
     let only_write_metric_once = new CodeValidation("Metric written more than once", "Each metric should only be written in one place. If the metric has been written more than once this test fails.", FunctionSeverity.information, ["awk"]);

@@ -1,0 +1,38 @@
+.error, .warning, .information { display: inline-block; border: solid 1px black; color: black; font-weight: bold; border-radius: 5px; padding: 4px; }
+        .error { background-color: yellow; }
+        .warning { background-color: red; }
+        .information { background-color: lightblue; }
+        .used .unused {
+            display: inline-block;
+            padding: 6px;
+            margin: 2px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: +2px;
+            color: black;
+            border: solid 2px black;
+            border-radius: 3px;
+        }
+
+        .used { background-color: darkred; }
+        .unused { background-color: darkgreen; }
+        .tooltip {
+            position: relative; 
+            display: inline-block; 
+            border-bottom: 1px dotted black;
+        }
+        .tooltip .tooltiptext { 
+            visibility: hidden;
+            width: 120px;
+            background-color: black; 
+            color: #fff; 
+            text-align: center; 
+            padding: 5px 0;
+            border-radius: 6px; 
+            position: absolute; 
+            z-index: 1;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible 
+        }

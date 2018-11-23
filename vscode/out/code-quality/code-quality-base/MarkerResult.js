@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class MarkerResult {
     constructor(start_pos, end_pos, tooltip, severity, offset_handled) {
+        this.code_validation = undefined;
         this.start_pos = start_pos;
         this.end_pos = end_pos;
         this.tooltip = tooltip;

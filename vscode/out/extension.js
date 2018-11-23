@@ -6,10 +6,13 @@ const vscode = require("vscode");
 const sections_1 = require("./code-quality/sections");
 const code_validation_1 = require("./code-quality/code-validation");
 const CodeValidation_1 = require("./code-quality/code-quality-base/CodeValidation");
+const CodeQualityView_1 = require("./gui/CodeQualityView");
 let errorDecorationType;
 let warningDecorationType;
 let infoDecorationType;
 let live_update = true;
+let qualityView = new CodeQualityView_1.CodeQualityView();
+const quality_functions = new code_validation_1.CodeValidations();
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
@@ -49,13 +52,12 @@ function activate(context) {
             borderColor: '#00cccc'
         }
     });
-    vscode.window.showInformationMessage("We are live!");
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
     let trigger_update_command = vscode.commands.registerCommand('extension.triggerUpdate', () => {
         var editor = vscode.window.activeTextEditor;
         if (editor !== null && editor !== undefined) {
-            updateDecorations(editor.document);
+            updateDecorations(editor.document, true);
         }
     });
     let set_language_command = vscode.commands.registerCommand('extension.setLanguage', () => {
@@ -142,7 +144,7 @@ function clearDecorations(editor) {
     editor.setDecorations(errorDecorationType, []);
     editor.setDecorations(infoDecorationType, []);
 }
-function updateDecorations(document) {
+function updateDecorations(document, manual = false) {
     if (!document) {
         return;
     }
@@ -155,10 +157,11 @@ function updateDecorations(document) {
     }
     const text = document.getText();
     let sections = sections_1.get_sections(text);
-    let quality_functions = code_validation_1.get_functions();
     const warnings = [];
     const errors = [];
     const information = [];
+    let all_marks = [];
+    quality_functions.reset();
     for (let sect of sections.all) {
         let marks = sect.get_marks(quality_functions, sections);
         if (marks.length > 0) {
@@ -174,12 +177,14 @@ function updateDecorations(document) {
                         information.push(create_decoration(editor, mark));
                         break;
                 }
+                all_marks.push(mark);
             }
         }
     }
     editor.setDecorations(warningDecorationType, warnings);
     editor.setDecorations(errorDecorationType, errors);
     editor.setDecorations(infoDecorationType, information);
+    qualityView.showWebView(quality_functions, manual);
 }
 function create_decoration(editor, marker) {
     const start_pos = editor.document.positionAt(marker.start_pos);

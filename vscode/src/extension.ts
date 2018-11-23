@@ -3,14 +3,17 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { get_sections } from "./code-quality/sections";
-import { get_functions } from './code-quality/code-validation';
+import { CodeValidations } from './code-quality/code-validation';
 import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
 import { MarkerResult } from './code-quality/code-quality-base/MarkerResult';
+import { CodeQualityView } from './gui/CodeQualityView';
 
 let errorDecorationType : vscode.TextEditorDecorationType;
 let warningDecorationType : vscode.TextEditorDecorationType;
 let infoDecorationType : vscode.TextEditorDecorationType;
 let live_update : boolean = true;
+let qualityView : CodeQualityView = new CodeQualityView();
+const quality_functions : CodeValidations = new CodeValidations();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -55,14 +58,12 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    vscode.window.showInformationMessage("We are live!");
-
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
     let trigger_update_command = vscode.commands.registerCommand('extension.triggerUpdate', () => {
         var editor = vscode.window.activeTextEditor;
         if (editor !== null && editor !== undefined) {
-            updateDecorations(editor.document); 
+            updateDecorations(editor.document, true); 
         }
     });
 
@@ -169,7 +170,7 @@ function clearDecorations(editor : vscode.TextEditor | undefined) {
     editor.setDecorations(infoDecorationType, []);
 }
 
-function updateDecorations(document : vscode.TextDocument | undefined) {
+function updateDecorations(document : vscode.TextDocument | undefined, manual : boolean = false) {
     if (!document) {
         return;
     }
@@ -186,11 +187,11 @@ function updateDecorations(document : vscode.TextDocument | undefined) {
     const text = document.getText();
     let sections = get_sections(text);
 
-    let quality_functions = get_functions();
     const warnings : vscode.DecorationOptions[] = [];
     const errors : vscode.DecorationOptions[] = [];
     const information : vscode.DecorationOptions[] = [];
-
+    let all_marks : MarkerResult[] = [];
+    quality_functions.reset();
     for (let sect of sections.all) {
         let marks = sect.get_marks(quality_functions, sections);
         if (marks.length > 0) {
@@ -206,6 +207,7 @@ function updateDecorations(document : vscode.TextDocument | undefined) {
                         information.push(create_decoration(editor, mark));
                     break;
                 }
+                all_marks.push(mark);
             }
         }
     }
@@ -214,6 +216,8 @@ function updateDecorations(document : vscode.TextDocument | undefined) {
     editor.setDecorations(warningDecorationType, warnings);
     editor.setDecorations(errorDecorationType, errors);
     editor.setDecorations(infoDecorationType, information);
+
+    qualityView.showWebView(quality_functions, manual);
 }
 
 function create_decoration(editor : vscode.TextEditor, marker : MarkerResult) {

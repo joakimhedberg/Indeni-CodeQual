@@ -17,14 +17,11 @@ Requires a .ind script
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `extension.warningBorderColor`: Border color for warning messages
+* `extension.errorBorderColor`: Border color for error messages
+* `extension.informationBorderColor`: Border color for information messages
 
 ## Known Issues
 
@@ -34,13 +31,14 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 Users appreciate release notes as you update your extension.
 
-# 1.0.0
+# 0.0.1
 
 Initial release of Indeni code quality checker plugin
 
-### 1.0.1
+# 0.1.0
 
-Fixed issue #.
+Fixed issue #43.
+Added feature overview of quality functions
 
 ### 1.1.0
 

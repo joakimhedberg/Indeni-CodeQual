@@ -19,9 +19,10 @@ export class CodeValidation
 {
     name : string; // Validation function name
     reason : string; // Reason/explanation for the function
-    severity : FunctionSeverity; // Severity: "information", "warning", "error"
-    apply_to_sections : string[];
-    mark : ((content : string, sections : Sections) => MarkerResult[]) | null;
+    severity : FunctionSeverity; // Severity enum
+    apply_to_sections : string[]; // Sections where this validation is applicable
+    mark : ((content : string, sections : Sections) => MarkerResult[]) | null; // Delegate to mark the code
+    applied_markers : MarkerResult[] = [];
     offset_handled : boolean = false;
     constructor(name : string, reason : string, severity : FunctionSeverity, apply_to_sections : string[]) {
         this.name = name;
@@ -29,6 +30,30 @@ export class CodeValidation
         this.severity = severity;
         this.apply_to_sections = apply_to_sections;
         this.mark = null;
+    }
+
+    public has_triggered() {
+        return this.applied_markers.length > 0;
+    }
+
+    public reset() {
+        this.applied_markers.length = 0;
+    }
+
+    public do_mark(content : string, sections : Sections) : MarkerResult[] {
+        if (this.mark === null) {
+            return [];
+        }
+
+        let result = this.mark(content, sections);
+
+        for (let marker of result) {
+            marker.code_validation = this;
+            this.applied_markers.push(marker);
+        }
+
+
+        return result;
     }
 }
 
@@ -119,7 +144,7 @@ export class CodeValidationByLine extends CodeValidationRegex {
 }
 
 export enum FunctionSeverity {
-    information,
-    warning,
-    error
+    information = "information",
+    warning = "warning",
+    error = "error"
 }
