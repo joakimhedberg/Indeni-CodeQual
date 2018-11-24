@@ -1,51 +1,54 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
+const path = require("path");
+// View for the code validations. Uses VS Code WebView which might not be optimal. Still gives a pretty nice result though.
 class CodeQualityView {
-    constructor() {
-        this._warnings = 0;
-        this._errors = 0;
-        this._information = 0;
+    constructor(resource_path) {
         this.panel = undefined;
+        this.resource_path = resource_path;
+        this.script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.js'));
+        this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
     }
-    get warnings() {
-        return this._warnings;
-    }
-    set warnings(value) {
-        this._warnings = value;
-    }
-    get errors() {
-        return this._errors;
-    }
-    set errors(value) {
-        this._errors = value;
-    }
-    get information() {
-        return this._information;
-    }
-    set information(value) {
-        this._information = value;
-    }
-    showWebView(validations, manual) {
+    show_web_view(validations, manual) {
         if (this.panel === undefined && manual) {
-            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside);
+            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true });
             this.panel.onDidDispose((e) => { this.panel = undefined; });
         }
         if (this.panel !== undefined) {
-            this.panel.webview.html = this.getHtml(validations);
+            this.panel.webview.html = this.get_html(validations);
+            if (!this.panel.visible) {
+                this.panel.reveal(vscode.ViewColumn.Beside);
+            }
         }
     }
-    getHtml(validations) {
-        let result = "<html><body><div class=\"used\">Used</div>";
-        result += this.getStyle();
+    get_html(validations) {
+        let result = "<html><head>";
+        let summary_data = {};
+        result += "</head>";
+        result += `<body>`;
+        result += this.get_script();
+        result += this.get_style();
+        result += `<div class="used" id="validation">Active</div>`;
+        let index = 0;
         let header_drawn = false;
         for (let validation of validations.functions.sort(this.sort_validation)) {
             if (validation.applied_markers.length === 0 && !header_drawn) {
-                result += `<div class="unused">Unused</div>`;
+                result += `<div class="unused">Inactive</div>`;
                 header_drawn = true;
             }
-            result += `<div class="${validation.severity} tooltip"><nobr>${validation.name}<span class="validation_result">(${validation.applied_markers.length})</span></nobr></span><span class="tooltiptext">${validation.reason}</div>`;
+            result += `<div class="${validation.severity} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.applied_markers.length})</span></span><span class="tooltiptext">${validation.reason}</div>`;
+            let summary = validation.get_summary();
+            if (summary.length > 0) {
+                summary_data[index] = validation.get_summary();
+            }
+            index++;
         }
+        result += `<div id="summary_parent">`;
+        for (let data in summary_data) {
+            result += `<div id="summary_${data}" class="summary">Summary<br/><pre>${summary_data[data]}</pre></div>`;
+        }
+        result += "</div>";
         return result + "</body></html>";
     }
     sort_validation(a, b) {
@@ -55,55 +58,11 @@ class CodeQualityView {
         }
         return result;
     }
-    getStyle() {
-        return `<style>
-        .error, .warning, .information { 
-            display: inline-block;
-            border: solid 1px black;
-            color: black;
-            margin: 3px;
-            font-weight: bold;
-            border-radius: 5px;
-            padding: 4px; 
-        }
-        .error { background-color: red; }
-        .warning { background-color: yellow; }
-        .information { background-color: green; }
-        .used, .unused {
-            margin: 4px;
-            padding: 6px;
-            margin: 2px;
-            font-size: larger;
-            font-weight: bold;
-            color: white;
-            border: solid 2px white;
-            border-radius: 3px;
-        }
-
-        .used { background-color: darkred; }
-        .unused { background-color: darkgreen; }
-        .tooltip {
-            position: relative; 
-            display: inline-block; 
-            border-bottom: 1px dotted black;
-        }
-
-        .tooltip .tooltiptext { 
-            visibility: hidden;
-            width: 250px;
-            background-color: black; 
-            color: #fff; 
-            text-align: center; 
-            padding: 5px 0;
-            border-radius: 6px; 
-            position: absolute; 
-            z-index: 1;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible 
-        }
-        </style>`;
+    get_script() {
+        return `<script src="${this.script_uri.with({ scheme: 'vscode-resource' })}"></script>`;
+    }
+    get_style() {
+        return `<link rel="stylesheet" href="${this.style_uri.with({ scheme: 'vscode-resource' })}"/>`;
     }
 }
 exports.CodeQualityView = CodeQualityView;

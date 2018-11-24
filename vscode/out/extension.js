@@ -7,15 +7,17 @@ const sections_1 = require("./code-quality/sections");
 const code_validation_1 = require("./code-quality/code-validation");
 const CodeValidation_1 = require("./code-quality/code-quality-base/CodeValidation");
 const CodeQualityView_1 = require("./gui/CodeQualityView");
+const path = require("path");
 let errorDecorationType;
 let warningDecorationType;
 let infoDecorationType;
 let live_update = true;
-let qualityView = new CodeQualityView_1.CodeQualityView();
+let qualityView;
 const quality_functions = new code_validation_1.CodeValidations();
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
+    qualityView = new CodeQualityView_1.CodeQualityView(path.join(context.extensionPath, 'resources'));
     errorDecorationType = vscode.window.createTextEditorDecorationType({
         borderWidth: '1px',
         borderStyle: 'solid',
@@ -184,11 +186,13 @@ function updateDecorations(document, manual = false) {
     editor.setDecorations(warningDecorationType, warnings);
     editor.setDecorations(errorDecorationType, errors);
     editor.setDecorations(infoDecorationType, information);
-    qualityView.showWebView(quality_functions, manual);
+    qualityView.show_web_view(quality_functions, manual);
 }
 function create_decoration(editor, marker) {
     const start_pos = editor.document.positionAt(marker.start_pos);
     const end_pos = editor.document.positionAt(marker.end_pos);
+    marker.start_line = start_pos.line;
+    marker.end_line = end_pos.line;
     return { range: new vscode.Range(start_pos, end_pos), hoverMessage: marker.tooltip };
 }
 // this method is called when your extension is deactivated

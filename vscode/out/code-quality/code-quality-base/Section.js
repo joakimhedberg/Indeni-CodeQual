@@ -1,5 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/*
+    The .ind script is split up into sections, that way we can apply the correct check to the correct section
+*/
 class Sections {
     constructor() {
         this.meta = null;
@@ -8,7 +11,7 @@ class Sections {
         this.json = null;
         this.xml = null;
         this.script = null;
-        this.all = [];
+        this.all = []; // This contains all the sections. This is what we are iterating while performing the checks.
     }
 }
 exports.Sections = Sections;
@@ -19,6 +22,7 @@ class Section {
         this.length = content.length;
         this.apply = apply;
     }
+    // Run all validations(that are applicable) and return check markers if needed
     get_marks(validations, sections) {
         let result = [];
         for (let validation of validations.functions) {
@@ -48,6 +52,7 @@ class Section {
         }
         return result;
     }
+    // Modify the marker offset if it's not already handled
     modify_mark(marker) {
         if (!marker.offset_handled) {
             marker.start_pos += this.offset;
@@ -55,19 +60,14 @@ class Section {
         }
         return marker;
     }
-    create_mark(range, severity, tooltip, offset_handled) {
-        let offset = 0;
-        if (!offset_handled) {
-            offset = this.offset;
-        }
-        return [severity, tooltip, range[0] + offset, range[1] + offset];
-    }
 }
 exports.Section = Section;
+// Comment specific section. Makes it possible to get some extra data out of the specific section.
 class CommentsSection extends Section {
     constructor(section) {
         super(section.offset, section.content, section.apply);
     }
+    // Get the metrics that has been documented in this section. Returns a tuple with metric name and metric offset
     get_documented_metrics() {
         let result = [];
         let regex = /^(([^\s:\#])+)/gm;
@@ -81,10 +81,12 @@ class CommentsSection extends Section {
     }
 }
 exports.CommentsSection = CommentsSection;
+// Awk specific section. Makes it possible to get some extra data out of the specific section.
 class AwkSection extends Section {
     constructor(section) {
         super(section.offset, section.content, section.apply);
     }
+    // Get metrics that has been used in this section. Ignores commented lines.
     get_metrics() {
         let result = [];
         let regex = /^\s{0,}[^\#]\s{0,}write.*Metric\w*\(\"(.*?)\".+$/gm;
@@ -98,10 +100,12 @@ class AwkSection extends Section {
     }
 }
 exports.AwkSection = AwkSection;
+// Yaml specific section. Makes it possible to get some extra data out of the specific section.
 class YamlSection extends Section {
     constructor(section) {
         super(section.offset, section.content, section.apply);
     }
+    // Get metrics that has been used in this section. Ignores commented lines.
     get_metrics() {
         let result = [];
         let regex = /im\.name\":\s*_constant:\s\"([^\"]+)/gm;
@@ -113,6 +117,18 @@ class YamlSection extends Section {
         }
         return result;
     }
+    /* Get awk specific sections. Example:
+    _value.double: |
+                    {
+                        if((temp("virtualStatus") == "offline") && (temp("enabledState") == "enabled")) {
+                            print "1"
+                        } else {
+                            print "0"
+                        }
+                    }
+
+        That way we can ignore the awk text in the yaml checks.
+    */
     get_awk_sections() {
         let result = [];
         let regex = /:\s+(\|)\w?/g;
@@ -126,6 +142,7 @@ class YamlSection extends Section {
         }
         return result;
     }
+    // Internal function used while parsing awk sections.
     get_awk_end(content, start) {
         let level = 0;
         let in_quote = false;
@@ -160,11 +177,13 @@ class YamlSection extends Section {
     }
 }
 exports.YamlSection = YamlSection;
+// Meta specific section. Makes it possible to get some extra data out of the specific section.
 class MetaSection extends Section {
     constructor(section) {
         super(section.offset, section.content, section.apply);
         this.includes_resource_data = false;
         this.includes_resource_data_range = null;
+        // Gets an indicator if the meta section uses resource data. Used in one of the checks.
         let regex = /^includes_resource_data:\s*true$/m;
         let match = this.content.match(regex);
         this.includes_resource_data = match !== null;

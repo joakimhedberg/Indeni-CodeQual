@@ -1,5 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/*
+    Special case class
+    Used in CodeValidationByLine
+*/
 class SpecialCase {
     constructor(search_pattern, mark = null) {
         this.search_pattern = search_pattern;

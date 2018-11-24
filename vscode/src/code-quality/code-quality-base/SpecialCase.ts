@@ -1,5 +1,9 @@
 import { MarkerResult } from "./MarkerResult";
 
+/* 
+    Special case class
+    Used in CodeValidationByLine
+*/
 export class SpecialCase {
     search_pattern : RegExp;
     mark : ((content : string) => MarkerResult[]) | null;

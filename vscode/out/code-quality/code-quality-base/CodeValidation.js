@@ -23,6 +23,35 @@ class CodeValidation {
         this.apply_to_sections = apply_to_sections;
         this.mark = null;
     }
+    // Summary of the applied markers, used for js/html
+    get_summary() {
+        let result = "";
+        if (this.applied_markers.length === 0) {
+            return result;
+        }
+        for (let mark of this.applied_markers) {
+            let line_string = this.build_line_string(mark);
+            result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'\n`;
+        }
+        return result;
+    }
+    build_line_string(mark) {
+        if (mark.start_line !== undefined && mark.end_line !== undefined) {
+            if (mark.start_line === mark.end_line) {
+                return mark.start_line.toString();
+            }
+            else {
+                return mark.start_line.toString() + " - " + mark.end_line.toString();
+            }
+        }
+        else if (mark.start_line !== undefined) {
+            return mark.start_line.toString();
+        }
+        else if (mark.end_line !== undefined) {
+            return mark.end_line.toString();
+        }
+        return "";
+    }
     has_triggered() {
         return this.applied_markers.length > 0;
     }
@@ -58,7 +87,7 @@ class CodeValidationRegex extends CodeValidation {
                         idx = match[0].indexOf(match[1], idx);
                         const start_pos = match.index + idx;
                         const end_pos = match.index + idx + match[i].length;
-                        result.push(new MarkerResult_1.MarkerResult(start_pos, end_pos, this.reason, this.severity, this.offset_handled));
+                        result.push(new MarkerResult_1.MarkerResult(start_pos, end_pos, this.reason, this.severity, this.offset_handled, match[1]));
                     }
                 }
             }
@@ -81,7 +110,7 @@ class CodeValidationByLine extends CodeValidationRegex {
                 let special_result = this.special(line);
                 if (special_result[0]) {
                     for (let res of special_result[1]) {
-                        result.push(new MarkerResult_1.MarkerResult(res.start_pos + line_offset, res.end_pos + line_offset, this.reason, this.severity, this.offset_handled));
+                        result.push(new MarkerResult_1.MarkerResult(res.start_pos + line_offset, res.end_pos + line_offset, this.reason, this.severity, this.offset_handled, res.offending_text));
                     }
                 }
                 else {
@@ -89,7 +118,7 @@ class CodeValidationByLine extends CodeValidationRegex {
                     while (match = line_regex.exec(line)) {
                         if (match.length > 1) {
                             if (!this.excluded(match[1])) {
-                                result.push(new MarkerResult_1.MarkerResult(match.index + line_offset, match.index + match[1].length + line_offset, this.reason, this.severity, this.offset_handled));
+                                result.push(new MarkerResult_1.MarkerResult(match.index + line_offset, match.index + match[1].length + line_offset, this.reason, this.severity, this.offset_handled, match[1]));
                             }
                         }
                     }

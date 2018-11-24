@@ -2,8 +2,8 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.1.0",
-    "publisher": "hedberg-jonsson",
+    "version": "0.1.1",
+    "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
     },

@@ -7,18 +7,19 @@ import { CodeValidations } from './code-quality/code-validation';
 import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
 import { MarkerResult } from './code-quality/code-quality-base/MarkerResult';
 import { CodeQualityView } from './gui/CodeQualityView';
+import * as path from 'path';
 
 let errorDecorationType : vscode.TextEditorDecorationType;
 let warningDecorationType : vscode.TextEditorDecorationType;
 let infoDecorationType : vscode.TextEditorDecorationType;
 let live_update : boolean = true;
-let qualityView : CodeQualityView = new CodeQualityView();
+let qualityView : CodeQualityView;
 const quality_functions : CodeValidations = new CodeValidations();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
+    qualityView = new CodeQualityView(path.join(context.extensionPath, 'resources'));
     errorDecorationType = vscode.window.createTextEditorDecorationType({
         borderWidth: '1px',
         borderStyle: 'solid',
@@ -207,22 +208,24 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
                         information.push(create_decoration(editor, mark));
                     break;
                 }
+
                 all_marks.push(mark);
             }
         }
     }
 
-
     editor.setDecorations(warningDecorationType, warnings);
     editor.setDecorations(errorDecorationType, errors);
     editor.setDecorations(infoDecorationType, information);
 
-    qualityView.showWebView(quality_functions, manual);
+    qualityView.show_web_view(quality_functions, manual);
 }
 
 function create_decoration(editor : vscode.TextEditor, marker : MarkerResult) {
     const start_pos = editor.document.positionAt(marker.start_pos);
     const end_pos = editor.document.positionAt(marker.end_pos);
+    marker.start_line = start_pos.line;
+    marker.end_line = end_pos.line;
     return { range: new vscode.Range(start_pos, end_pos), hoverMessage: marker.tooltip };
 }
 

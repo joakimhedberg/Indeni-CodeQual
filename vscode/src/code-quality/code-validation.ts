@@ -53,7 +53,7 @@ function get_functions() {
                 }
 
                 if (time > 60) {
-                    result.push(new MarkerResult(match.index, match.index + match[0].length, "Due to a platform bug we do not support intervals over 1 hour.", FunctionSeverity.error, false));
+                    result.push(new MarkerResult(match.index, match.index + match[0].length, "Due to a platform bug we do not support intervals over 1 hour.", FunctionSeverity.error, false, match[0]));
                 }
             }
         }
@@ -103,9 +103,10 @@ function get_functions() {
     ///A regexp/ {
     let generic_space_before_example_and_after = new CodeValidationRegex("Space <3", "Space in certain places makes the code look nicer.", FunctionSeverity.information, ["awk"], /(if\()|(\){)|}else|else{/g);
 
+    // This check has been removed, it is not needed since git can handle CRLF-LF conversions
     // Line feeds can differ between operating systems and editors, in a mixed environment \n is always the way to go
     // Example of offending line\r\n
-    let carriage_return = new CodeValidationRegex("Carriage return", "Set your editor to use simple line feeds(LF) and not CRLF.", FunctionSeverity.error, ["script"], /(\r+)/g);
+    // let carriage_return = new CodeValidationRegex("Carriage return", "Set your editor to use simple line feeds(LF) and not CRLF.", FunctionSeverity.error, ["script"], /(\r+)/g);
 
     // Changing column values is potentially the cause of bugs and should be avoided
     // Example of an offending line:
@@ -140,7 +141,7 @@ function get_functions() {
                 var re = new RegExp(script_name);
                 var match = re.exec(content);
                 if (match !== null && match.length > 0) {
-                    result.push(new MarkerResult(match.index, match.index + match[0].length, reason, FunctionSeverity.error, false));
+                    result.push(new MarkerResult(match.index, match.index + match[0].length, reason, FunctionSeverity.error, false, match[0]));
                 }
             }
         }
@@ -165,8 +166,8 @@ function get_functions() {
             for (let i = 0; i < metrics.length - 1; i++) {
                 for (let j = i + 1; j < metrics.length; j++) {
                     if (metrics[i][0] === metrics[j][0]) {
-                        result.push(new MarkerResult(metrics[i][1], metrics[i][1] + metrics[i][0].length, reason, FunctionSeverity.information, false));
-                        result.push(new MarkerResult(metrics[j][1], metrics[j][1] + metrics[j][0].length, reason, FunctionSeverity.information, false));
+                        result.push(new MarkerResult(metrics[i][1], metrics[i][1] + metrics[i][0].length, reason, FunctionSeverity.information, false, metrics[i][0]));
+                        result.push(new MarkerResult(metrics[j][1], metrics[j][1] + metrics[j][0].length, reason, FunctionSeverity.information, false, metrics[j][0]));
                     }
                 }
             }
@@ -212,7 +213,6 @@ function get_functions() {
     functions.push(empty_begin_section);
     functions.push(empty_end_section);
     functions.push(generic_space_before_example_and_after);
-    functions.push(carriage_return);
     functions.push(column_variable_manipulation);
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
@@ -224,6 +224,8 @@ function get_functions() {
     functions.push(includes_resource_data);
     functions.push(invalid_yaml_leading_space);
     functions.push(comparison_operator_no_space);
+    // The CRLF-LF check has been disabled
+    // functions.push(carriage_return);
     return functions;
 }
 
@@ -242,15 +244,17 @@ function verify_yaml_indent(content : string, sections : Sections) : MarkerResul
 
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
-        let regex = /^\s+/;
+        let regex = /^(\s+)/;
         let match = line.match(regex);
         if (match !== null && match !== undefined)
         {
             if (match.index !== undefined) {
                 if (!is_within(indexes, match.index + line_offset))
                 {
-                    if (match[0].length % 4 && match[0].length > 0) {
-                        result.push(new MarkerResult(match.index + line_offset, match.index + match[0].length + line_offset, "Yaml indent not divisible by 4", FunctionSeverity.error, false));
+                    // Workaround to handle CRLF situations. The regex was behaving strangely. Seems like ^ only matches \n which means (\r) is also in the mix
+                    var issue = match[1];
+                    if (issue.length % 4 && issue.length > 0) {
+                        result.push(new MarkerResult(match.index + line_offset, match.index + issue.length + line_offset, "Yaml indent not divisible by 4", FunctionSeverity.error, false, issue));
                     }
                 }
             }
@@ -289,12 +293,12 @@ function resource_data_mark(content : string, sections : Sections) : MarkerResul
             if (resource_metrics.indexOf(metric[0]) > -1) {
                 resource_metric_found = true;
                 if (!sections.meta.includes_resource_data) {
-                    result.push(new MarkerResult(metric[1] + parser.offset, metric[1] + parser.offset + metric[0].length, "This tag would normally require include_resource_data in the meta section.", FunctionSeverity.error, true));
+                    result.push(new MarkerResult(metric[1] + parser.offset, metric[1] + parser.offset + metric[0].length, "This tag would normally require include_resource_data in the meta section.", FunctionSeverity.error, true, metric[0]));
                 }
             }
         }
         if (!resource_metric_found && sections.meta.includes_resource_data_range !== null) {
-            let marker = new MarkerResult(sections.meta.includes_resource_data_range[0] + sections.meta.offset, sections.meta.includes_resource_data_range[1] + sections.meta.offset, "Resource data has been used but no metrics that require it seem to exist.", FunctionSeverity.error, true); 
+            let marker = new MarkerResult(sections.meta.includes_resource_data_range[0] + sections.meta.offset, sections.meta.includes_resource_data_range[1] + sections.meta.offset, "Resource data has been used but no metrics that require it seem to exist.", FunctionSeverity.error, true, "includes_resource_data: true");
             result.push(marker);
         }
     }
@@ -325,7 +329,7 @@ function verify_metric_marker(content  : string, sections : Sections) : MarkerRe
             }
 
             if (!exists) {
-                result.push(new MarkerResult(doc[1] + sections.comments.offset, doc[1] + sections.comments.offset + doc[0].length, "This metric has been documented but is not used in the code.", FunctionSeverity.error, false));
+                result.push(new MarkerResult(doc[1] + sections.comments.offset, doc[1] + sections.comments.offset + doc[0].length, "This metric has been documented but is not used in the code.", FunctionSeverity.error, false, doc[0]));
             }
         }
 
@@ -341,7 +345,7 @@ function verify_metric_marker(content  : string, sections : Sections) : MarkerRe
                 }
             }
             if (!exists) {
-                result.push(new MarkerResult(use[1] + section.offset, use[1] + section.offset + use[0].length, "This metric is used in the code but has not been documented in the meta section!", FunctionSeverity.error, false));
+                result.push(new MarkerResult(use[1] + section.offset, use[1] + section.offset + use[0].length, "This metric is used in the code but has not been documented in the meta section!", FunctionSeverity.error, false, use[0]));
             }
         }
     }
