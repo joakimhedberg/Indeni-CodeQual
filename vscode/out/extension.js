@@ -11,6 +11,7 @@ const path = require("path");
 let errorDecorationType;
 let warningDecorationType;
 let infoDecorationType;
+let debugDecorationType;
 let live_update = true;
 let qualityView;
 const quality_functions = new code_validation_1.CodeValidations();
@@ -53,6 +54,11 @@ function activate(context) {
         dark: {
             borderColor: '#00cccc'
         }
+    });
+    debugDecorationType = vscode.window.createTextEditorDecorationType({
+        borderWidth: '2px',
+        borderStyle: 'dashed',
+        borderColor: 'pink'
     });
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
@@ -159,6 +165,7 @@ function updateDecorations(document, manual = false) {
     }
     const text = document.getText();
     let sections = sections_1.get_sections(text);
+    const debugs = [];
     const warnings = [];
     const errors = [];
     const information = [];
@@ -186,6 +193,7 @@ function updateDecorations(document, manual = false) {
     editor.setDecorations(warningDecorationType, warnings);
     editor.setDecorations(errorDecorationType, errors);
     editor.setDecorations(infoDecorationType, information);
+    editor.setDecorations(debugDecorationType, debugs);
     qualityView.show_web_view(quality_functions, manual);
 }
 function create_decoration(editor, marker) {

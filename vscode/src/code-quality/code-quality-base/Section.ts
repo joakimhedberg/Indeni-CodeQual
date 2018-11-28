@@ -121,6 +121,144 @@ export class AwkSection extends Section {
 
         return result;
     }
+    
+    public get_variables() : [string, number][] {
+        
+        let regex = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        let regex_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var       
+        let regex_incdec_suffix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: test++, test--
+        let regex_incdec_prefix = /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: ++test, --test
+        
+
+        let match;
+        let result : [string, number][] = [];
+        while (match = regex.exec(this.content)) {
+            if (match.length > 0) {
+                let var_idx = 1;
+
+                for (let i = match.length - 1; i > 0; i--) {
+                    if (match[i] !== undefined) {
+                        var_idx = i;
+                        break;
+                    }
+                }
+                let var_name : string = match[var_idx];
+
+                let array_match = /\[.*\]/g.exec(var_name);
+                
+                if (array_match !== null && array_match.index !== undefined)
+                {
+                    let res_var = var_name.replace(/\[.*\]/, "");
+                    let parameters = array_match[0].replace(/\[(.*)\]/, "$1");
+                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+
+                    this.handle_parameters(parameters, match.index + var_name.indexOf(res_var), match[0], result);
+                }
+                else {
+                    if (var_name !== undefined)
+                    {
+                        let p_idx = var_name.indexOf("(") + 1;
+                        if (p_idx > 0) {
+                            var_name = var_name.slice(p_idx, var_name.length);
+                        }
+
+                        if (!isNaN(Number(var_name))) {
+                            continue;
+                        }
+
+                        if (var_name.trim() === "") {
+                            continue;
+                        }
+
+                        let res_var = this.var_cleanup(var_name);
+                        result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                    }
+                }
+                
+                //this.handle_var(var_name, match.index, match[0], result);
+            }
+        }
+
+        while (match = regex_delete.exec(this.content)) {
+            if (match.length > 0) {
+                let res_var = this.var_cleanup(match[1]);
+                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+            }
+        }
+        
+        while (match = regex_incdec_suffix.exec(this.content)) {
+            if (match.length > 0) {
+                let res_var = this.var_cleanup(match[1]);
+                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+            }
+        }
+        
+        while (match = regex_incdec_prefix.exec(this.content)) {
+            if (match.length > 1) {
+                let res_var = this.var_cleanup(match[2]);
+                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+            }
+        }
+        
+
+        return result;
+    }
+
+    var_cleanup(variable : string) {
+        let result = variable.trim();
+        if (result.indexOf("=") > -1) {
+            result = result.substring(0, result.indexOf("="));
+        }
+
+        return result.trim();
+    }
+
+    handle_var(variable : string, match_index : number, full_match : string, result : [string, number][]) {
+        if (variable === undefined) {
+            return;
+        }
+
+        variable = variable.replace("[ ,]", '');
+        
+        // Skip commented lines
+        if (full_match.match(/^\s*[#]/) || variable.startsWith("\"") || !variable) {
+            return;
+        }
+        
+        let array_match = /([^\s].*)\[(.*)\]/g.exec(variable);
+
+        //let parenthesis_match = /for\s\((.*)\)/g.exec(variable);
+        let equals_match = /(.?)[=\s<>]+/g.exec(variable);
+        // Check if the variable is an array
+        if (array_match !== null && array_match.length > 1 && array_match.index !== undefined) {
+            result.push([array_match[1], full_match.indexOf(array_match[1])]);
+            this.handle_parameters(array_match[2], match_index, full_match, result);
+        }
+        else if (equals_match !== null && equals_match.length > 1 && equals_match.index !== undefined) {
+            this.handle_var(equals_match[1], match_index + equals_match.index, full_match, result);
+        }
+        else {
+            let p_idx = variable.indexOf("(");
+            if (p_idx > -1)
+            {
+                variable = variable.substring(p_idx, variable.length - p_idx);
+            }
+            if (!isNaN(Number(variable))) {
+                return;
+            }
+            result.push([variable, match_index + full_match.indexOf(variable) + this.offset]);
+        }
+    }
+
+    handle_parameters(content : string, match_index : number, full_match : string, result : [string, number][]) {
+        let items = content.split(/[,+-/\\\s]+(?=([^\"]*\"[^\"]*\")*[^\"]*$)/g);
+        for (let i = 0; i < items.length; i++) {
+            if (items[i] === undefined) {
+                continue;
+            }
+            this.handle_var(items[i], match_index, full_match, result);
+        }
+    }
 }
 
 // Yaml specific section. Makes it possible to get some extra data out of the specific section.
@@ -157,6 +295,17 @@ export class YamlSection extends Section {
 
         That way we can ignore the awk text in the yaml checks.
     */
+
+    public get_awk() : AwkSection[] {
+        let results : AwkSection[] = [];
+        for (let sect of this.get_awk_sections()) {
+            let result = new Section(this.offset + sect[0], this.content.slice(sect[0], sect[1]), ["awk"]);
+            results.push(new AwkSection(result));
+        }
+
+        return results;
+    }
+    
     public get_awk_sections() : [number, number][] {
         let result : [number, number][] = [];
 

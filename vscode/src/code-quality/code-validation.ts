@@ -1,6 +1,6 @@
 import { CodeValidation, CodeValidationByLine, CodeValidationRegex, FunctionSeverity } from "./code-quality-base/CodeValidation";
 import { MarkerResult } from "./code-quality-base/MarkerResult";
-import { Sections } from "./code-quality-base/Section";
+import { Sections, AwkSection } from "./code-quality-base/Section";
 import { SpecialCase } from "./code-quality-base/SpecialCase";
 
 const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
@@ -70,7 +70,7 @@ function get_functions() {
     // Single equal sign in an if is always true and the cause of bugs
     // Example of an offending line: 
     //if (variable = 1) { 
-    let if_contains_single_equal_sign = new CodeValidationRegex("If statement with single equal sign", "Found an if statement that contains a single equals sign. Since this is most likely an accident (and it'd always return true) it could cause strange bugs in the code. Consider replacing with double equal signs.", FunctionSeverity.error, ["awk"], /if\s*?\([^=]+[^=!](=){1}[^=].+\)/gm);
+    let if_contains_single_equal_sign = new CodeValidationRegex("If statement with single equal sign", "Found an if statement that contains a single equals sign. Since this is most likely an accident (and it'd always return true) it could cause strange bugs in the code. Consider replacing with double equal signs.", FunctionSeverity.error, ["awk"], /if\s+\([^=!]+(=)[^=]+\)\s+\{/gm);// /if\s*?\([^=]+[^=!](=){1}[^=].+\)/gm);
 
     //Trailing white space serves no purpose
     // Example of an offending line:
@@ -185,7 +185,9 @@ function get_functions() {
     // Example of an offending line: 
     //myVariable = 1
     //my-variable = 1
-    let variable_naming_convention = new CodeValidationByLine("Variable naming", "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", FunctionSeverity.warning, ["awk"], /(?!.*\()(["]?[a-z0-9]+([A-Z0-9][a-z0-9]+["]?)+)/g, [new SpecialCase(/\//), new SpecialCase(/#/)], [/"[^"]+"|(([a-z0-9]+\-)+[a-z0-9]+)/g]);
+    //let variable_naming_convention = new CodeValidationByLine("Variable naming", "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", FunctionSeverity.warning, ["awk"], /(?!.*\()(["]?[a-z0-9]+([A-Z0-9][a-z0-9]+["]?)+)/g, [new SpecialCase(/\//), new SpecialCase(/#/)], [/"[^"]+"|(([a-z0-9]+\-)+[a-z0-9]+)/g]);
+    let variable_naming_convention = new CodeValidation("Variable naming", "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", FunctionSeverity.warning, ["awk", "yaml"]);
+    variable_naming_convention.mark = awk_variable_naming;
 
     // includes_resource_data means that the script is always executed by indeni, even during high CPU usage
     //includes_resource_data: true
@@ -227,6 +229,64 @@ function get_functions() {
     // The CRLF-LF check has been disabled
     // functions.push(carriage_return);
     return functions;
+}
+
+function awk_variable_naming(content : string, sections : Sections) : MarkerResult[] {
+    let result : MarkerResult[] = [];
+
+    if (sections.awk !== null) {
+        for (let res of awk_section_variable_naming(sections.awk)) {
+            result.push(res);
+        }
+    } else {
+        let yaml_section = sections.xml || sections.json;
+        if (yaml_section !== null)
+        {
+            for (let awk_section of yaml_section.get_awk()) {
+                for (let res of awk_section_variable_naming(awk_section)) {
+                    result.push(res);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+function awk_section_variable_naming(section : AwkSection) : MarkerResult[] {
+    let result : MarkerResult[] = [];
+
+    let variables : Map<string, number[]> = new Map();
+    for (let variable of section.get_variables()) {
+        let arr = variables.get(variable[0]);
+        if (arr === undefined) {
+            arr = [];
+            variables.set(variable[0], arr);
+        }
+
+        arr.push(variable[1]);  
+    }
+
+    for (let item of variables) {
+        if (!verify_variable_spelling(item[0])) {
+            for (let startpos of item[1]) {
+                result.push(new MarkerResult(startpos, startpos + item[0].length, "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", FunctionSeverity.warning, true, item[0]));
+            }
+        }
+    }
+
+    return result;
+}
+
+function verify_variable_spelling(varname : string) : boolean {
+    let match = varname.match("^[a-z0-9_]*");
+    if (match === null) {
+        return false;
+    }
+    
+    return match[0] === varname;
+
+    return true;
 }
 
 function verify_yaml_indent(content : string, sections : Sections) : MarkerResult[] {
