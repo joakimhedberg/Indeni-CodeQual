@@ -31,7 +31,7 @@ class CodeValidation {
         }
         for (let mark of this.applied_markers) {
             let line_string = this.build_line_string(mark);
-            result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'\n`;
+            result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'<button onclick="scroll_to(${mark.start_pos}, ${mark.end_pos});">Show</button>\n`;
         }
         return result;
     }
@@ -80,6 +80,7 @@ class CodeValidationRegex extends CodeValidation {
             while (match = regex.exec(content)) {
                 if (match.length > 1) {
                     let idx = 0;
+                    // Find the first actual match
                     for (let i = 1; i < match.length; i++) {
                         if (match[i] === undefined) {
                             continue;

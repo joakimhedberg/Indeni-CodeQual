@@ -5,14 +5,14 @@ import * as vscode from 'vscode';
 import { get_sections } from "./code-quality/sections";
 import { CodeValidations } from './code-quality/code-validation';
 import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
-import { MarkerResult } from './code-quality/code-quality-base/MarkerResult';
+import { MarkerResult, MarkerCollection } from './code-quality/code-quality-base/MarkerResult';
 import { CodeQualityView } from './gui/CodeQualityView';
 import * as path from 'path';
 
-let errorDecorationType : vscode.TextEditorDecorationType;
-let warningDecorationType : vscode.TextEditorDecorationType;
-let infoDecorationType : vscode.TextEditorDecorationType;
-let debugDecorationType : vscode.TextEditorDecorationType;
+let errorCollection : MarkerCollection;
+let warningCollection : MarkerCollection;
+let informationCollection : MarkerCollection;
+let debugCollection : MarkerCollection;
 
 let live_update : boolean = true;
 let qualityView : CodeQualityView;
@@ -22,7 +22,9 @@ const quality_functions : CodeValidations = new CodeValidations();
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     qualityView = new CodeQualityView(path.join(context.extensionPath, 'resources'));
-    errorDecorationType = vscode.window.createTextEditorDecorationType({
+    let errorDecorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+        fontWeight: 'bold',
         borderWidth: '1px',
         borderStyle: 'solid',
         overviewRulerColor: 'red',
@@ -35,7 +37,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    warningDecorationType = vscode.window.createTextEditorDecorationType({
+    errorCollection = new MarkerCollection(errorDecorationType);
+    
+    let warningDecorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: 'rgba(255, 255, 0, 0.2)',
+        fontWeight: 'bold',
         borderWidth: '1px',
         borderStyle: 'solid',
         overviewRulerColor: 'yellow',
@@ -48,7 +54,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    infoDecorationType = vscode.window.createTextEditorDecorationType({
+    warningCollection = new MarkerCollection(warningDecorationType);
+
+    let infoDecorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: 'rgba(0, 0, 255, 0.2)',
+        fontWeight: 'bold',
         borderWidth: '1px',
         borderStyle: 'solid',
         overviewRulerColor: 'blue',
@@ -61,11 +71,15 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    debugDecorationType = vscode.window.createTextEditorDecorationType({
+    informationCollection = new MarkerCollection(infoDecorationType);
+
+    let debugDecorationType = vscode.window.createTextEditorDecorationType({
         borderWidth: '2px',
         borderStyle: 'dashed',
         borderColor: 'pink'
     });
+
+    debugCollection = new MarkerCollection(debugDecorationType);
 
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
@@ -173,10 +187,10 @@ function clearDecorations(editor : vscode.TextEditor | undefined) {
     {
         return;
     }
-
-    editor.setDecorations(warningDecorationType, []);
-    editor.setDecorations(errorDecorationType, []);
-    editor.setDecorations(infoDecorationType, []);
+    warningCollection.detach(editor);
+    errorCollection.detach(editor);
+    informationCollection.detach(editor);
+    debugCollection.detach(editor);
 }
 
 function updateDecorations(document : vscode.TextDocument | undefined, manual : boolean = false) {
@@ -193,57 +207,48 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
         return;
     }
 
+    warningCollection.clear();
+    errorCollection.clear();
+    debugCollection.clear();
+    informationCollection.clear();
+
     const text = document.getText();
     let sections = get_sections(text);
 
-    
-
-    const debugs : vscode.DecorationOptions[] = [];
-    const warnings : vscode.DecorationOptions[] = [];
-    const errors : vscode.DecorationOptions[] = [];
-    const information : vscode.DecorationOptions[] = [];
+   
     let all_marks : MarkerResult[] = [];
-
+    
     quality_functions.reset();
     for (let sect of sections.all) {
         let marks = sect.get_marks(quality_functions, sections);
-        if (marks.length > 0) {
-            for (let mark of marks) {
-                switch (mark.severity) {
-                    case FunctionSeverity.warning:
-                        warnings.push(create_decoration(editor, mark));
-                    break;
-                    case FunctionSeverity.error:
-                        errors.push(create_decoration(editor, mark));
-                    break;
-                    case FunctionSeverity.information:
-                        information.push(create_decoration(editor, mark));
-                    break;
-                }
-
-                all_marks.push(mark);
+        for (let mark of marks) {
+            switch (mark.severity) {
+                case FunctionSeverity.warning:
+                    warningCollection.append(mark);    
+                break;
+                case FunctionSeverity.error:
+                    errorCollection.append(mark);
+                break;
+                case FunctionSeverity.information:
+                    informationCollection.append(mark);
+                break;
             }
+
+            all_marks.push(mark);
         }
     }
 
-    editor.setDecorations(warningDecorationType, warnings);
-    editor.setDecorations(errorDecorationType, errors);
-    editor.setDecorations(infoDecorationType, information);
-    editor.setDecorations(debugDecorationType, debugs);
-    qualityView.show_web_view(quality_functions, manual);
-}
-
-function create_decoration(editor : vscode.TextEditor, marker : MarkerResult) {
-    const start_pos = editor.document.positionAt(marker.start_pos);
-    const end_pos = editor.document.positionAt(marker.end_pos);
-    marker.start_line = start_pos.line;
-    marker.end_line = end_pos.line;
-    return { range: new vscode.Range(start_pos, end_pos), hoverMessage: marker.tooltip };
+    warningCollection.apply(editor);
+    errorCollection.apply(editor);
+    informationCollection.apply(editor);
+    debugCollection.apply(editor);
+    qualityView.show_web_view(quality_functions, manual, editor);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    errorDecorationType.dispose();
-    warningDecorationType.dispose();
-    infoDecorationType.dispose();
+    warningCollection.dispose();
+    errorCollection.dispose();
+    informationCollection.dispose();
+    debugCollection.dispose();
 }

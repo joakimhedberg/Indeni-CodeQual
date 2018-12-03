@@ -3,9 +3,12 @@
 Code quality checker for Indeni .ind scripts
 
 # Credits
-## Patrik Jonsson for coming up with the code quality idea in the first place and putting alot of work in the base that i've copy-pasted
-## Hawkeye Parker for helping to keep the project alive and up-to-date
-## Joakim Hedberg for stealing a great idea putting it into this tool
+* Patrik Jonsson
+    * For coming up with the code quality idea in the first place and putting alot of work in the base that i've copy-pasted
+* Hawkeye Parker
+    * For helping to keep the project alive and up-to-date
+* Joakim Hedberg
+    * For stealing a great idea putting it into this tool
 
 # Features
 

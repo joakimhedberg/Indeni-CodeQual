@@ -15,10 +15,29 @@ export class CodeQualityView {
         this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
     }
 
-    public show_web_view(validations : CodeValidations, manual : boolean) {
+    public show_web_view(validations : CodeValidations, manual : boolean, editor : vscode.TextEditor) {
         if (this.panel === undefined && manual) {
             this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true } );
             this.panel.onDidDispose((e : void) => { this.panel = undefined; });
+            this.panel.webview.onDidReceiveMessage(message => {
+                switch (message.command) {
+                    case 'scroll':
+                        if (message.start && message.end) {
+                            if (editor !== undefined) {
+                                let doc = editor.document;
+                                let pos1 = doc.positionAt(message.start);
+                                let pos2 = doc.positionAt(message.end);
+                                let rng = new vscode.Range(pos1, pos2);
+                                if (editor.document.validateRange(rng)) {
+                                    editor.revealRange(rng);
+                                    editor.selection = new vscode.Selection(pos1, pos2);
+                                }
+                            }
+                        
+                        }
+                    break;
+                }
+            }, undefined);
         }
 
         if (this.panel !== undefined)
@@ -38,7 +57,6 @@ export class CodeQualityView {
         result += `<body>`;
         result += this.get_script();
         result += this.get_style();
-
         result += `<div class="used" id="validation">Active</div>`;
         let index : number = 0;
         let header_drawn : boolean = false;

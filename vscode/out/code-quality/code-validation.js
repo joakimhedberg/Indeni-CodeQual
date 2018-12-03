@@ -85,10 +85,6 @@ function get_functions() {
     //#if(something == "1"){
     ///A regexp/ {
     let generic_space_before_example_and_after = new CodeValidation_1.CodeValidationRegex("Space <3", "Space in certain places makes the code look nicer.", CodeValidation_1.FunctionSeverity.information, ["awk"], /(if\()|(\){)|}else|else{/g);
-    // This check has been removed, it is not needed since git can handle CRLF-LF conversions
-    // Line feeds can differ between operating systems and editors, in a mixed environment \n is always the way to go
-    // Example of offending line\r\n
-    // let carriage_return = new CodeValidationRegex("Carriage return", "Set your editor to use simple line feeds(LF) and not CRLF.", FunctionSeverity.error, ["script"], /(\r+)/g);
     // Changing column values is potentially the cause of bugs and should be avoided
     // Example of an offending line:
     //clusterMode = trim(substr($0, index($0, ":") + 1))
@@ -171,7 +167,20 @@ function get_functions() {
     //       skip-documentation: true
     let invalid_yaml_leading_space = new CodeValidation_1.CodeValidation("Invalid YAML white-space", "Since indentation in YAML is 4 spaces having a number not divisible by 4 would cause an error in most cases.", CodeValidation_1.FunctionSeverity.error, ["yaml"]);
     invalid_yaml_leading_space.mark = verify_yaml_indent;
+    // Example of offending lines:
+    // testar_var=23
+    // test_var= 23
+    // test_var =23
     let comparison_operator_no_space = new CodeValidation_1.CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase_1.SpecialCase(/split/), new SpecialCase_1.SpecialCase(/gsub/), new SpecialCase_1.SpecialCase(/sub/), new SpecialCase_1.SpecialCase(/index/), new SpecialCase_1.SpecialCase(/match/), new SpecialCase_1.SpecialCase(/join/), new SpecialCase_1.SpecialCase(/\!\(/), new SpecialCase_1.SpecialCase(/!\//), new SpecialCase_1.SpecialCase(/#/)]);
+    // Example of offending lines:
+    // # META
+    // #META
+    // # REMOTE::SSH
+    // # REMOTE SSH
+    // #! REMOTE SSH
+    // #!REMOTE SSH
+    let erroneous_section_definition = new CodeValidation_1.CodeValidation("Erroneous section marker", "The section marker must start with #!, otherwise the script might fail or show some unpredicted behavior", CodeValidation_1.FunctionSeverity.error, ["script"]);
+    erroneous_section_definition.mark = mark_erroneous_section_definitions;
     functions.push(space_before_example);
     functions.push(lowercase_description);
     functions.push(monitoring_interval_above_60);
@@ -193,8 +202,7 @@ function get_functions() {
     functions.push(includes_resource_data);
     functions.push(invalid_yaml_leading_space);
     functions.push(comparison_operator_no_space);
-    // The CRLF-LF check has been disabled
-    // functions.push(carriage_return);
+    functions.push(erroneous_section_definition);
     return functions;
 }
 function awk_variable_naming(content, sections) {
@@ -215,6 +223,54 @@ function awk_variable_naming(content, sections) {
         }
     }
     return result;
+}
+function mark_erroneous_section_definitions(content, sections) {
+    let result = [];
+    let regex_remote = /^(.*)(REMOTE)(.*?)([A-Z]{3,4})\s?$/gm;
+    let regex_parser = /^(.*)(PARSER)(.*)?([A-Z]{3,4})\s?$/gm;
+    let regex_meta = /^(.*)(META)\s?/gm;
+    let match;
+    while (match = regex_remote.exec(content)) {
+        mark_erroneous_section(match, result);
+    }
+    while (match = regex_parser.exec(content)) {
+        mark_erroneous_section(match, result);
+    }
+    while (match = regex_meta.exec(content)) {
+        let fail = false;
+        if (match.length < 2) {
+            fail = true;
+        }
+        else {
+            if (!match[0].startsWith("#!")) {
+                fail = true;
+            }
+        }
+        if (fail) {
+            result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A meta section marker should keep the format #! META", CodeValidation_1.FunctionSeverity.error, false, match[0]));
+        }
+    }
+    return result;
+}
+function mark_erroneous_section(match, result) {
+    let fail = false;
+    // There should be 5 matches 0: (Full match) 1: (#!), 2: (REMOTE), 3: (::), 4: (HTTP|SSH)
+    if (match.length < 4) {
+        fail = true;
+    }
+    else {
+        if (!match[1].startsWith("#!")) {
+            fail = true;
+        }
+        else {
+            if (!match[3].startsWith("::")) {
+                fail = true;
+            }
+        }
+    }
+    if (fail) {
+        result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A section marker should keep the format #! SECTION::SUBSECTION + / ", CodeValidation_1.FunctionSeverity.error, false, match[0]));
+    }
 }
 function awk_section_variable_naming(section) {
     let result = [];
@@ -245,34 +301,58 @@ function verify_variable_spelling(varname) {
     return true;
 }
 function verify_yaml_indent(content, sections) {
-    let lines = content.split("\n");
     let result = [];
-    let line_offset = 0;
+    let regex = /[\r\n](\s*)/g;
+    let match;
+    let section = sections.json || sections.xml;
     let indexes = [];
-    if (sections.json !== null) {
+    if (section !== null) {
+        indexes = section.get_awk_sections();
+    }
+    while (match = regex.exec(content)) {
+        if (is_within(indexes, match.index)) {
+            continue;
+        }
+        if (match.length > 0) {
+            let text = match[1].replace(/[\r\n]*/, '');
+            if (text.length % 4 && text.length > 0) {
+                result.push(new MarkerResult_1.MarkerResult(match.index + match[0].indexOf(text), match.index + match[0].indexOf(text) + text.length, "Yaml indent not divisible by 4", CodeValidation_1.FunctionSeverity.error, false, text + " - " + text.length + " characters"));
+            }
+        }
+    }
+    return result;
+    /*let lines = content.split("\n");
+    let line_offset = 0;
+
+    let indexes : [number, number][] = [];
+    if (sections.json !== null){
         indexes = sections.json.get_awk_sections();
     }
     else if (sections.xml !== null) {
         indexes = sections.xml.get_awk_sections();
     }
+
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
         let regex = /^(\s+)/;
         let match = line.match(regex);
-        if (match !== null && match !== undefined) {
+        if (match !== null && match !== undefined)
+        {
             if (match.index !== undefined) {
-                if (!is_within(indexes, match.index + line_offset)) {
+                if (!is_within(indexes, match.index + line_offset))
+                {
                     // Workaround to handle CRLF situations. The regex was behaving strangely. Seems like ^ only matches \n which means (\r) is also in the mix
                     var issue = match[1];
                     if (issue.length % 4 && issue.length > 0) {
-                        result.push(new MarkerResult_1.MarkerResult(match.index + line_offset, match.index + issue.length + line_offset, "Yaml indent not divisible by 4", CodeValidation_1.FunctionSeverity.error, false, issue));
+                        result.push(new MarkerResult(match.index + line_offset, match.index + issue.length + line_offset, "Yaml indent not divisible by 4", FunctionSeverity.error, false, issue));
                     }
                 }
             }
         }
         line_offset += lines[i].length + 1;
     }
-    return result;
+
+    return result;*/
 }
 function is_within(indexes, match_index) {
     for (let index of indexes) {

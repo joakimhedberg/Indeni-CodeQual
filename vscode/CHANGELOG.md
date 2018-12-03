@@ -3,6 +3,14 @@
 ## [Upcoming release]
 Various bugfixes reported @ github
 
+## [0.1.3]
+Fixed the yaml indent check. It had problems with CRLF
+Fixed the embedded-awk iterator and made it a little more robust.
+Added write*Metric snippets
+Made the credits a bit less invasive...
+Added buttons in the gui to navigate/scroll to the issue
+New function: Mark erroneous section definitions(Verify section marker syntax)
+
 ## [0.1.2]
 Fixed the variable naming convention. Or atleast improved it.
 It will check for variables, matching them with the snake_case convention. Alerts if the match fails.

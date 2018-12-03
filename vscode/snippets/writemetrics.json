@@ -1,0 +1,59 @@
+{
+	"writeDoubleMetric": {
+		"scope": "awk",
+		"prefix": "writeDoubleMetric",
+		"body": [
+			"writeDoubleMetric(${1:imName}, ${2:tags}, ${3:dsType}, 0, ${4:value})"
+		],
+		"description": "Write double metric"
+	},
+	"writeDoubleMetricWithLiveConfig": {
+		"scope": "awk",
+		"prefix": "writeDoubleMetricWithLiveConfig",
+		"body": [
+			"writeDoubleMetricWithLiveConfig(${1:imName}, ${2:tags}, ${3:dsType}, 0, ${4:value}, ${5:displayName}, ${6:displayType}, ${7:identityTags})"
+		],
+		"description": "Write double metric with live config"
+	},
+	"writeComplexMetric": {
+		"scope": "awk",
+		"prefix": "writeComplexMetric",
+		"body": [
+			"writeComplexMetric(${1:imName}, ${2:tags}, ${3:value})"
+		],
+		"description": "Write complex metric"
+	},
+	"writeComplexMetricString": {
+		"scope": "awk",
+		"prefix": "writeComplexMetricString",
+		"body": [
+			"writeComplexMetricString(${1:imName}, ${2:tags}, ${3:value})"
+		],
+		"description": "Write complex metric string"
+	},
+	"writeComplexMetricStringWithLiveConfig": {
+		"scope": "awk",
+		"prefix": "writeComplexMetricStringWithLiveConfig",
+		"body": [
+			"writeComplexMetricStringWithLiveConfig(${1:imName}, ${2:tags}, ${3:value}, ${4:displayName})"
+		],
+		"description": "Write complex metric string with live config"
+	},
+	"writeComplexMetricObjectArray": {
+		"scope": "awk",
+		"prefix": "writeComplexMetricObjectArray",
+		"body": [
+			"writeComplexMetricObjectArray(${1:imName}, ${2:tags}, ${3:objects})"
+		],
+		"description": "Write complex metric object array"
+	},
+	"writeComplexMetricObjectArrayWithLiveConfig": {
+		"scope": "awk",
+		"prefix": "writeComplexMetricObjectArrayWithLiveConfig",
+		"body": [
+			"writeComplexMetricObjectArrayWithLiveConfig(${1:imName}, ${2:tags}, ${3:objects}, ${4:displayName})"
+		],
+		"description": "Write complex metric object array with live config"
+	}
+
+}

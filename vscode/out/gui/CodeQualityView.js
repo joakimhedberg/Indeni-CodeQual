@@ -10,10 +10,28 @@ class CodeQualityView {
         this.script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.js'));
         this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
     }
-    show_web_view(validations, manual) {
+    show_web_view(validations, manual, editor) {
         if (this.panel === undefined && manual) {
             this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true });
             this.panel.onDidDispose((e) => { this.panel = undefined; });
+            this.panel.webview.onDidReceiveMessage(message => {
+                switch (message.command) {
+                    case 'scroll':
+                        if (message.start && message.end) {
+                            if (editor !== undefined) {
+                                let doc = editor.document;
+                                let pos1 = doc.positionAt(message.start);
+                                let pos2 = doc.positionAt(message.end);
+                                let rng = new vscode.Range(pos1, pos2);
+                                if (editor.document.validateRange(rng)) {
+                                    editor.revealRange(rng);
+                                    editor.selection = new vscode.Selection(pos1, pos2);
+                                }
+                            }
+                        }
+                        break;
+                }
+            }, undefined);
         }
         if (this.panel !== undefined) {
             this.panel.webview.html = this.get_html(validations);

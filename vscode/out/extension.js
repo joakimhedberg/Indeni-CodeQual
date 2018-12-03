@@ -6,12 +6,13 @@ const vscode = require("vscode");
 const sections_1 = require("./code-quality/sections");
 const code_validation_1 = require("./code-quality/code-validation");
 const CodeValidation_1 = require("./code-quality/code-quality-base/CodeValidation");
+const MarkerResult_1 = require("./code-quality/code-quality-base/MarkerResult");
 const CodeQualityView_1 = require("./gui/CodeQualityView");
 const path = require("path");
-let errorDecorationType;
-let warningDecorationType;
-let infoDecorationType;
-let debugDecorationType;
+let errorCollection;
+let warningCollection;
+let informationCollection;
+let debugCollection;
 let live_update = true;
 let qualityView;
 const quality_functions = new code_validation_1.CodeValidations();
@@ -19,7 +20,9 @@ const quality_functions = new code_validation_1.CodeValidations();
 // your extension is activated the very first time the command is executed
 function activate(context) {
     qualityView = new CodeQualityView_1.CodeQualityView(path.join(context.extensionPath, 'resources'));
-    errorDecorationType = vscode.window.createTextEditorDecorationType({
+    let errorDecorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+        fontWeight: 'bold',
         borderWidth: '1px',
         borderStyle: 'solid',
         overviewRulerColor: 'red',
@@ -31,7 +34,10 @@ function activate(context) {
             borderColor: { id: 'extension.errorBorderColor' }
         }
     });
-    warningDecorationType = vscode.window.createTextEditorDecorationType({
+    errorCollection = new MarkerResult_1.MarkerCollection(errorDecorationType);
+    let warningDecorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: 'rgba(255, 255, 0, 0.2)',
+        fontWeight: 'bold',
         borderWidth: '1px',
         borderStyle: 'solid',
         overviewRulerColor: 'yellow',
@@ -43,7 +49,10 @@ function activate(context) {
             borderColor: { id: 'extension.warningBorderColor' }
         }
     });
-    infoDecorationType = vscode.window.createTextEditorDecorationType({
+    warningCollection = new MarkerResult_1.MarkerCollection(warningDecorationType);
+    let infoDecorationType = vscode.window.createTextEditorDecorationType({
+        backgroundColor: 'rgba(0, 0, 255, 0.2)',
+        fontWeight: 'bold',
         borderWidth: '1px',
         borderStyle: 'solid',
         overviewRulerColor: 'blue',
@@ -55,11 +64,13 @@ function activate(context) {
             borderColor: '#00cccc'
         }
     });
-    debugDecorationType = vscode.window.createTextEditorDecorationType({
+    informationCollection = new MarkerResult_1.MarkerCollection(infoDecorationType);
+    let debugDecorationType = vscode.window.createTextEditorDecorationType({
         borderWidth: '2px',
         borderStyle: 'dashed',
         borderColor: 'pink'
     });
+    debugCollection = new MarkerResult_1.MarkerCollection(debugDecorationType);
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
     let trigger_update_command = vscode.commands.registerCommand('extension.triggerUpdate', () => {
@@ -148,9 +159,10 @@ function clearDecorations(editor) {
     if (!editor) {
         return;
     }
-    editor.setDecorations(warningDecorationType, []);
-    editor.setDecorations(errorDecorationType, []);
-    editor.setDecorations(infoDecorationType, []);
+    warningCollection.detach(editor);
+    errorCollection.detach(editor);
+    informationCollection.detach(editor);
+    debugCollection.detach(editor);
 }
 function updateDecorations(document, manual = false) {
     if (!document) {
@@ -163,51 +175,43 @@ function updateDecorations(document, manual = false) {
     if (editor === null || editor === undefined) {
         return;
     }
+    warningCollection.clear();
+    errorCollection.clear();
+    debugCollection.clear();
+    informationCollection.clear();
     const text = document.getText();
     let sections = sections_1.get_sections(text);
-    const debugs = [];
-    const warnings = [];
-    const errors = [];
-    const information = [];
     let all_marks = [];
     quality_functions.reset();
     for (let sect of sections.all) {
         let marks = sect.get_marks(quality_functions, sections);
-        if (marks.length > 0) {
-            for (let mark of marks) {
-                switch (mark.severity) {
-                    case CodeValidation_1.FunctionSeverity.warning:
-                        warnings.push(create_decoration(editor, mark));
-                        break;
-                    case CodeValidation_1.FunctionSeverity.error:
-                        errors.push(create_decoration(editor, mark));
-                        break;
-                    case CodeValidation_1.FunctionSeverity.information:
-                        information.push(create_decoration(editor, mark));
-                        break;
-                }
-                all_marks.push(mark);
+        for (let mark of marks) {
+            switch (mark.severity) {
+                case CodeValidation_1.FunctionSeverity.warning:
+                    warningCollection.append(mark);
+                    break;
+                case CodeValidation_1.FunctionSeverity.error:
+                    errorCollection.append(mark);
+                    break;
+                case CodeValidation_1.FunctionSeverity.information:
+                    informationCollection.append(mark);
+                    break;
             }
+            all_marks.push(mark);
         }
     }
-    editor.setDecorations(warningDecorationType, warnings);
-    editor.setDecorations(errorDecorationType, errors);
-    editor.setDecorations(infoDecorationType, information);
-    editor.setDecorations(debugDecorationType, debugs);
-    qualityView.show_web_view(quality_functions, manual);
-}
-function create_decoration(editor, marker) {
-    const start_pos = editor.document.positionAt(marker.start_pos);
-    const end_pos = editor.document.positionAt(marker.end_pos);
-    marker.start_line = start_pos.line;
-    marker.end_line = end_pos.line;
-    return { range: new vscode.Range(start_pos, end_pos), hoverMessage: marker.tooltip };
+    warningCollection.apply(editor);
+    errorCollection.apply(editor);
+    informationCollection.apply(editor);
+    debugCollection.apply(editor);
+    qualityView.show_web_view(quality_functions, manual, editor);
 }
 // this method is called when your extension is deactivated
 function deactivate() {
-    errorDecorationType.dispose();
-    warningDecorationType.dispose();
-    infoDecorationType.dispose();
+    warningCollection.dispose();
+    errorCollection.dispose();
+    informationCollection.dispose();
+    debugCollection.dispose();
 }
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map

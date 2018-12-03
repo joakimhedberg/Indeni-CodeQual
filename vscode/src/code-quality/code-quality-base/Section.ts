@@ -124,7 +124,8 @@ export class AwkSection extends Section {
     
     public get_variables() : [string, number][] {
         
-        let regex = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        //let regex = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        let regex = /^[^#]\s?([a-zA-Z0-9_]+)(?=[^=!<>~]=[^=])/gm;
         let regex_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var       
         let regex_incdec_suffix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: test++, test--
         let regex_incdec_prefix = /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: ++test, --test
@@ -174,15 +175,25 @@ export class AwkSection extends Section {
                         result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
                     }
                 }
-                
-                //this.handle_var(var_name, match.index, match[0], result);
             }
         }
 
         while (match = regex_delete.exec(this.content)) {
-            if (match.length > 0) {
-                let res_var = this.var_cleanup(match[1]);
-                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+            if (match.length > 0) 
+            {
+                let var_name = match[1];
+                let arr_match = /\[.*\]/g.exec(var_name);
+                if (arr_match !== null && arr_match.index !== undefined)
+                {
+                    let res_var = var_name.replace(/\[.*\]/, "");
+                    let parameters = arr_match[0].replace(/\[(.*)\]/, "$1");
+                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+
+                    this.handle_parameters(parameters, match.index + var_name.indexOf(res_var), match[0], result);
+                } else {
+                    let res_var = this.var_cleanup(match[1]);
+                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                }
             }
         }
         
@@ -309,7 +320,7 @@ export class YamlSection extends Section {
     public get_awk_sections() : [number, number][] {
         let result : [number, number][] = [];
 
-        let regex = /:\s+(\|)\w?/g;
+        let regex = /:\s+(\|)\w?[\r\n]\s*{/g;
         let match;
         while (match = regex.exec(this.content)) {
             if (match.length > 0) {
