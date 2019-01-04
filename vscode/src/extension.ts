@@ -215,7 +215,6 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
     const text = document.getText();
     let sections = get_sections(text);
 
-   
     let all_marks : MarkerResult[] = [];
     
     quality_functions.reset();

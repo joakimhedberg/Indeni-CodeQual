@@ -83,10 +83,10 @@ export class CommentsSection extends Section {
     public get_documented_metrics() : [string, number][] {
         let result : [string, number][] = [];
 
-        let regex = /^(([^\s:\#])+)/gm;
+        let regex_assigned = /^(([^\s:\#])+)/gm;
         let match;
 
-        while (match = regex.exec(this.content))
+        while (match = regex_assigned.exec(this.content))
         {
             if (match.length > 1)
             {
@@ -108,10 +108,10 @@ export class AwkSection extends Section {
     public get_metrics() : [string, number][] {
         let result : [string, number][] = [];
 
-        let regex = /^\s{0,}[^\#]\s{0,}write.*Metric\w*\(\"(.*?)\".+$/gm;
+        let regex_assigned = /^\s{0,}[^\#]\s{0,}write.*Metric\w*\(\"(.*?)\".+$/gm;
         
         let match;
-        while (match = regex.exec(this.content))
+        while (match = regex_assigned.exec(this.content))
         {
             if (match.length > 1)
             {
@@ -122,18 +122,16 @@ export class AwkSection extends Section {
         return result;
     }
     
-    public get_variables() : [string, number][] {
-        
-        //let regex = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
-        let regex = /^[^#]\s?([a-zA-Z0-9_]+)(?=[^=!<>~]=[^=])/gm;
-        let regex_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var       
-        let regex_incdec_suffix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: test++, test--
-        let regex_incdec_prefix = /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: ++test, --test
-        
+    public get_variables() : [string, number, AwkVariableOccurence][] {
+        //let regex_assigned = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        let regex_assigned = /([^\s].*)(?=[^=!<>~]=[^=])/gm;
+        let regex_assigned_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var       
+        let regex_assigned_incdec_suffix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: test++, test--
+        let regex_assigned_incdec_prefix = /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: ++test, --test
 
         let match;
-        let result : [string, number][] = [];
-        while (match = regex.exec(this.content)) {
+        let result : [string, number, AwkVariableOccurence][] = [];
+        while (match = regex_assigned.exec(this.content)) {
             if (match.length > 0) {
                 let var_idx = 1;
 
@@ -151,7 +149,7 @@ export class AwkSection extends Section {
                 {
                     let res_var = var_name.replace(/\[.*\]/, "");
                     let parameters = array_match[0].replace(/\[(.*)\]/, "$1");
-                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.assignment]);
 
                     this.handle_parameters(parameters, match.index + var_name.indexOf(res_var), match[0], result);
                 }
@@ -172,13 +170,13 @@ export class AwkSection extends Section {
                         }
 
                         let res_var = this.var_cleanup(var_name);
-                        result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                        result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.assignment]);
                     }
                 }
             }
         }
 
-        while (match = regex_delete.exec(this.content)) {
+        while (match = regex_assigned_delete.exec(this.content)) {
             if (match.length > 0) 
             {
                 let var_name = match[1];
@@ -187,27 +185,27 @@ export class AwkSection extends Section {
                 {
                     let res_var = var_name.replace(/\[.*\]/, "");
                     let parameters = arr_match[0].replace(/\[(.*)\]/, "$1");
-                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.delete]);
 
                     this.handle_parameters(parameters, match.index + var_name.indexOf(res_var), match[0], result);
                 } else {
                     let res_var = this.var_cleanup(match[1]);
-                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                    result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.delete]);
                 }
             }
         }
         
-        while (match = regex_incdec_suffix.exec(this.content)) {
+        while (match = regex_assigned_incdec_suffix.exec(this.content)) {
             if (match.length > 0) {
                 let res_var = this.var_cleanup(match[1]);
-                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.incremented_decremented]);
             }
         }
         
-        while (match = regex_incdec_prefix.exec(this.content)) {
+        while (match = regex_assigned_incdec_prefix.exec(this.content)) {
             if (match.length > 1) {
                 let res_var = this.var_cleanup(match[2]);
-                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset]);
+                result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.incremented_decremented]);
             }
         }
         
@@ -224,7 +222,7 @@ export class AwkSection extends Section {
         return result.trim();
     }
 
-    handle_var(variable : string, match_index : number, full_match : string, result : [string, number][]) {
+    handle_var(variable : string, match_index : number, full_match : string, result : [string, number, AwkVariableOccurence][], occurence : AwkVariableOccurence | undefined = undefined) {
         if (variable === undefined) {
             return;
         }
@@ -242,7 +240,7 @@ export class AwkSection extends Section {
         let equals_match = /(.?)[=\s<>]+/g.exec(variable);
         // Check if the variable is an array
         if (array_match !== null && array_match.length > 1 && array_match.index !== undefined) {
-            result.push([array_match[1], full_match.indexOf(array_match[1])]);
+            result.push([array_match[1], full_match.indexOf(array_match[1]), AwkVariableOccurence.assignment]);
             this.handle_parameters(array_match[2], match_index, full_match, result);
         }
         else if (equals_match !== null && equals_match.length > 1 && equals_match.index !== undefined) {
@@ -257,17 +255,17 @@ export class AwkSection extends Section {
             if (!isNaN(Number(variable))) {
                 return;
             }
-            result.push([variable, match_index + full_match.indexOf(variable) + this.offset]);
+            result.push([variable, match_index + full_match.indexOf(variable) + this.offset, occurence || AwkVariableOccurence.assignment]);
         }
     }
 
-    handle_parameters(content : string, match_index : number, full_match : string, result : [string, number][]) {
+    handle_parameters(content : string, match_index : number, full_match : string, result : [string, number, AwkVariableOccurence][]) {
         let items = content.split(/[,+-/\\\s]+(?=([^\"]*\"[^\"]*\")*[^\"]*$)/g);
         for (let i = 0; i < items.length; i++) {
             if (items[i] === undefined) {
                 continue;
             }
-            this.handle_var(items[i], match_index, full_match, result);
+            this.handle_var(items[i], match_index, full_match, result, AwkVariableOccurence.embedded);
         }
     }
 }
@@ -282,10 +280,10 @@ export class YamlSection extends Section {
     public get_metrics() : [string, number][] {
         let result : [string, number][] = [];
 
-        let regex = /im\.name\":\s*_constant:\s\"([^\"]+)/gm;
+        let regex_assigned = /im\.name\":\s*_constant:\s\"([^\"]+)/gm;
 
         let match;
-        while (match = regex.exec(this.content)) {
+        while (match = regex_assigned.exec(this.content)) {
             if (match.length > 1) {
                 result.push([match[1], match.index + match[0].indexOf(match[1])]);
             }
@@ -320,9 +318,9 @@ export class YamlSection extends Section {
     public get_awk_sections() : [number, number][] {
         let result : [number, number][] = [];
 
-        let regex = /:\s+(\|)\w?[\r\n]\s*{/g;
+        let regex_assigned = /:\s+(\|)\w?[\r\n]\s*{/g;
         let match;
-        while (match = regex.exec(this.content)) {
+        while (match = regex_assigned.exec(this.content)) {
             if (match.length > 0) {
                 let awk_start = match.index + match.length;
                 let awk_end = this.get_awk_end(this.content, awk_start);
@@ -374,12 +372,19 @@ export class MetaSection extends Section {
     constructor(section : Section) {
         super(section.offset, section.content, section.apply);
         // Gets an indicator if the meta section uses resource data. Used in one of the checks.
-        let regex = /^includes_resource_data:\s*true$/m;
-        let match = this.content.match(regex);
+        let regex_assigned = /^includes_resource_data:\s*true$/m;
+        let match = this.content.match(regex_assigned);
         this.includes_resource_data = match !== null;
         if (match !== null && match.index !== null && match.length > 0 && match.index !== undefined) {
             this.includes_resource_data_range = [match.index, match.index + match[0].length];
         }
     }
 
+}
+
+export enum AwkVariableOccurence {
+    assignment,
+    delete,
+    incremented_decremented,
+    embedded
 }

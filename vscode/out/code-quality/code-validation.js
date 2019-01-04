@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CodeValidation_1 = require("./code-quality-base/CodeValidation");
 const MarkerResult_1 = require("./code-quality-base/MarkerResult");
+const Section_1 = require("./code-quality-base/Section");
 const SpecialCase_1 = require("./code-quality-base/SpecialCase");
 const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
@@ -105,7 +106,7 @@ function get_functions() {
     let valid_scriptname_prefix = new CodeValidation_1.CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), CodeValidation_1.FunctionSeverity.error, ["meta"]);
     valid_scriptname_prefix.mark = (content, sections) => {
         let result = [];
-        let reason = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", ");
+        let reason_prefix = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", ");
         var script_name_row = content.match(/^name:.*$/m);
         if (script_name_row !== null && script_name_row.length === 1) {
             var script_name = script_name_row[0].split(" ")[1];
@@ -114,12 +115,13 @@ function get_functions() {
                 var re = new RegExp(script_name);
                 var match = re.exec(content);
                 if (match !== null && match.length > 0) {
-                    result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, reason, CodeValidation_1.FunctionSeverity.error, false, match[0]));
+                    result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, reason_prefix, CodeValidation_1.FunctionSeverity.error, false, match[0]));
                 }
             }
         }
         return result;
     };
+    let valid_script_name = new CodeValidation_1.CodeValidationRegex("Valid script name", "Script names should consist of letters a-z and scores -", CodeValidation_1.FunctionSeverity.error, ["meta"], /^name:\s?([^a-z\-])$/gm);
     // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
     // Verify that metrics are represented both in Write and in the documentation
     let verify_metric_documentation = new CodeValidation_1.CodeValidation("Undocumented/unused metrics", "The documentation section should have one entry per metric used in the script, and the script should use all documented metrics.", CodeValidation_1.FunctionSeverity.error, ["script"]);
@@ -195,6 +197,7 @@ function get_functions() {
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
     functions.push(valid_scriptname_prefix);
+    functions.push(valid_script_name);
     functions.push(verify_metric_documentation);
     functions.push(only_write_metric_once);
     functions.push(comma_without_space);
@@ -229,6 +232,7 @@ function mark_erroneous_section_definitions(content, sections) {
     let regex_remote = /^(.*)(REMOTE)(.*?)([A-Z]{3,4})\s?$/gm;
     let regex_parser = /^(.*)(PARSER)(.*)?([A-Z]{3,4})\s?$/gm;
     let regex_meta = /^(.*)(META)\s?/gm;
+    let regex_comments = /^(.*)(COMMENTS)\s?/gm;
     let match;
     while (match = regex_remote.exec(content)) {
         mark_erroneous_section(match, result);
@@ -248,6 +252,20 @@ function mark_erroneous_section_definitions(content, sections) {
         }
         if (fail) {
             result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A meta section marker should keep the format #! META", CodeValidation_1.FunctionSeverity.error, false, match[0]));
+        }
+    }
+    while (match = regex_comments.exec(content)) {
+        let fail = false;
+        if (match.length < 2) {
+            fail = true;
+        }
+        else {
+            if (!match[0].startsWith("#!")) {
+                fail = true;
+            }
+        }
+        if (fail) {
+            result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A comment section marker should keep the format #! META", CodeValidation_1.FunctionSeverity.error, false, match[0]));
         }
     }
     return result;
@@ -275,7 +293,15 @@ function mark_erroneous_section(match, result) {
 function awk_section_variable_naming(section) {
     let result = [];
     let variables = new Map();
+    let assignments = [];
+    let other = new Map();
     for (let variable of section.get_variables()) {
+        if (variable[2] === Section_1.AwkVariableOccurence.assignment) {
+            assignments.push(variable);
+        }
+        else {
+            other.set(variable[0], (other.get(variable[0]) || 0) + 1);
+        }
         let arr = variables.get(variable[0]);
         if (arr === undefined) {
             arr = [];
@@ -290,6 +316,12 @@ function awk_section_variable_naming(section) {
             }
         }
     }
+    /*for (let assigned of assignments) {
+        let usage = other.get(assigned[0]);
+        if (usage === undefined) {
+            result.push(new MarkerResult(assigned[1], assigned[1] + assigned[0].length, "Variable is declared but not used", FunctionSeverity.warning, true, assigned[0]));
+        }
+    }*/
     return result;
 }
 function verify_variable_spelling(varname) {
