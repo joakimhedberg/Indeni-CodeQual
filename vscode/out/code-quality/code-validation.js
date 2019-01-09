@@ -103,25 +103,44 @@ function get_functions() {
     // This is just a recommendation.
     // Example of an offending line: 
     //name: sausage-metric
-    let valid_scriptname_prefix = new CodeValidation_1.CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), CodeValidation_1.FunctionSeverity.error, ["meta"]);
-    valid_scriptname_prefix.mark = (content, sections) => {
-        let result = [];
+    /*let valid_scriptname_prefix = new CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), FunctionSeverity.error, ["meta"]);
+    valid_scriptname_prefix.mark = (content : string, sections : Sections) : MarkerResult[] => {
+        let result : MarkerResult[] = [];
         let reason_prefix = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", ");
         var script_name_row = content.match(/^name:.*$/m);
         if (script_name_row !== null && script_name_row.length === 1) {
             var script_name = script_name_row[0].split(" ")[1];
+
             var prefix = script_name.replace(/-.+$/, "");
             if (indeni_script_name_prefixes.indexOf(prefix) === -1) {
                 var re = new RegExp(script_name);
                 var match = re.exec(content);
                 if (match !== null && match.length > 0) {
-                    result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, reason_prefix, CodeValidation_1.FunctionSeverity.error, false, match[0]));
+                    result.push(new MarkerResult(match.index, match.index + match[0].length, reason_prefix, FunctionSeverity.error, false, match[0]));
+                }
+            }
+        }
+        return result;
+    };*/
+    let valid_script_name = new CodeValidation_1.CodeValidation("Valid script name", "Script names should consist of letters a-z and scores -", CodeValidation_1.FunctionSeverity.error, ["meta"]);
+    valid_script_name.mark = (content, sections) => {
+        let result = [];
+        if (sections.meta !== null) {
+            let script_name = sections.meta.get_script_name();
+            if (script_name !== undefined) {
+                let script_name_split = script_name[1].split(/-/);
+                if (indeni_script_name_prefixes.indexOf(script_name_split[0]) === -1) {
+                    result.push(new MarkerResult_1.MarkerResult(script_name[0], script_name[0] + script_name_split[0].length, "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), CodeValidation_1.FunctionSeverity.error, false, script_name_split[0]));
+                }
+                let error_characters = /([^a-z\-])/gm;
+                let match;
+                while (match = error_characters.exec(script_name[1])) {
+                    result.push(new MarkerResult_1.MarkerResult(script_name[0] + match.index, script_name[0] + match.index + match[1].length, "A script name should consist of letters(a-z) and dashes(-)", CodeValidation_1.FunctionSeverity.error, false, match[1]));
                 }
             }
         }
         return result;
     };
-    let valid_script_name = new CodeValidation_1.CodeValidationRegex("Valid script name", "Script names should consist of letters a-z and scores -", CodeValidation_1.FunctionSeverity.error, ["meta"], /^name:\s?([^a-z\-])$/gm);
     // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
     // Verify that metrics are represented both in Write and in the documentation
     let verify_metric_documentation = new CodeValidation_1.CodeValidation("Undocumented/unused metrics", "The documentation section should have one entry per metric used in the script, and the script should use all documented metrics.", CodeValidation_1.FunctionSeverity.error, ["script"]);
@@ -173,7 +192,7 @@ function get_functions() {
     // testar_var=23
     // test_var= 23
     // test_var =23
-    let comparison_operator_no_space = new CodeValidation_1.CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase_1.SpecialCase(/split/), new SpecialCase_1.SpecialCase(/gsub/), new SpecialCase_1.SpecialCase(/sub/), new SpecialCase_1.SpecialCase(/index/), new SpecialCase_1.SpecialCase(/match/), new SpecialCase_1.SpecialCase(/join/), new SpecialCase_1.SpecialCase(/\!\(/), new SpecialCase_1.SpecialCase(/!\//), new SpecialCase_1.SpecialCase(/#/)]);
+    let comparison_operator_no_space = new CodeValidation_1.CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase_1.SpecialCase(/split/), new SpecialCase_1.SpecialCase(/gsub/), new SpecialCase_1.SpecialCase(/sub/), /*new SpecialCase(/index/), */ new SpecialCase_1.SpecialCase(/match/), new SpecialCase_1.SpecialCase(/join/), new SpecialCase_1.SpecialCase(/\!\(/), new SpecialCase_1.SpecialCase(/!\//), new SpecialCase_1.SpecialCase(/#/)]);
     // Example of offending lines:
     // # META
     // #META
@@ -196,7 +215,7 @@ function get_functions() {
     functions.push(column_variable_manipulation);
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
-    functions.push(valid_scriptname_prefix);
+    //functions.push(valid_scriptname_prefix);
     functions.push(valid_script_name);
     functions.push(verify_metric_documentation);
     functions.push(only_write_metric_once);

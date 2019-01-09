@@ -1,15 +1,15 @@
 .error, .warning, .information { 
     display: inline-block;
-    border: solid 1px black;
+    border: solid 1px lightgray;
     color: black;
     margin: 3px;
     font-weight: bold;
     border-radius: 5px;
     padding: 4px; 
 }
-.error { background-color: red; }
-.warning { background-color: yellow; }
-.information { background-color: green; }
+.error { background-color: darkred; color: white;}
+.warning { background-color: #c7bb25; color: white; }
+.information { background-color: darkgreen; color: white;}
 .used, .unused, .summary {
     margin: 4px;
     padding: 6px;

@@ -319,6 +319,14 @@ class MetaSection extends Section {
             this.includes_resource_data_range = [match.index, match.index + match[0].length];
         }
     }
+    get_script_name() {
+        let regex_name = /^name:\s*(.*)$/gm;
+        let match = regex_name.exec(this.content);
+        if (match !== null && match.length > 0 && match.index !== undefined) {
+            return [match.index + match[0].indexOf(match[1]), match[1]];
+        }
+        return undefined;
+    }
 }
 exports.MetaSection = MetaSection;
 var AwkVariableOccurence;

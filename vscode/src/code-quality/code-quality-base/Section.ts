@@ -380,6 +380,17 @@ export class MetaSection extends Section {
         }
     }
 
+    get_script_name() : [number, string] | undefined {
+        let regex_name = /^name:\s*(.*)$/gm;
+
+        let match = regex_name.exec(this.content);
+        if (match !== null && match.length > 0 && match.index !== undefined)
+        {
+            return [match.index + match[0].indexOf(match[1]), match[1]];
+        }
+
+        return undefined;
+    }
 }
 
 export enum AwkVariableOccurence {

@@ -123,7 +123,7 @@ function get_functions() {
     // This is just a recommendation.
     // Example of an offending line: 
     //name: sausage-metric
-    let valid_scriptname_prefix = new CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), FunctionSeverity.error, ["meta"]);
+    /*let valid_scriptname_prefix = new CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), FunctionSeverity.error, ["meta"]);
     valid_scriptname_prefix.mark = (content : string, sections : Sections) : MarkerResult[] => {
         let result : MarkerResult[] = [];
         let reason_prefix = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", ");
@@ -141,9 +141,33 @@ function get_functions() {
             }
         }
         return result;
-    };
+    };*/
 
-    let valid_script_name = new CodeValidationRegex("Valid script name", "Script names should consist of letters a-z and scores -", FunctionSeverity.error, ["meta"], /^name:\s?([^a-z\-])$/gm);
+    let valid_script_name = new CodeValidation("Valid script name", "Script names should consist of letters a-z and scores -", FunctionSeverity.error, ["meta"]);
+    valid_script_name.mark = (content : string, sections : Sections) : MarkerResult[] => {
+        let result : MarkerResult[] = [];
+
+        if (sections.meta !== null)
+        {
+            let script_name = sections.meta.get_script_name();
+            if (script_name !== undefined)
+            {
+                let script_name_split = script_name[1].split(/-/);
+                if (indeni_script_name_prefixes.indexOf(script_name_split[0]) === -1) {
+                    result.push(new MarkerResult(script_name[0], script_name[0] + script_name_split[0].length, "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), FunctionSeverity.error, false, script_name_split[0]));
+                }
+
+                let error_characters = /([^a-z\-])/gm;
+
+                let match;
+                while (match = error_characters.exec(script_name[1])) {
+                    result.push(new MarkerResult(script_name[0] + match.index, script_name[0] + match.index + match[1].length, "A script name should consist of letters(a-z) and dashes(-)", FunctionSeverity.error, false, match[1]));
+                }
+            }
+        }
+
+        return result;
+    }
     
     // This function is a bit special as it it does not only parse and mark, it also compares data from different sections
     // Verify that metrics are represented both in Write and in the documentation
@@ -204,7 +228,7 @@ function get_functions() {
     // testar_var=23
     // test_var= 23
     // test_var =23
-    let comparison_operator_no_space = new CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase(/split/), new SpecialCase(/gsub/), new SpecialCase(/sub/), new SpecialCase(/index/), new SpecialCase(/match/), new SpecialCase(/join/), new SpecialCase(/\!\(/), new SpecialCase(/!\//), new SpecialCase(/#/)]);
+    let comparison_operator_no_space = new CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase(/split/), new SpecialCase(/gsub/), new SpecialCase(/sub/), /*new SpecialCase(/index/), */new SpecialCase(/match/), new SpecialCase(/join/), new SpecialCase(/\!\(/), new SpecialCase(/!\//), new SpecialCase(/#/)]);
     
     // Example of offending lines:
     // # META
@@ -229,7 +253,7 @@ function get_functions() {
     functions.push(column_variable_manipulation);
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
-    functions.push(valid_scriptname_prefix);
+    //functions.push(valid_scriptname_prefix);
     functions.push(valid_script_name);
     functions.push(verify_metric_documentation);
     functions.push(only_write_metric_once);
