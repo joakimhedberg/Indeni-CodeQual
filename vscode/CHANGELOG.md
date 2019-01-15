@@ -3,6 +3,10 @@
 ## [Upcoming release]
 Various bugfixes reported @ github
 
+## [0.1.4]
+Some bugfixes. Some tidying up in the code-behind.
+New quality check, script name
+
 ## [0.1.3]
 Fixed the yaml indent check. It had problems with CRLF
 Fixed the embedded-awk iterator and made it a little more robust.

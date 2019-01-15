@@ -13,6 +13,10 @@ class Sections {
         this.script = null;
         this.all = []; // This contains all the sections. This is what we are iterating while performing the checks.
     }
+    // Minor check to see if this seems to be an Indeni script, it really only checks if the meta section is present.
+    is_valid() {
+        return this.meta !== null;
+    }
 }
 exports.Sections = Sections;
 class Section {

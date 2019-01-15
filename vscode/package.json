@@ -2,7 +2,7 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
@@ -38,8 +38,8 @@
         ],
         "keybindings": [
             {
-                "key": "ctrl+i l",
-                "command": "extension.setLanguage"
+                "key": "ctrl+i p",
+                "command": "extension.triggerUpdate"
             },
             {
                 "key": "ctrl+i c",
@@ -50,8 +50,8 @@
                 "command": "extension.toggleLive"
             },
             {
-                "key": "ctrl+i p",
-                "command": "extension.triggerUpdate"
+                "key": "ctrl+i l",
+                "command": "extension.setLanguage"
             }
         ],
         "snippets": [

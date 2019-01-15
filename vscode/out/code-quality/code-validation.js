@@ -8,11 +8,39 @@ const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", 
 const resource_metrics = ["cpu-usage", "memory-usage"];
 class CodeValidations {
     constructor() {
+        this.warning_markers = [];
+        this.error_markers = [];
+        this.information_markers = [];
+        this.all_markers = [];
         this.functions = get_functions();
     }
     reset() {
         for (let validation of this.functions) {
             validation.reset();
+        }
+        this.warning_markers = [];
+        this.error_markers = [];
+        this.information_markers = [];
+        this.all_markers = [];
+    }
+    apply(sections) {
+        this.reset();
+        for (let sect of sections.all) {
+            let marks = sect.get_marks(this, sections);
+            for (let mark of marks) {
+                switch (mark.severity) {
+                    case CodeValidation_1.FunctionSeverity.warning:
+                        this.warning_markers.push(mark);
+                        break;
+                    case CodeValidation_1.FunctionSeverity.error:
+                        this.error_markers.push(mark);
+                        break;
+                    case CodeValidation_1.FunctionSeverity.information:
+                        this.information_markers.push(mark);
+                        break;
+                }
+                this.all_markers.push(mark);
+            }
         }
     }
 }
@@ -23,7 +51,7 @@ function get_functions() {
     // Example of an offending line: 
     //# my_example
     ///A regexp/ {
-    let space_before_example = new CodeValidation_1.CodeValidationRegex("Space before example", "Space before examples may look nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does.", CodeValidation_1.FunctionSeverity.warning, ["awk"], /(\# .+)\n\/.+\/\s*{\n/g);
+    let space_before_example = new CodeValidation_1.CodeValidationRegex("Space before example", "Space before examples may look nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does.", CodeValidation_1.FunctionSeverity.warning, ["awk"], /^(\# .+)(\n|\r\n)\/.+\/\s*{/gm);
     // Simply for good manners
     // Example of an offending line:
     // description: grab some data from the device
@@ -93,35 +121,17 @@ function get_functions() {
     // A "~" should always be followed by a space (unless it is a regexp)
     // Example of an offending line:
     // if ($0 ~/Active/) {
-    let tilde_without_space = new CodeValidation_1.CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ \n]{1}~[^ \n]{1})|([^ \n]{1}~)|(~[^ \n]{1})/gm);
+    let tilde_without_space = new CodeValidation_1.CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm);
     // Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).
     // Example of an offending line:
     // if ($0 ~ "ClusterXL Inactive") {
     let tilde_without_regexp_notation = new CodeValidation_1.CodeValidationRegex("Tilde without regexp notation", "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).", CodeValidation_1.FunctionSeverity.warning, ["awk"], /(~\s+[^/])/gm);
     // Prefixes is important not only to distinguish which type of device the script is executed on
     // but also to avoid script name collisions. 
+    // A script name should consist of letters a-z and scores
     // This is just a recommendation.
     // Example of an offending line: 
     //name: sausage-metric
-    /*let valid_scriptname_prefix = new CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), FunctionSeverity.error, ["meta"]);
-    valid_scriptname_prefix.mark = (content : string, sections : Sections) : MarkerResult[] => {
-        let result : MarkerResult[] = [];
-        let reason_prefix = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", ");
-        var script_name_row = content.match(/^name:.*$/m);
-        if (script_name_row !== null && script_name_row.length === 1) {
-            var script_name = script_name_row[0].split(" ")[1];
-
-            var prefix = script_name.replace(/-.+$/, "");
-            if (indeni_script_name_prefixes.indexOf(prefix) === -1) {
-                var re = new RegExp(script_name);
-                var match = re.exec(content);
-                if (match !== null && match.length > 0) {
-                    result.push(new MarkerResult(match.index, match.index + match[0].length, reason_prefix, FunctionSeverity.error, false, match[0]));
-                }
-            }
-        }
-        return result;
-    };*/
     let valid_script_name = new CodeValidation_1.CodeValidation("Valid script name", "Script names should consist of letters a-z and scores -", CodeValidation_1.FunctionSeverity.error, ["meta"]);
     valid_script_name.mark = (content, sections) => {
         let result = [];
@@ -335,12 +345,6 @@ function awk_section_variable_naming(section) {
             }
         }
     }
-    /*for (let assigned of assignments) {
-        let usage = other.get(assigned[0]);
-        if (usage === undefined) {
-            result.push(new MarkerResult(assigned[1], assigned[1] + assigned[0].length, "Variable is declared but not used", FunctionSeverity.warning, true, assigned[0]));
-        }
-    }*/
     return result;
 }
 function verify_variable_spelling(varname) {
@@ -349,7 +353,6 @@ function verify_variable_spelling(varname) {
         return false;
     }
     return match[0] === varname;
-    return true;
 }
 function verify_yaml_indent(content, sections) {
     let result = [];

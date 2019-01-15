@@ -82,13 +82,13 @@ class CodeValidationRegex extends CodeValidation {
                     let idx = 0;
                     // Find the first actual match
                     for (let i = 1; i < match.length; i++) {
-                        if (match[i] === undefined) {
+                        if (match[i] === undefined || match[i] === null) {
                             continue;
                         }
-                        idx = match[0].indexOf(match[1], idx);
+                        idx = match[0].indexOf(match[i], idx);
                         const start_pos = match.index + idx;
                         const end_pos = match.index + idx + match[i].length;
-                        result.push(new MarkerResult_1.MarkerResult(start_pos, end_pos, this.reason, this.severity, this.offset_handled, match[1]));
+                        result.push(new MarkerResult_1.MarkerResult(start_pos, end_pos, this.reason, this.severity, this.offset_handled, match[i]));
                     }
                 }
             }
@@ -118,8 +118,13 @@ class CodeValidationByLine extends CodeValidationRegex {
                     let match;
                     while (match = line_regex.exec(line)) {
                         if (match.length > 1) {
-                            if (!this.excluded(match[1])) {
-                                result.push(new MarkerResult_1.MarkerResult(match.index + line_offset, match.index + match[1].length + line_offset, this.reason, this.severity, this.offset_handled, match[1]));
+                            for (let i = 1; i < match.length; i++) {
+                                if (match[i] === null || match[i] === undefined) {
+                                    continue;
+                                }
+                                if (!this.excluded(match[i])) {
+                                    result.push(new MarkerResult_1.MarkerResult(match.index + line_offset, match.index + match[i].length + line_offset, this.reason, this.severity, this.offset_handled, match[i]));
+                                }
                             }
                         }
                     }

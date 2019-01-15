@@ -4,25 +4,24 @@
 import * as vscode from 'vscode';
 import { get_sections } from "./code-quality/sections";
 import { CodeValidations } from './code-quality/code-validation';
-import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
-import { MarkerResult, MarkerCollection } from './code-quality/code-quality-base/MarkerResult';
-import { CodeQualityView } from './gui/CodeQualityView';
+import { MarkerCollection } from './code-quality/code-quality-base/MarkerResult';
 import * as path from 'path';
+import { CodeQualityView } from './gui/CodeQualityView';
 
-let errorCollection : MarkerCollection;
-let warningCollection : MarkerCollection;
-let informationCollection : MarkerCollection;
-let debugCollection : MarkerCollection;
+let error_collection : MarkerCollection;
+let warning_collection : MarkerCollection;
+let information_collection : MarkerCollection;
+let debug_collection : MarkerCollection;
 
 let live_update : boolean = true;
-let qualityView : CodeQualityView;
+let quality_view : CodeQualityView;
 const quality_functions : CodeValidations = new CodeValidations();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    qualityView = new CodeQualityView(path.join(context.extensionPath, 'resources'));
-    let errorDecorationType = vscode.window.createTextEditorDecorationType({
+    quality_view = new CodeQualityView(path.join(context.extensionPath, 'resources'));
+    let error_decoration_type = vscode.window.createTextEditorDecorationType({
         backgroundColor: 'rgba(255, 0, 0, 0.2)',
         fontWeight: 'bold',
         borderWidth: '1px',
@@ -37,9 +36,9 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    errorCollection = new MarkerCollection(errorDecorationType);
+    error_collection = new MarkerCollection(error_decoration_type);
     
-    let warningDecorationType = vscode.window.createTextEditorDecorationType({
+    let warning_decoration_type = vscode.window.createTextEditorDecorationType({
         backgroundColor: 'rgba(255, 255, 0, 0.2)',
         fontWeight: 'bold',
         borderWidth: '1px',
@@ -54,9 +53,9 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    warningCollection = new MarkerCollection(warningDecorationType);
+    warning_collection = new MarkerCollection(warning_decoration_type);
 
-    let infoDecorationType = vscode.window.createTextEditorDecorationType({
+    let info_decoration_type = vscode.window.createTextEditorDecorationType({
         backgroundColor: 'rgba(0, 0, 255, 0.2)',
         fontWeight: 'bold',
         borderWidth: '1px',
@@ -71,15 +70,15 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    informationCollection = new MarkerCollection(infoDecorationType);
+    information_collection = new MarkerCollection(info_decoration_type);
 
-    let debugDecorationType = vscode.window.createTextEditorDecorationType({
+    let debug_decoration_type = vscode.window.createTextEditorDecorationType({
         borderWidth: '2px',
         borderStyle: 'dashed',
         borderColor: 'pink'
     });
 
-    debugCollection = new MarkerCollection(debugDecorationType);
+    debug_collection = new MarkerCollection(debug_decoration_type);
 
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
@@ -131,14 +130,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(set_language_command);
 }
 
-function is_indeni_script(document : vscode.TextDocument | undefined) {
-    if (document === undefined) {
-        return false;
-    }
-
-    return document.fileName.toLowerCase().endsWith(".ind");
-}
-
 function text_document_changed(change : vscode.TextDocumentChangeEvent) {
     if (live_update) {
         updateDecorations(change.document);
@@ -159,15 +150,10 @@ function setLanguage(document : vscode.TextDocument | undefined) {
         return;
     }
 
-    if (!is_indeni_script(document)) {
-        return;
-    }
-
-    if (document.uri.fsPath.toLowerCase().endsWith(".ind"))
+    const text = document.getText();
+    let sections = get_sections(text);
+    if (sections.is_valid())
     {
-        const text = document.getText();
-        let sections = get_sections(text);
-
         if (sections.awk !== null) {
             if (document.languageId !== "awk")
             {
@@ -187,10 +173,10 @@ function clearDecorations(editor : vscode.TextEditor | undefined) {
     {
         return;
     }
-    warningCollection.detach(editor);
-    errorCollection.detach(editor);
-    informationCollection.detach(editor);
-    debugCollection.detach(editor);
+    warning_collection.detach(editor);
+    error_collection.detach(editor);
+    information_collection.detach(editor);
+    debug_collection.detach(editor);
 }
 
 function updateDecorations(document : vscode.TextDocument | undefined, manual : boolean = false) {
@@ -198,56 +184,46 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
         return;
     }
 
-    if (!is_indeni_script(document)) {
-        return;
-    }
-    
     let editor = vscode.window.activeTextEditor;
     if (editor === null || editor === undefined) {
         return;
     }
 
-    warningCollection.clear();
-    errorCollection.clear();
-    debugCollection.clear();
-    informationCollection.clear();
+    warning_collection.clear();
+    error_collection.clear();
+    debug_collection.clear();
+    information_collection.clear();
 
     const text = document.getText();
     let sections = get_sections(text);
 
-    let all_marks : MarkerResult[] = [];
-    
-    quality_functions.reset();
-    for (let sect of sections.all) {
-        let marks = sect.get_marks(quality_functions, sections);
-        for (let mark of marks) {
-            switch (mark.severity) {
-                case FunctionSeverity.warning:
-                    warningCollection.append(mark);    
-                break;
-                case FunctionSeverity.error:
-                    errorCollection.append(mark);
-                break;
-                case FunctionSeverity.information:
-                    informationCollection.append(mark);
-                break;
-            }
+    if (!sections.is_valid()) {
+        return;
+    }
+    quality_functions.apply(sections);
 
-            all_marks.push(mark);
-        }
+    for (let warning of quality_functions.warning_markers) {
+        warning_collection.append(warning);
+    }
+    for (let error of quality_functions.error_markers) {
+        error_collection.append(error);
     }
 
-    warningCollection.apply(editor);
-    errorCollection.apply(editor);
-    informationCollection.apply(editor);
-    debugCollection.apply(editor);
-    qualityView.show_web_view(quality_functions, manual, editor);
+    for (let info of quality_functions.information_markers) {
+        information_collection.append(info);
+    }
+
+    warning_collection.apply(editor);
+    error_collection.apply(editor);
+    information_collection.apply(editor);
+    debug_collection.apply(editor);
+    quality_view.show_web_view(quality_functions, manual, editor);
 }
 
-// this method is called when your extension is deactivated
+// this method is called when the extension is deactivated
 export function deactivate() {
-    warningCollection.dispose();
-    errorCollection.dispose();
-    informationCollection.dispose();
-    debugCollection.dispose();
+    warning_collection.dispose();
+    error_collection.dispose();
+    information_collection.dispose();
+    debug_collection.dispose();
 }

@@ -12,6 +12,11 @@ export class Sections {
     public xml : YamlSection | null = null;
     public script : Section | null = null;
     public all : Section[] = []; // This contains all the sections. This is what we are iterating while performing the checks.
+
+    // Minor check to see if this seems to be an Indeni script, it really only checks if the meta section is present.
+    public is_valid() : Boolean {
+        return this.meta !== null;
+    }
 }
 
 export class Section {

@@ -47,15 +47,16 @@ class CodeQualityView {
         result += `<body>`;
         result += this.get_script();
         result += this.get_style();
-        result += `<div class="used" id="validation">Active</div>`;
+        result += `<div class="used" id="validation">Non-compliant</div>`;
         let index = 0;
         let header_drawn = false;
         for (let validation of validations.functions.sort(this.sort_validation)) {
             if (validation.applied_markers.length === 0 && !header_drawn) {
-                result += `<div class="unused">Inactive</div>`;
+                result += `<div class="unused">Compliant</div>`;
                 header_drawn = true;
             }
-            result += `<div class="${validation.severity} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.applied_markers.length})</span></span><span class="tooltiptext">${validation.reason}</div>`;
+            let div_class = header_drawn ? "compliant" : validation.severity;
+            result += `<div class="${div_class} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.applied_markers.length})</span></span><span class="tooltiptext">${validation.reason}</div>`;
             let summary = validation.get_summary();
             if (summary.length > 0) {
                 summary_data[index] = validation.get_summary();
