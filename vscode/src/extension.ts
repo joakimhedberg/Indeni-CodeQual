@@ -168,6 +168,14 @@ function setLanguage(document : vscode.TextDocument | undefined) {
     }
 }
 
+function is_indeni_script(document : vscode.TextDocument | undefined) {
+    if (document === undefined) {
+        return false;
+    }
+
+    return document.fileName.toLowerCase().endsWith(".ind");
+}
+
 function clearDecorations(editor : vscode.TextEditor | undefined) {
     if (!editor)
     {
@@ -180,7 +188,8 @@ function clearDecorations(editor : vscode.TextEditor | undefined) {
 }
 
 function updateDecorations(document : vscode.TextDocument | undefined, manual : boolean = false) {
-    if (!document) {
+    if (!is_indeni_script(document) || document === undefined)
+    {
         return;
     }
 

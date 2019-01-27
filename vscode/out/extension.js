@@ -145,6 +145,12 @@ function setLanguage(document) {
         }
     }
 }
+function is_indeni_script(document) {
+    if (document === undefined) {
+        return false;
+    }
+    return document.fileName.toLowerCase().endsWith(".ind");
+}
 function clearDecorations(editor) {
     if (!editor) {
         return;
@@ -155,7 +161,7 @@ function clearDecorations(editor) {
     debug_collection.detach(editor);
 }
 function updateDecorations(document, manual = false) {
-    if (!document) {
+    if (!is_indeni_script(document) || document === undefined) {
         return;
     }
     let editor = vscode.window.activeTextEditor;

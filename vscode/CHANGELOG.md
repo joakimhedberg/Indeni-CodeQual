@@ -3,6 +3,9 @@
 ## [Upcoming release]
 Various bugfixes reported @ github
 
+## [0.1.5]
+Minor fix, re-added the check for .ind scripts.
+
 ## [0.1.4]
 Some bugfixes. Some tidying up in the code-behind.
 New quality check, script name
