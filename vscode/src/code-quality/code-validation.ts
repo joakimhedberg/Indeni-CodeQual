@@ -3,7 +3,7 @@ import { MarkerResult } from "./code-quality-base/MarkerResult";
 import { Sections, AwkSection, AwkVariableOccurence } from "./code-quality-base/Section";
 import { SpecialCase } from "./code-quality-base/SpecialCase";
 
-const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
+const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 
 export class CodeValidations {
@@ -12,6 +12,7 @@ export class CodeValidations {
     public error_markers : MarkerResult[] = [];
     public information_markers : MarkerResult[] = [];
     public all_markers : MarkerResult[] = [];
+    public marker_map : { [key: number] : MarkerResult[]; } = {};
     constructor() {
         this.functions = get_functions();
     }
@@ -26,11 +27,39 @@ export class CodeValidations {
         this.all_markers = [];
     }
 
+    public has_marker(marker : MarkerResult) {
+        let items = this.marker_map[marker.start_pos];
+        if (items) {
+            for (let existing_marker of items) {
+                if (existing_marker.end_pos === marker.end_pos) {
+                    if (existing_marker.offending_text === marker.offending_text && existing_marker.severity === marker.severity) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     public apply(sections : Sections) {
         this.reset();
         for (let sect of sections.all) {
             let marks = sect.get_marks(this, sections);
             for (let mark of marks) {
+                if (mark.ignore_comments && sections.script !== null)
+                {
+                    if (sections.script.is_in_comment(mark.start_pos) || sections.script.is_in_comment(mark.end_pos))
+                    {
+                        mark.is_ignored = true;
+                        continue;
+                    }
+                }
+                
+                if (this.has_marker(mark)) {
+                    continue;
+                }
+                
                 switch (mark.severity) {
                     case FunctionSeverity.warning:
                         this.warning_markers.push(mark);    
@@ -56,12 +85,13 @@ function get_functions() {
     //# my_example
     ///A regexp/ {
     let space_before_example = new CodeValidationRegex("Space before example", "Space before examples may look nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does.", FunctionSeverity.warning, ["awk"], /^(\# .+)(\n|\r\n)\/.+\/\s*{/gm);
-    
+    space_before_example.ignore_comments = false;
+
     // Simply for good manners
     // Example of an offending line:
     // description: grab some data from the device
     let lowercase_description = new CodeValidationRegex("Description begins in lower case", "In the english language, it's good practice to begin sentences with upper case.", FunctionSeverity.error, ["meta"], /^description:\s+([a-z]+)/gm);
-    
+
     // We have had a bug in the platform with scripts running with intervals of more than 60 minutes
     //
     // Example of an offending line:
@@ -263,7 +293,6 @@ function get_functions() {
     functions.push(column_variable_manipulation);
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
-    //functions.push(valid_scriptname_prefix);
     functions.push(valid_script_name);
     functions.push(verify_metric_documentation);
     functions.push(only_write_metric_once);

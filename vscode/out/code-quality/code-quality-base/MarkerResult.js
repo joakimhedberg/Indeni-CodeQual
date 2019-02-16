@@ -7,6 +7,8 @@ const vscode = require("vscode");
 class MarkerResult {
     constructor(start_pos, end_pos, tooltip, severity, offset_handled, offending_text) {
         this.code_validation = undefined; // Parent validation of the check
+        this.ignore_comments = false;
+        this.is_ignored = false;
         this.start_pos = start_pos;
         this.end_pos = end_pos;
         this.tooltip = tooltip;
@@ -48,13 +50,19 @@ class MarkerCollection extends vscode.Disposable {
                 decorations.push({ range: new vscode.Range(start_pos, end_pos), hoverMessage: marker.tooltip });
             }
         }
-        editor.setDecorations(this.decoration, decorations);
+        if (this.decoration !== undefined) {
+            editor.setDecorations(this.decoration, decorations);
+        }
     }
     detach(editor) {
-        editor.setDecorations(this.decoration, []);
+        if (this.decoration !== undefined) {
+            editor.setDecorations(this.decoration, []);
+        }
     }
     dispose() {
-        this.decoration.dispose();
+        if (this.decoration !== undefined) {
+            this.decoration.dispose();
+        }
         this.markers.clear();
     }
 }

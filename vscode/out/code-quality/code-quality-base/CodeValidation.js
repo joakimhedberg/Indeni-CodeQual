@@ -17,19 +17,29 @@ class CodeValidation {
     constructor(name, reason, severity, apply_to_sections) {
         this.applied_markers = [];
         this.offset_handled = false;
+        this.ignore_comments = true;
         this.name = name;
         this.reason = reason;
         this.severity = severity;
         this.apply_to_sections = apply_to_sections;
         this.mark = null;
     }
+    get_filtered_markers() {
+        let filtered = this.applied_markers.filter((element, index, array) => {
+            return !element.is_ignored;
+        });
+        return filtered.filter((element, index, array) => {
+            return array.findIndex(t => t.start_pos === element.start_pos && t.severity === element.severity && t.tooltip === element.tooltip) === index;
+        });
+    }
     // Summary of the applied markers, used for js/html
     get_summary() {
         let result = "";
-        if (this.applied_markers.length === 0) {
+        let markers = this.get_filtered_markers();
+        if (markers.length === 0) {
             return result;
         }
-        for (let mark of this.applied_markers) {
+        for (let mark of markers) {
             let line_string = this.build_line_string(mark);
             result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'<button onclick="scroll_to(${mark.start_pos}, ${mark.end_pos});">Show</button>\n`;
         }

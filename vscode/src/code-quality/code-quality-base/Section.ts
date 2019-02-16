@@ -24,11 +24,45 @@ export class Section {
     content : string; // Section content
     length : number; // Section total length
     public apply : string[]; // What type of checks should be applied here? Example: ["meta", "awk"]
+    public comments : [string, number][];
     constructor(offset : number, content : string, apply : string[]) {
         this.offset = offset;
         this.content = content;
         this.length = content.length;
         this.apply = apply;
+        this.comments = this.get_comments(); // Load the comments in this section, offset by the script as a whole
+    }
+
+    // Get the comments in the script, ie the text that starts with # going forward to newline.
+    // Returns a list of tuples where the string is the comment (including the #) and the number is the overall offset in the script
+    get_comments() : [string, number][] {
+        
+        let result : [string, number][] = [];
+        let regex_comments = /(#[^!].*)$/gm;
+        let match;
+
+        while (match = regex_comments.exec(this.content))
+        {
+            if (match !== undefined)
+            {
+                if (match.length > 1)
+                {
+                    result.push([match[1], match.index + this.offset]);
+                }
+            }
+        }
+        return result;
+    }
+
+    // Check if the offset provided is within a comment
+    public is_in_comment(offset : number) : boolean {
+        for (let comment of this.comments) {
+            if (comment[1] <= offset && offset <= comment[1] + comment[0].length) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Run all validations(that are applicable) and return check markers if needed
@@ -56,7 +90,9 @@ export class Section {
                 var marks = validation.do_mark(this.content, sections);
                 if (marks.length > 0) {
                     for (let mark of marks) {
-                        result.push(this.modify_mark(mark));
+                        let modified_mark = this.modify_mark(mark);
+                        modified_mark.ignore_comments = validation.ignore_comments;
+                        result.push(modified_mark);
                     }
                 }
             }
@@ -128,9 +164,42 @@ export class AwkSection extends Section {
     }
     
     public get_variables() : [string, number, AwkVariableOccurence][] {
-        //let regex_assigned = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
-        let regex_assigned = /([^\s].*)(?=[^=!<>~]=[^=])/gm;
-        let regex_assigned_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var       
+        /*
+        What can variables look like?
+            Assignment:
+                var_name = value
+                    Taking into account that the space between = on both sides can be 0 to infinity
+                tags_arr[parameters] = value
+            Incremental/decremental
+                var_name++
+                ++var_name
+                var_name--
+                --var_name
+                tags_arr[parameters]++
+                ++tags_arr[parameters]
+                tags_arr[parameters]--
+                --tags_arr[parameters]
+
+            Removal
+                delete var_name
+                delete tags_arr[parameter]
+
+            Operators
+                < Less than
+                <= Less than or equal to
+                > Greater than
+                >= Greater than or equal to
+                == Equal to
+                != Not equal to
+                ~ Matches(compares a string to a regular expression)
+                !~ Does not match
+                variable in array
+        */
+
+
+        let regex_assigned = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        //let regex_assigned = /\s?([a-zA-Z\_0-9]+)(\s?|\[.*\]\s?)(?=[^=!<>,]=[^=])/gm;
+        let regex_assigned_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var
         let regex_assigned_incdec_suffix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: test++, test--
         let regex_assigned_incdec_prefix = /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: ++test, --test
 
@@ -213,7 +282,21 @@ export class AwkSection extends Section {
                 result.push([res_var, match.index + match[0].indexOf(res_var) + this.offset, AwkVariableOccurence.incremented_decremented]);
             }
         }
-        
+
+        let result2 : [string, number, AwkVariableOccurence][] = [];
+
+        for (let variable of result) {
+            let usage_regexp = new RegExp("(?<!\")" + variable[0] + "(?!\")", "gm");
+            
+            let match;
+            while (match = usage_regexp.exec(this.content)) {
+                result2.push([match[0], match.index + this.offset, AwkVariableOccurence.embedded]);
+            }
+        }
+
+        if (result2.length > 0) {
+            result = result.concat(result2);
+        }
 
         return result;
     }

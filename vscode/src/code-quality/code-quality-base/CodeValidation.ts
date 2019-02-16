@@ -22,8 +22,9 @@ export class CodeValidation
     severity : FunctionSeverity; // Severity enum
     apply_to_sections : string[]; // Sections where this validation is applicable
     mark : ((content : string, sections : Sections) => MarkerResult[]) | null; // Delegate to mark the code
-    applied_markers : MarkerResult[] = [];
+    public applied_markers : MarkerResult[] = [];
     offset_handled : boolean = false;
+    public ignore_comments : boolean = true;
     constructor(name : string, reason : string, severity : FunctionSeverity, apply_to_sections : string[]) {
         this.name = name;
         this.reason = reason;
@@ -32,15 +33,27 @@ export class CodeValidation
         this.mark = null;
     }
 
+    public get_filtered_markers() : MarkerResult[] {
+        let filtered = this.applied_markers.filter((element, index, array) => {
+            return !element.is_ignored;
+        });
+
+        return filtered.filter((element, index, array) => {
+            return array.findIndex(t => t.start_pos === element.start_pos && t.severity === element.severity && t.tooltip === element.tooltip) === index;
+        });
+    }
+
     // Summary of the applied markers, used for js/html
     public get_summary() : string {
         let result : string = "";
 
-        if (this.applied_markers.length === 0) {
+        let markers = this.get_filtered_markers();
+
+        if (markers.length === 0) {
             return result;
         }
 
-        for (let mark of this.applied_markers) {
+        for (let mark of markers) {
             let line_string = this.build_line_string(mark);
             
             result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'<button onclick="scroll_to(${mark.start_pos}, ${mark.end_pos});">Show</button>\n`;

@@ -14,6 +14,8 @@ export class MarkerResult {
     severity : FunctionSeverity; // Severity of the check
     code_validation : CodeValidation | undefined = undefined; // Parent validation of the check
     offending_text : string; // The text that has been grabbed while doing the check
+    public ignore_comments : boolean = false;
+    public is_ignored : boolean = false;
     constructor(start_pos : number, end_pos : number, tooltip : string, severity : FunctionSeverity, offset_handled : boolean, offending_text : string) {
         this.start_pos = start_pos;
         this.end_pos = end_pos;
@@ -26,9 +28,9 @@ export class MarkerResult {
 
 export class MarkerCollection extends vscode.Disposable {
     markers : Map<number, MarkerResult[]> = new Map();
-    decoration : vscode.TextEditorDecorationType;
+    decoration : vscode.TextEditorDecorationType | undefined;
 
-    constructor(decoration : vscode.TextEditorDecorationType) {
+    constructor(decoration : vscode.TextEditorDecorationType | undefined) {
         super(() => { this.dispose(); });
         this.decoration = decoration;
     }
@@ -64,15 +66,21 @@ export class MarkerCollection extends vscode.Disposable {
             }
         }
 
-        editor.setDecorations(this.decoration, decorations);
+        if (this.decoration !== undefined) {
+            editor.setDecorations(this.decoration, decorations);
+        }
     }
 
     public detach(editor : vscode.TextEditor) {
-        editor.setDecorations(this.decoration, []);
+        if (this.decoration !== undefined) {
+            editor.setDecorations(this.decoration, []);
+        }
     }
 
     public dispose() {
-        this.decoration.dispose();
+        if (this.decoration !== undefined) {
+            this.decoration.dispose();
+        }
         this.markers.clear();
     }
 }

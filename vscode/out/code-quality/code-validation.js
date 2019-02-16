@@ -4,7 +4,7 @@ const CodeValidation_1 = require("./code-quality-base/CodeValidation");
 const MarkerResult_1 = require("./code-quality-base/MarkerResult");
 const Section_1 = require("./code-quality-base/Section");
 const SpecialCase_1 = require("./code-quality-base/SpecialCase");
-const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
+const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 class CodeValidations {
     constructor() {
@@ -12,6 +12,7 @@ class CodeValidations {
         this.error_markers = [];
         this.information_markers = [];
         this.all_markers = [];
+        this.marker_map = {};
         this.functions = get_functions();
     }
     reset() {
@@ -23,11 +24,33 @@ class CodeValidations {
         this.information_markers = [];
         this.all_markers = [];
     }
+    has_marker(marker) {
+        let items = this.marker_map[marker.start_pos];
+        if (items) {
+            for (let existing_marker of items) {
+                if (existing_marker.end_pos === marker.end_pos) {
+                    if (existing_marker.offending_text === marker.offending_text && existing_marker.severity === marker.severity) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
     apply(sections) {
         this.reset();
         for (let sect of sections.all) {
             let marks = sect.get_marks(this, sections);
             for (let mark of marks) {
+                if (mark.ignore_comments && sections.script !== null) {
+                    if (sections.script.is_in_comment(mark.start_pos) || sections.script.is_in_comment(mark.end_pos)) {
+                        mark.is_ignored = true;
+                        continue;
+                    }
+                }
+                if (this.has_marker(mark)) {
+                    continue;
+                }
                 switch (mark.severity) {
                     case CodeValidation_1.FunctionSeverity.warning:
                         this.warning_markers.push(mark);
@@ -52,6 +75,7 @@ function get_functions() {
     //# my_example
     ///A regexp/ {
     let space_before_example = new CodeValidation_1.CodeValidationRegex("Space before example", "Space before examples may look nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does.", CodeValidation_1.FunctionSeverity.warning, ["awk"], /^(\# .+)(\n|\r\n)\/.+\/\s*{/gm);
+    space_before_example.ignore_comments = false;
     // Simply for good manners
     // Example of an offending line:
     // description: grab some data from the device
@@ -225,7 +249,6 @@ function get_functions() {
     functions.push(column_variable_manipulation);
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
-    //functions.push(valid_scriptname_prefix);
     functions.push(valid_script_name);
     functions.push(verify_metric_documentation);
     functions.push(only_write_metric_once);
