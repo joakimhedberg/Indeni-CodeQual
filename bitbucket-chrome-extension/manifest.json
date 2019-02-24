@@ -1,0 +1,36 @@
+{
+    "name": "Indeni Bitbucket ToDo's",
+    "version": "0.0.0.4",
+    "description": "Adding a to-do list to Bitbucket for script and rule writers",
+    "permissions": ["activeTab", "storage"],
+    "short_name": "IB2Do",
+    "content_scripts": [
+        {
+            "matches": ["https://bitbucket.org/indeni/indeni-knowledge/pull-requests/*"],
+            "css": ["css/todo.css"],
+            "js": [
+                "js/jquery-3.3.1.min.js",
+                "settings/settings.js",
+                "js/generateDBDocument.js",
+                "js/readDocumentFromDB.js",
+                "js/writeDocumentToDB.js",
+                "js/newToDoList.js",
+                "js/sanitizeToDoList.js",
+                "js/getPullRequestId.js",
+                "js/generateContent.js",
+                "js/main.js"
+            ],
+            "run_at": "document_idle"
+        }
+      ],
+    "web_accessible_resources": [
+        "images/link.png"
+    ],
+    "icons": {
+        "16": "images/icon16.png",
+        "32": "images/icon32.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png"
+      },
+    "manifest_version": 2
+}
