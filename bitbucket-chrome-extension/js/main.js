@@ -15,3 +15,8 @@ readDocumentFromDB()
         
     })
 
+waitFor('a.view-file', 1000, 20)
+    .then(generateTestDirectoryShortCuts)
+    .catch(function(err){
+        console.error(err);
+    })
