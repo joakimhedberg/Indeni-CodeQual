@@ -22,8 +22,6 @@ function generateContent(toDoList){
 
     let sortedKeys = Object.keys(toDoList).sort();
 
-    console.log(sortedKeys);
-
     for(i in sortedKeys){
         let key = sortedKeys[i];
         let itemMetaData = settings.toDos[key];
