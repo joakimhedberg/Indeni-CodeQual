@@ -1,6 +1,6 @@
 {
     "name": "Indeni Bitbucket ToDo's",
-    "version": "0.0.0.4",
+    "version": "0.0.0.5",
     "description": "Adding a to-do list to Bitbucket for script and rule writers",
     "permissions": ["activeTab", "storage"],
     "short_name": "IB2Do",
