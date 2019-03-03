@@ -1,5 +1,6 @@
 import { FunctionSeverity, CodeValidation } from "./CodeValidation";
 
+import * as vscode from 'vscode';
 /*
     Result markers for the checks, check markers really...
 */
@@ -13,6 +14,8 @@ export class MarkerResult {
     severity : FunctionSeverity; // Severity of the check
     code_validation : CodeValidation | undefined = undefined; // Parent validation of the check
     offending_text : string; // The text that has been grabbed while doing the check
+    public ignore_comments : boolean = false;
+    public is_ignored : boolean = false;
     constructor(start_pos : number, end_pos : number, tooltip : string, severity : FunctionSeverity, offset_handled : boolean, offending_text : string) {
         this.start_pos = start_pos;
         this.end_pos = end_pos;
@@ -20,5 +23,64 @@ export class MarkerResult {
         this.offset_handled = offset_handled;
         this.severity = severity;
         this.offending_text = offending_text;
+    }
+}
+
+export class MarkerCollection extends vscode.Disposable {
+    markers : Map<number, MarkerResult[]> = new Map();
+    decoration : vscode.TextEditorDecorationType | undefined;
+
+    constructor(decoration : vscode.TextEditorDecorationType | undefined) {
+        super(() => { this.dispose(); });
+        this.decoration = decoration;
+    }
+
+    public clear() {
+        this.markers.clear();
+    }
+
+    public append(marker : MarkerResult) {
+        let existing = this.markers.get(marker.start_pos);
+        if (existing !== undefined) {
+            for (let exists of existing) {
+                if (exists.end_pos === marker.end_pos) {
+                    return false;
+                }
+            }
+
+            existing.push(marker);
+        }
+        else {
+            this.markers.set(marker.start_pos, [marker]);
+        }
+    }
+
+    public apply(editor : vscode.TextEditor)
+    {
+        let decorations = [];
+        for (let marker_collection of this.markers) {
+            for (let marker of marker_collection[1]) {
+                let start_pos = editor.document.positionAt(marker.start_pos);
+                let end_pos = editor.document.positionAt(marker.end_pos);
+                decorations.push({ range: new vscode.Range(start_pos, end_pos), hoverMessage: marker.tooltip });
+            }
+        }
+
+        if (this.decoration !== undefined) {
+            editor.setDecorations(this.decoration, decorations);
+        }
+    }
+
+    public detach(editor : vscode.TextEditor) {
+        if (this.decoration !== undefined) {
+            editor.setDecorations(this.decoration, []);
+        }
+    }
+
+    public dispose() {
+        if (this.decoration !== undefined) {
+            this.decoration.dispose();
+        }
+        this.markers.clear();
     }
 }

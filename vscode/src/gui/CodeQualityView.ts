@@ -15,10 +15,29 @@ export class CodeQualityView {
         this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
     }
 
-    public show_web_view(validations : CodeValidations, manual : boolean) {
+    public show_web_view(validations : CodeValidations, manual : boolean, editor : vscode.TextEditor) {
         if (this.panel === undefined && manual) {
             this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true } );
             this.panel.onDidDispose((e : void) => { this.panel = undefined; });
+            this.panel.webview.onDidReceiveMessage(message => {
+                switch (message.command) {
+                    case 'scroll':
+                        if (message.start && message.end) {
+                            if (editor !== undefined) {
+                                let doc = editor.document;
+                                let pos1 = doc.positionAt(message.start);
+                                let pos2 = doc.positionAt(message.end);
+                                let rng = new vscode.Range(pos1, pos2);
+                                if (editor.document.validateRange(rng)) {
+                                    editor.revealRange(rng);
+                                    editor.selection = new vscode.Selection(pos1, pos2);
+                                }
+                            }
+                        
+                        }
+                    break;
+                }
+            }, undefined);
         }
 
         if (this.panel !== undefined)
@@ -38,16 +57,16 @@ export class CodeQualityView {
         result += `<body>`;
         result += this.get_script();
         result += this.get_style();
-
-        result += `<div class="used" id="validation">Active</div>`;
+        result += `<div class="used" id="validation">Non-compliant</div>`;
         let index : number = 0;
         let header_drawn : boolean = false;
         for (let validation of validations.functions.sort(this.sort_validation)) {
             if (validation.applied_markers.length === 0 && !header_drawn) {
-                result += `<div class="unused">Inactive</div>`;
+                result += `<div class="unused">Compliant</div>`;
                 header_drawn = true;
             }
-            result += `<div class="${validation.severity} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.applied_markers.length})</span></span><span class="tooltiptext">${validation.reason}</div>`;
+            let div_class = header_drawn? "compliant": validation.severity;
+            result += `<div class="${div_class} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.get_filtered_markers().length})</span></span><span class="tooltiptext">${validation.reason}</div>`;
             let summary = validation.get_summary();
             if (summary.length > 0) {
                 summary_data[index] = validation.get_summary();

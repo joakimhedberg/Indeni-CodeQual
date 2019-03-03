@@ -2,16 +2,68 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CodeValidation_1 = require("./code-quality-base/CodeValidation");
 const MarkerResult_1 = require("./code-quality-base/MarkerResult");
+const Section_1 = require("./code-quality-base/Section");
 const SpecialCase_1 = require("./code-quality-base/SpecialCase");
-const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix"];
+const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 class CodeValidations {
     constructor() {
+        this.warning_markers = [];
+        this.error_markers = [];
+        this.information_markers = [];
+        this.all_markers = [];
+        this.marker_map = {};
         this.functions = get_functions();
     }
     reset() {
         for (let validation of this.functions) {
             validation.reset();
+        }
+        this.warning_markers = [];
+        this.error_markers = [];
+        this.information_markers = [];
+        this.all_markers = [];
+    }
+    has_marker(marker) {
+        let items = this.marker_map[marker.start_pos];
+        if (items) {
+            for (let existing_marker of items) {
+                if (existing_marker.end_pos === marker.end_pos) {
+                    if (existing_marker.offending_text === marker.offending_text && existing_marker.severity === marker.severity) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    apply(sections) {
+        this.reset();
+        for (let sect of sections.all) {
+            let marks = sect.get_marks(this, sections);
+            for (let mark of marks) {
+                if (mark.ignore_comments && sections.script !== null) {
+                    if (sections.script.is_in_comment(mark.start_pos) || sections.script.is_in_comment(mark.end_pos)) {
+                        mark.is_ignored = true;
+                        continue;
+                    }
+                }
+                if (this.has_marker(mark)) {
+                    continue;
+                }
+                switch (mark.severity) {
+                    case CodeValidation_1.FunctionSeverity.warning:
+                        this.warning_markers.push(mark);
+                        break;
+                    case CodeValidation_1.FunctionSeverity.error:
+                        this.error_markers.push(mark);
+                        break;
+                    case CodeValidation_1.FunctionSeverity.information:
+                        this.information_markers.push(mark);
+                        break;
+                }
+                this.all_markers.push(mark);
+            }
         }
     }
 }
@@ -22,7 +74,8 @@ function get_functions() {
     // Example of an offending line: 
     //# my_example
     ///A regexp/ {
-    let space_before_example = new CodeValidation_1.CodeValidationRegex("Space before example", "Space before examples may look nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does.", CodeValidation_1.FunctionSeverity.warning, ["awk"], /(\# .+)\n\/.+\/\s*{\n/g);
+    let space_before_example = new CodeValidation_1.CodeValidationRegex("Space before example", "Space before examples may look nice, but it's far from exact unless the input file actually has one. Consider removing this space unless yours does.", CodeValidation_1.FunctionSeverity.warning, ["awk"], /^(\# .+)(\n|\r\n)\/.+\/\s*{/gm);
+    space_before_example.ignore_comments = false;
     // Simply for good manners
     // Example of an offending line:
     // description: grab some data from the device
@@ -58,7 +111,7 @@ function get_functions() {
     // Single equal sign in an if is always true and the cause of bugs
     // Example of an offending line: 
     //if (variable = 1) { 
-    let if_contains_single_equal_sign = new CodeValidation_1.CodeValidationRegex("If statement with single equal sign", "Found an if statement that contains a single equals sign. Since this is most likely an accident (and it'd always return true) it could cause strange bugs in the code. Consider replacing with double equal signs.", CodeValidation_1.FunctionSeverity.error, ["awk"], /if\s*?\([^=]+[^=!](=){1}[^=].+\)/gm);
+    let if_contains_single_equal_sign = new CodeValidation_1.CodeValidationRegex("If statement with single equal sign", "Found an if statement that contains a single equals sign. Since this is most likely an accident (and it'd always return true) it could cause strange bugs in the code. Consider replacing with double equal signs.", CodeValidation_1.FunctionSeverity.error, ["awk"], /if\s+\([^=!]+(=)[^=]+\)\s+\{/gm); // /if\s*?\([^=]+[^=!](=){1}[^=].+\)/gm);
     //Trailing white space serves no purpose
     // Example of an offending line:
     // variable = test 
@@ -85,10 +138,6 @@ function get_functions() {
     //#if(something == "1"){
     ///A regexp/ {
     let generic_space_before_example_and_after = new CodeValidation_1.CodeValidationRegex("Space <3", "Space in certain places makes the code look nicer.", CodeValidation_1.FunctionSeverity.information, ["awk"], /(if\()|(\){)|}else|else{/g);
-    // This check has been removed, it is not needed since git can handle CRLF-LF conversions
-    // Line feeds can differ between operating systems and editors, in a mixed environment \n is always the way to go
-    // Example of offending line\r\n
-    // let carriage_return = new CodeValidationRegex("Carriage return", "Set your editor to use simple line feeds(LF) and not CRLF.", FunctionSeverity.error, ["script"], /(\r+)/g);
     // Changing column values is potentially the cause of bugs and should be avoided
     // Example of an offending line:
     //clusterMode = trim(substr($0, index($0, ":") + 1))
@@ -96,29 +145,31 @@ function get_functions() {
     // A "~" should always be followed by a space (unless it is a regexp)
     // Example of an offending line:
     // if ($0 ~/Active/) {
-    let tilde_without_space = new CodeValidation_1.CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ \n]{1}~[^ \n]{1})|([^ \n]{1}~)|(~[^ \n]{1})/gm);
+    let tilde_without_space = new CodeValidation_1.CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm);
     // Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).
     // Example of an offending line:
     // if ($0 ~ "ClusterXL Inactive") {
     let tilde_without_regexp_notation = new CodeValidation_1.CodeValidationRegex("Tilde without regexp notation", "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).", CodeValidation_1.FunctionSeverity.warning, ["awk"], /(~\s+[^/])/gm);
     // Prefixes is important not only to distinguish which type of device the script is executed on
     // but also to avoid script name collisions. 
+    // A script name should consist of letters a-z and scores
     // This is just a recommendation.
     // Example of an offending line: 
     //name: sausage-metric
-    let valid_scriptname_prefix = new CodeValidation_1.CodeValidation("Valid script name prefix", "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), CodeValidation_1.FunctionSeverity.error, ["meta"]);
-    valid_scriptname_prefix.mark = (content, sections) => {
+    let valid_script_name = new CodeValidation_1.CodeValidation("Valid script name", "Script names should consist of letters a-z and scores -", CodeValidation_1.FunctionSeverity.error, ["meta"]);
+    valid_script_name.mark = (content, sections) => {
         let result = [];
-        let reason = "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", ");
-        var script_name_row = content.match(/^name:.*$/m);
-        if (script_name_row !== null && script_name_row.length === 1) {
-            var script_name = script_name_row[0].split(" ")[1];
-            var prefix = script_name.replace(/-.+$/, "");
-            if (indeni_script_name_prefixes.indexOf(prefix) === -1) {
-                var re = new RegExp(script_name);
-                var match = re.exec(content);
-                if (match !== null && match.length > 0) {
-                    result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, reason, CodeValidation_1.FunctionSeverity.error, false, match[0]));
+        if (sections.meta !== null) {
+            let script_name = sections.meta.get_script_name();
+            if (script_name !== undefined) {
+                let script_name_split = script_name[1].split(/-/);
+                if (indeni_script_name_prefixes.indexOf(script_name_split[0]) === -1) {
+                    result.push(new MarkerResult_1.MarkerResult(script_name[0], script_name[0] + script_name_split[0].length, "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + indeni_script_name_prefixes.join(", "), CodeValidation_1.FunctionSeverity.error, false, script_name_split[0]));
+                }
+                let error_characters = /([^a-z\-])/gm;
+                let match;
+                while (match = error_characters.exec(script_name[1])) {
+                    result.push(new MarkerResult_1.MarkerResult(script_name[0] + match.index, script_name[0] + match.index + match[1].length, "A script name should consist of letters(a-z) and dashes(-)", CodeValidation_1.FunctionSeverity.error, false, match[1]));
                 }
             }
         }
@@ -156,7 +207,9 @@ function get_functions() {
     // Example of an offending line: 
     //myVariable = 1
     //my-variable = 1
-    let variable_naming_convention = new CodeValidation_1.CodeValidationByLine("Variable naming", "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", CodeValidation_1.FunctionSeverity.warning, ["awk"], /(?!.*\()(["]?[a-z0-9]+([A-Z0-9][a-z0-9]+["]?)+)/g, [new SpecialCase_1.SpecialCase(/\//), new SpecialCase_1.SpecialCase(/#/)], [/"[^"]+"|(([a-z0-9]+\-)+[a-z0-9]+)/g]);
+    //let variable_naming_convention = new CodeValidationByLine("Variable naming", "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", FunctionSeverity.warning, ["awk"], /(?!.*\()(["]?[a-z0-9]+([A-Z0-9][a-z0-9]+["]?)+)/g, [new SpecialCase(/\//), new SpecialCase(/#/)], [/"[^"]+"|(([a-z0-9]+\-)+[a-z0-9]+)/g]);
+    let variable_naming_convention = new CodeValidation_1.CodeValidation("Variable naming", "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", CodeValidation_1.FunctionSeverity.warning, ["awk", "yaml"]);
+    variable_naming_convention.mark = awk_variable_naming;
     // includes_resource_data means that the script is always executed by indeni, even during high CPU usage
     //includes_resource_data: true
     let includes_resource_data = new CodeValidation_1.CodeValidation("Resource data validation", "includes_resource_data means that the script is always executed by indeni, even during high CPU usage. It has to be included for scripts using the cpu-usage and/or memory-usage metrics.\nIf this check fails it means that you have specified includes_resource_data, but not used the metrics, or that you have used cpu-usage and/or memory-usage without including includes_resource_data in the meta section.", CodeValidation_1.FunctionSeverity.error, ["script"]);
@@ -169,7 +222,20 @@ function get_functions() {
     //       skip-documentation: true
     let invalid_yaml_leading_space = new CodeValidation_1.CodeValidation("Invalid YAML white-space", "Since indentation in YAML is 4 spaces having a number not divisible by 4 would cause an error in most cases.", CodeValidation_1.FunctionSeverity.error, ["yaml"]);
     invalid_yaml_leading_space.mark = verify_yaml_indent;
-    let comparison_operator_no_space = new CodeValidation_1.CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase_1.SpecialCase(/split/), new SpecialCase_1.SpecialCase(/gsub/), new SpecialCase_1.SpecialCase(/sub/), new SpecialCase_1.SpecialCase(/index/), new SpecialCase_1.SpecialCase(/match/), new SpecialCase_1.SpecialCase(/join/), new SpecialCase_1.SpecialCase(/\!\(/), new SpecialCase_1.SpecialCase(/!\//), new SpecialCase_1.SpecialCase(/#/)]);
+    // Example of offending lines:
+    // testar_var=23
+    // test_var= 23
+    // test_var =23
+    let comparison_operator_no_space = new CodeValidation_1.CodeValidationByLine("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, ["awk"], /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [new SpecialCase_1.SpecialCase(/split/), new SpecialCase_1.SpecialCase(/gsub/), new SpecialCase_1.SpecialCase(/sub/), /*new SpecialCase(/index/), */ new SpecialCase_1.SpecialCase(/match/), new SpecialCase_1.SpecialCase(/join/), new SpecialCase_1.SpecialCase(/\!\(/), new SpecialCase_1.SpecialCase(/!\//), new SpecialCase_1.SpecialCase(/#/)]);
+    // Example of offending lines:
+    // # META
+    // #META
+    // # REMOTE::SSH
+    // # REMOTE SSH
+    // #! REMOTE SSH
+    // #!REMOTE SSH
+    let erroneous_section_definition = new CodeValidation_1.CodeValidation("Erroneous section marker", "The section marker must start with #!, otherwise the script might fail or show some unpredicted behavior", CodeValidation_1.FunctionSeverity.error, ["script"]);
+    erroneous_section_definition.mark = mark_erroneous_section_definitions;
     functions.push(space_before_example);
     functions.push(lowercase_description);
     functions.push(monitoring_interval_above_60);
@@ -183,7 +249,7 @@ function get_functions() {
     functions.push(column_variable_manipulation);
     functions.push(tilde_without_space);
     functions.push(tilde_without_regexp_notation);
-    functions.push(valid_scriptname_prefix);
+    functions.push(valid_script_name);
     functions.push(verify_metric_documentation);
     functions.push(only_write_metric_once);
     functions.push(comma_without_space);
@@ -191,39 +257,179 @@ function get_functions() {
     functions.push(includes_resource_data);
     functions.push(invalid_yaml_leading_space);
     functions.push(comparison_operator_no_space);
-    // The CRLF-LF check has been disabled
-    // functions.push(carriage_return);
+    functions.push(erroneous_section_definition);
     return functions;
 }
-function verify_yaml_indent(content, sections) {
-    let lines = content.split("\n");
+function awk_variable_naming(content, sections) {
     let result = [];
-    let line_offset = 0;
+    if (sections.awk !== null) {
+        for (let res of awk_section_variable_naming(sections.awk)) {
+            result.push(res);
+        }
+    }
+    else {
+        let yaml_section = sections.xml || sections.json;
+        if (yaml_section !== null) {
+            for (let awk_section of yaml_section.get_awk()) {
+                for (let res of awk_section_variable_naming(awk_section)) {
+                    result.push(res);
+                }
+            }
+        }
+    }
+    return result;
+}
+function mark_erroneous_section_definitions(content, sections) {
+    let result = [];
+    let regex_remote = /^(.*)(REMOTE)(.*?)([A-Z]{3,4})\s?$/gm;
+    let regex_parser = /^(.*)(PARSER)(.*)?([A-Z]{3,4})\s?$/gm;
+    let regex_meta = /^(.*)(META)\s?/gm;
+    let regex_comments = /^(.*)(COMMENTS)\s?/gm;
+    let match;
+    while (match = regex_remote.exec(content)) {
+        mark_erroneous_section(match, result);
+    }
+    while (match = regex_parser.exec(content)) {
+        mark_erroneous_section(match, result);
+    }
+    while (match = regex_meta.exec(content)) {
+        let fail = false;
+        if (match.length < 2) {
+            fail = true;
+        }
+        else {
+            if (!match[0].startsWith("#!")) {
+                fail = true;
+            }
+        }
+        if (fail) {
+            result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A meta section marker should keep the format #! META", CodeValidation_1.FunctionSeverity.error, false, match[0]));
+        }
+    }
+    while (match = regex_comments.exec(content)) {
+        let fail = false;
+        if (match.length < 2) {
+            fail = true;
+        }
+        else {
+            if (!match[0].startsWith("#!")) {
+                fail = true;
+            }
+        }
+        if (fail) {
+            result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A comment section marker should keep the format #! META", CodeValidation_1.FunctionSeverity.error, false, match[0]));
+        }
+    }
+    return result;
+}
+function mark_erroneous_section(match, result) {
+    let fail = false;
+    // There should be 5 matches 0: (Full match) 1: (#!), 2: (REMOTE), 3: (::), 4: (HTTP|SSH)
+    if (match.length < 4) {
+        fail = true;
+    }
+    else {
+        if (!match[1].startsWith("#!")) {
+            fail = true;
+        }
+        else {
+            if (!match[3].startsWith("::")) {
+                fail = true;
+            }
+        }
+    }
+    if (fail) {
+        result.push(new MarkerResult_1.MarkerResult(match.index, match.index + match[0].length, "A section marker should keep the format #! SECTION::SUBSECTION + / ", CodeValidation_1.FunctionSeverity.error, false, match[0]));
+    }
+}
+function awk_section_variable_naming(section) {
+    let result = [];
+    let variables = new Map();
+    let assignments = [];
+    let other = new Map();
+    for (let variable of section.get_variables()) {
+        if (variable[2] === Section_1.AwkVariableOccurence.assignment) {
+            assignments.push(variable);
+        }
+        else {
+            other.set(variable[0], (other.get(variable[0]) || 0) + 1);
+        }
+        let arr = variables.get(variable[0]);
+        if (arr === undefined) {
+            arr = [];
+            variables.set(variable[0], arr);
+        }
+        arr.push(variable[1]);
+    }
+    for (let item of variables) {
+        if (!verify_variable_spelling(item[0])) {
+            for (let startpos of item[1]) {
+                result.push(new MarkerResult_1.MarkerResult(startpos, startpos + item[0].length, "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", CodeValidation_1.FunctionSeverity.warning, true, item[0]));
+            }
+        }
+    }
+    return result;
+}
+function verify_variable_spelling(varname) {
+    let match = varname.match("^[a-z0-9_]*");
+    if (match === null) {
+        return false;
+    }
+    return match[0] === varname;
+}
+function verify_yaml_indent(content, sections) {
+    let result = [];
+    let regex = /[\r\n](\s*)/g;
+    let match;
+    let section = sections.json || sections.xml;
     let indexes = [];
-    if (sections.json !== null) {
+    if (section !== null) {
+        indexes = section.get_awk_sections();
+    }
+    while (match = regex.exec(content)) {
+        if (is_within(indexes, match.index)) {
+            continue;
+        }
+        if (match.length > 0) {
+            let text = match[1].replace(/[\r\n]*/, '');
+            if (text.length % 4 && text.length > 0) {
+                result.push(new MarkerResult_1.MarkerResult(match.index + match[0].indexOf(text), match.index + match[0].indexOf(text) + text.length, "Yaml indent not divisible by 4", CodeValidation_1.FunctionSeverity.error, false, text + " - " + text.length + " characters"));
+            }
+        }
+    }
+    return result;
+    /*let lines = content.split("\n");
+    let line_offset = 0;
+
+    let indexes : [number, number][] = [];
+    if (sections.json !== null){
         indexes = sections.json.get_awk_sections();
     }
     else if (sections.xml !== null) {
         indexes = sections.xml.get_awk_sections();
     }
+
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
         let regex = /^(\s+)/;
         let match = line.match(regex);
-        if (match !== null && match !== undefined) {
+        if (match !== null && match !== undefined)
+        {
             if (match.index !== undefined) {
-                if (!is_within(indexes, match.index + line_offset)) {
+                if (!is_within(indexes, match.index + line_offset))
+                {
                     // Workaround to handle CRLF situations. The regex was behaving strangely. Seems like ^ only matches \n which means (\r) is also in the mix
                     var issue = match[1];
                     if (issue.length % 4 && issue.length > 0) {
-                        result.push(new MarkerResult_1.MarkerResult(match.index + line_offset, match.index + issue.length + line_offset, "Yaml indent not divisible by 4", CodeValidation_1.FunctionSeverity.error, false, issue));
+                        result.push(new MarkerResult(match.index + line_offset, match.index + issue.length + line_offset, "Yaml indent not divisible by 4", FunctionSeverity.error, false, issue));
                     }
                 }
             }
         }
         line_offset += lines[i].length + 1;
     }
-    return result;
+
+    return result;*/
 }
 function is_within(indexes, match_index) {
     for (let index of indexes) {

@@ -2,7 +2,7 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.1.1",
+    "version": "0.1.6",
     "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
@@ -34,6 +34,30 @@
             {
                 "command": "extension.setLanguage",
                 "title": "Indeni code quality: Set syntax highlight(awk/yaml)"
+            }
+        ],
+        "keybindings": [
+            {
+                "key": "ctrl+i p",
+                "command": "extension.triggerUpdate"
+            },
+            {
+                "key": "ctrl+i c",
+                "command": "extension.triggerClear"
+            },
+            {
+                "key": "ctrl+i t",
+                "command": "extension.toggleLive"
+            },
+            {
+                "key": "ctrl+i l",
+                "command": "extension.setLanguage"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "awk",
+                "path": "./snippets/writemetrics.json"
             }
         ],
         "colors": [

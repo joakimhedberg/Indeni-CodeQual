@@ -5,3 +5,14 @@ function show_summary(id) {
     }
     document.getElementById('summary_' + id).style.display = 'block';
 }
+
+const vscode = acquireVsCodeApi();
+
+function scroll_to(text_start, text_end) {
+    vscode.postMessage(
+        { 
+            command: 'scroll',
+            start: text_start,
+            end: text_end
+        });
+}

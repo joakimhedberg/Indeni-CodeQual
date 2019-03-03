@@ -22,8 +22,9 @@ export class CodeValidation
     severity : FunctionSeverity; // Severity enum
     apply_to_sections : string[]; // Sections where this validation is applicable
     mark : ((content : string, sections : Sections) => MarkerResult[]) | null; // Delegate to mark the code
-    applied_markers : MarkerResult[] = [];
+    public applied_markers : MarkerResult[] = [];
     offset_handled : boolean = false;
+    public ignore_comments : boolean = true;
     constructor(name : string, reason : string, severity : FunctionSeverity, apply_to_sections : string[]) {
         this.name = name;
         this.reason = reason;
@@ -32,18 +33,30 @@ export class CodeValidation
         this.mark = null;
     }
 
+    public get_filtered_markers() : MarkerResult[] {
+        let filtered = this.applied_markers.filter((element, index, array) => {
+            return !element.is_ignored;
+        });
+
+        return filtered.filter((element, index, array) => {
+            return array.findIndex(t => t.start_pos === element.start_pos && t.severity === element.severity && t.tooltip === element.tooltip) === index;
+        });
+    }
+
     // Summary of the applied markers, used for js/html
     public get_summary() : string {
         let result : string = "";
 
-        if (this.applied_markers.length === 0) {
+        let markers = this.get_filtered_markers();
+
+        if (markers.length === 0) {
             return result;
         }
 
-        for (let mark of this.applied_markers) {
+        for (let mark of markers) {
             let line_string = this.build_line_string(mark);
             
-            result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'\n`;
+            result += `[Line: ${line_string}] [Start-End(global): ${mark.start_pos}, ${mark.end_pos}] Offending text: '${mark.offending_text}'<button onclick="scroll_to(${mark.start_pos}, ${mark.end_pos});">Show</button>\n`;
         }
 
         return result;
@@ -100,19 +113,20 @@ export class CodeValidationRegex extends CodeValidation {
         this.mark = (content : string, sections : Sections) : MarkerResult[] => {
             let match;
             let result : MarkerResult[] = [];
+
             while (match = regex.exec(content)) {
                 if (match.length > 1) {
                     let idx = 0;
-
-                    for (let i =    1; i < match.length; i++)
+                    // Find the first actual match
+                    for (let i = 1; i < match.length; i++)
                     {
-                        if (match[i] === undefined) {
+                        if (match[i] === undefined || match[i] === null) {
                             continue;
                         }
-                        idx = match[0].indexOf(match[1], idx);
+                        idx = match[0].indexOf(match[i], idx);
                         const start_pos = match.index + idx;
                         const end_pos = match.index + idx + match[i].length;
-                        result.push(new MarkerResult(start_pos, end_pos, this.reason, this.severity, this.offset_handled, match[1]));
+                        result.push(new MarkerResult(start_pos, end_pos, this.reason, this.severity, this.offset_handled, match[i]));
                     }
                 }
             }
@@ -146,8 +160,14 @@ export class CodeValidationByLine extends CodeValidationRegex {
                     let match;
                     while (match = line_regex.exec(line)) {
                         if (match.length > 1) {
-                            if (!this.excluded(match[1])) {
-                                result.push(new MarkerResult(match.index + line_offset, match.index + match[1].length + line_offset, this.reason, this.severity, this.offset_handled, match[1]));
+                            for (let i = 1; i < match.length; i++)
+                            {
+                                if (match[i] === null || match[i] === undefined) {
+                                    continue;
+                                }
+                                if (!this.excluded(match[i])) {
+                                    result.push(new MarkerResult(match.index + line_offset, match.index + match[i].length + line_offset, this.reason, this.severity, this.offset_handled, match[i]));
+                                }
                             }
                         }
                     }
