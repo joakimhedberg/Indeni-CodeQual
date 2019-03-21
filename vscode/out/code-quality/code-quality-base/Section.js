@@ -233,10 +233,9 @@ class AwkSection extends Section {
         }
         let result2 = [];
         for (let variable of result) {
-            let usage_regexp = new RegExp("(?<!\")" + variable[0] + "(?!\")", "gm");
-            let match;
-            while (match = usage_regexp.exec(this.content)) {
-                result2.push([match[0], match.index + this.offset, AwkVariableOccurence.embedded]);
+            let index = -1;
+            while ((index = this.content.indexOf(variable[0], index + 1)) > -1) {
+                result2.push([variable[0], index + this.offset, AwkVariableOccurence.embedded]);
             }
         }
         if (result2.length > 0) {

@@ -20,14 +20,13 @@ const quality_functions = new code_validation_1.CodeValidations();
 function activate(context) {
     quality_view = new CodeQualityView_1.CodeQualityView(path.join(context.extensionPath, 'resources'));
     let error_decoration_type = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(255, 0, 0, 0.2)',
         fontWeight: 'bold',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        overviewRulerColor: 'red',
+        borderWidth: '0px 0px 2px 0px',
+        borderStyle: 'dashed',
+        overviewRulerColor: { id: 'extension.errorBorderColor' },
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
-            borderColor: { id: 'extension.errorBorderColor' },
+            borderColor: { id: 'extension.errorBorderColor' }
         },
         dark: {
             borderColor: { id: 'extension.errorBorderColor' }
@@ -35,11 +34,10 @@ function activate(context) {
     });
     error_collection = new MarkerResult_1.MarkerCollection(error_decoration_type);
     let warning_decoration_type = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(255, 255, 0, 0.2)',
         fontWeight: 'bold',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        overviewRulerColor: 'yellow',
+        borderWidth: '0px 0px 2px 0px',
+        borderStyle: 'dashed',
+        overviewRulerColor: { id: 'extension.warningBorderColor' },
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
             borderColor: { id: 'extension.warningBorderColor' }
@@ -50,17 +48,16 @@ function activate(context) {
     });
     warning_collection = new MarkerResult_1.MarkerCollection(warning_decoration_type);
     let info_decoration_type = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(0, 0, 255, 0.2)',
         fontWeight: 'bold',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        overviewRulerColor: 'blue',
+        borderWidth: '0px 0px 2px 0px',
+        borderStyle: 'dashed',
+        overviewRulerColor: { id: 'extension.informationBorderColor' },
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
-            borderColor: 'blue'
+            borderColor: { id: 'extension.informationBorderColor' },
         },
         dark: {
-            borderColor: '#00cccc'
+            borderColor: { id: 'extension.informationBorderColor' },
         }
     });
     information_collection = new MarkerResult_1.MarkerCollection(info_decoration_type);

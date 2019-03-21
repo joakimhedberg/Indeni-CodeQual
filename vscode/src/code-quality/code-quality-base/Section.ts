@@ -73,6 +73,7 @@ export class Section {
             if (validation.mark === null) {
                 continue;
             }
+
             let can_apply = false;
             for (let sect of validation.apply_to_sections) {
                 for (let target_sect of this.apply) {
@@ -249,7 +250,7 @@ export class AwkSection extends Section {
                 }
             }
         }
-
+        
         while (match = regex_assigned_delete.exec(this.content)) {
             if (match.length > 0) 
             {
@@ -284,20 +285,18 @@ export class AwkSection extends Section {
         }
 
         let result2 : [string, number, AwkVariableOccurence][] = [];
-
-        for (let variable of result) {
-            let usage_regexp = new RegExp("(?<!\")" + variable[0] + "(?!\")", "gm");
-            
-            let match;
-            while (match = usage_regexp.exec(this.content)) {
-                result2.push([match[0], match.index + this.offset, AwkVariableOccurence.embedded]);
+        
+        for (let variable of result) {          
+            let index = -1;
+            while ((index = this.content.indexOf(variable[0], index  + 1)) > -1) {
+                result2.push([variable[0], index + this.offset, AwkVariableOccurence.embedded]);
             }
+
         }
 
         if (result2.length > 0) {
             result = result.concat(result2);
         }
-
         return result;
     }
 

@@ -63,7 +63,7 @@
         "colors": [
             {
                 "id": "extension.warningBorderColor",
-                "description" : "Border color for warnings",
+                "description": "Border color for warnings",
                 "defaults": {
                     "dark": "#a4a244",
                     "light": "#ffff00",

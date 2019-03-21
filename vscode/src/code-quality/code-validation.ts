@@ -46,6 +46,7 @@ export class CodeValidations {
         this.reset();
         for (let sect of sections.all) {
             let marks = sect.get_marks(this, sections);
+
             for (let mark of marks) {
                 if (mark.ignore_comments && sections.script !== null)
                 {

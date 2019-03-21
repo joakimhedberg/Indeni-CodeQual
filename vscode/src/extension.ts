@@ -22,28 +22,26 @@ const quality_functions : CodeValidations = new CodeValidations();
 export function activate(context: vscode.ExtensionContext) {
     quality_view = new CodeQualityView(path.join(context.extensionPath, 'resources'));
     let error_decoration_type = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(255, 0, 0, 0.2)',
         fontWeight: 'bold',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        overviewRulerColor: 'red',
+        borderWidth: '0px 0px 2px 0px',
+        borderStyle: 'dashed',
+        overviewRulerColor: { id: 'extension.errorBorderColor' },
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
-            borderColor: { id: 'extension.errorBorderColor'},
+            borderColor: { id: 'extension.errorBorderColor' }
         },
         dark: {
-            borderColor: { id: 'extension.errorBorderColor'}
+            borderColor: { id: 'extension.errorBorderColor' }
         }
     });
 
     error_collection = new MarkerCollection(error_decoration_type);
     
     let warning_decoration_type = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(255, 255, 0, 0.2)',
         fontWeight: 'bold',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        overviewRulerColor: 'yellow',
+        borderWidth: '0px 0px 2px 0px',
+        borderStyle: 'dashed',
+        overviewRulerColor: { id: 'extension.warningBorderColor' },
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
             borderColor: { id: 'extension.warningBorderColor'}
@@ -56,17 +54,16 @@ export function activate(context: vscode.ExtensionContext) {
     warning_collection = new MarkerCollection(warning_decoration_type);
 
     let info_decoration_type = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(0, 0, 255, 0.2)',
         fontWeight: 'bold',
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        overviewRulerColor: 'blue',
+        borderWidth: '0px 0px 2px 0px',
+        borderStyle: 'dashed',
+        overviewRulerColor: { id: 'extension.informationBorderColor' },
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
-            borderColor: 'blue'
+            borderColor: { id: 'extension.informationBorderColor' },
         },
         dark: {
-            borderColor: '#00cccc'
+            borderColor: { id: 'extension.informationBorderColor' },
         }
     });
 
@@ -193,6 +190,7 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
         return;
     }
 
+    
     let editor = vscode.window.activeTextEditor;
     if (editor === null || editor === undefined) {
         return;
@@ -209,15 +207,16 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
     if (!sections.is_valid()) {
         return;
     }
-    quality_functions.apply(sections);
 
+    quality_functions.apply(sections);
+    
     for (let warning of quality_functions.warning_markers) {
         warning_collection.append(warning);
     }
     for (let error of quality_functions.error_markers) {
         error_collection.append(error);
     }
-
+    
     for (let info of quality_functions.information_markers) {
         information_collection.append(info);
     }
