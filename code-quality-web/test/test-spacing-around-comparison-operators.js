@@ -1,5 +1,5 @@
 var test = require('tape');
-var valid = require('../code-quality/code-validation.js');
+var valid = require('../code-validation.js');
 
 test('test comparison operators without spaces', function (t) {
 

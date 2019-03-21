@@ -1,9 +1,9 @@
 'use strict';
 var fs = require('fs');
 var test = require('tape');
-var mark = require('../code-quality/indeni-js-support.js');
-var valid = require('../code-quality/code-validation.js');
-var sections = require('../code-quality/common.js');
+var mark = require('../indeni-js-support.js');
+var valid = require('../code-validation.js');
+var sections = require('../common.js');
 
 /********
  *  IMPORTANT: The .ind test input files for these tests must have *nix line endings (lf) to work properly with the tests.    
