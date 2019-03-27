@@ -134,7 +134,7 @@ export class CodeQualityView {
                 header_drawn = true;
             }
             let div_class = header_drawn? "compliant": validation.severity;
-            result += `<div class="${div_class} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.get_filtered_markers().length})</span></span><span class="tooltiptext">${validation.reason}</div>`;
+            result += `<div class="${div_class} tooltip" onclick="show_summary('${index}');">${validation.name}<span class="validation_result">(${validation.get_filtered_markers().length})</span><span class="tooltiptext">${validation.reason}</div>`;
             let summary = validation.get_summary();
             if (summary.length > 0) {
                 summary_data[index] = validation.get_summary();

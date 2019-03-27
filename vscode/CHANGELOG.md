@@ -4,6 +4,10 @@
 Various bugfixes reported @ github
 A bug where the web view shows "null" at the top of the page
 
+## [0.2.0]
+Added support for the new script map structure
+
+
 ## [0.1.6]
 Added ignore functionality to comments
 Added gigamon to the allowed script prefixes
