@@ -14,8 +14,11 @@ export class MarkerResult {
     severity : FunctionSeverity; // Severity of the check
     code_validation : CodeValidation | undefined = undefined; // Parent validation of the check
     offending_text : string; // The text that has been grabbed while doing the check
-    public ignore_comments : boolean = false;
+    public ignore_comments : boolean = true;
+    public ignore_quoted : boolean = true;
+    public ignore_regexp : boolean = false;
     public is_ignored : boolean = false;
+
     constructor(start_pos : number, end_pos : number, tooltip : string, severity : FunctionSeverity, offset_handled : boolean, offending_text : string) {
         this.start_pos = start_pos;
         this.end_pos = end_pos;
@@ -40,10 +43,13 @@ export class MarkerCollection extends vscode.Disposable {
     }
 
     public append(marker : MarkerResult) {
+        if (marker.is_ignored) {
+            return;
+        }
         let existing = this.markers.get(marker.start_pos);
         if (existing !== undefined) {
             for (let exists of existing) {
-                if (exists.end_pos === marker.end_pos) {
+                if (exists.end_pos === marker.end_pos && exists.tooltip === marker.tooltip) {
                     return false;
                 }
             }

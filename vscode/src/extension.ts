@@ -7,6 +7,9 @@ import { CodeValidations } from './code-quality/code-validation';
 import { MarkerCollection } from './code-quality/code-quality-base/MarkerResult';
 import * as path from 'path';
 import { CodeQualityView } from './gui/CodeQualityView';
+import { SplitScript } from './code-quality/code-quality-base/split-script/SplitScript';
+import { SplitScriptValidationCollection } from './code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
+import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
 
 let error_collection : MarkerCollection;
 let warning_collection : MarkerCollection;
@@ -16,6 +19,8 @@ let debug_collection : MarkerCollection;
 let live_update : boolean = true;
 let quality_view : CodeQualityView;
 const quality_functions : CodeValidations = new CodeValidations();
+
+let split_validations : SplitScriptValidationCollection = new SplitScriptValidationCollection();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -165,12 +170,21 @@ function setLanguage(document : vscode.TextDocument | undefined) {
     }
 }
 
-function is_indeni_script(document : vscode.TextDocument | undefined) {
+function is_indeni_script(document : vscode.TextDocument | undefined) : IndeniScriptType {
     if (document === undefined) {
-        return false;
+        return IndeniScriptType.none;
     }
 
-    return document.fileName.toLowerCase().endsWith(".ind");
+    let tmp = new SplitScript();
+    if (tmp.load(document.fileName, document.getText())) {
+        return IndeniScriptType.split;
+    }
+    
+    if (document.fileName.toLowerCase().endsWith(".ind")) {
+        return IndeniScriptType.normal;
+    }
+
+    return IndeniScriptType.none;
 }
 
 function clearDecorations(editor : vscode.TextEditor | undefined) {
@@ -185,14 +199,16 @@ function clearDecorations(editor : vscode.TextEditor | undefined) {
 }
 
 function updateDecorations(document : vscode.TextDocument | undefined, manual : boolean = false) {
-    if (!is_indeni_script(document) || document === undefined)
-    {
-        return;
-    }
-
-    
     let editor = vscode.window.activeTextEditor;
     if (editor === null || editor === undefined) {
+        return;
+    }
+    
+    if (document === undefined) {
+        return;
+    }
+    let is_script = is_indeni_script(document);
+    if (is_script === IndeniScriptType.none) {
         return;
     }
 
@@ -201,31 +217,54 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
     debug_collection.clear();
     information_collection.clear();
 
-    const text = document.getText();
-    let sections = get_sections(text);
+    if (is_script === IndeniScriptType.normal) {
+        const text = document.getText();
+        let sections = get_sections(text);
 
-    if (!sections.is_valid()) {
-        return;
-    }
+        if (!sections.is_valid()) {
+            return;
+        }
 
-    quality_functions.apply(sections);
-    
-    for (let warning of quality_functions.warning_markers) {
-        warning_collection.append(warning);
-    }
-    for (let error of quality_functions.error_markers) {
-        error_collection.append(error);
-    }
-    
-    for (let info of quality_functions.information_markers) {
-        information_collection.append(info);
+        quality_functions.apply(sections);
+        
+        for (let warning of quality_functions.warning_markers) {
+            warning_collection.append(warning);
+        }
+        for (let error of quality_functions.error_markers) {
+            error_collection.append(error);
+        }
+        
+        for (let info of quality_functions.information_markers) {
+            information_collection.append(info);
+        }
+
+        quality_view.show_web_view(quality_functions, manual, editor);
+    } else if (is_script === IndeniScriptType.split) {
+        let split_script = new SplitScript();
+        if (!split_script.load(document.fileName, document.getText())) {
+            return;
+        }
+
+        let markers = split_validations.apply(split_script);
+        for (let marker of markers) {
+            switch (marker.severity) {
+                case FunctionSeverity.error:
+                    error_collection.append(marker);
+                    break;
+                case FunctionSeverity.warning:
+                    warning_collection.append(marker);
+                    break;
+                case FunctionSeverity.information:
+                    information_collection.append(marker);
+                    break;
+            }
+        }
     }
 
     warning_collection.apply(editor);
     error_collection.apply(editor);
     information_collection.apply(editor);
     debug_collection.apply(editor);
-    quality_view.show_web_view(quality_functions, manual, editor);
 }
 
 // this method is called when the extension is deactivated
@@ -234,4 +273,10 @@ export function deactivate() {
     error_collection.dispose();
     information_collection.dispose();
     debug_collection.dispose();
+}
+
+enum IndeniScriptType {
+    normal,
+    split,
+    none
 }

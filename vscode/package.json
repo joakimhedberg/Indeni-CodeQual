@@ -65,8 +65,8 @@
                 "id": "extension.warningBorderColor",
                 "description": "Border color for warnings",
                 "defaults": {
-                    "dark": "#a4a244",
-                    "light": "#ffff00",
+                    "light": "#a4a244",
+                    "dark": "#ffff00",
                     "highContrast": "#ffff00"
                 }
             },
@@ -74,8 +74,8 @@
                 "id": "extension.errorBorderColor",
                 "description": "Border color for errors",
                 "defaults": {
-                    "dark": "#a60004",
-                    "light": "#f1bebf",
+                    "dark": "#f1bebf",
+                    "light": "#a60004",
                     "highContrast": "#ff0d13"
                 }
             },
@@ -83,8 +83,8 @@
                 "id": "extension.informationBorderColor",
                 "description": "Border color for information",
                 "defaults": {
-                    "dark": "#000080",
-                    "light": "#a7a2e8",
+                    "dark": "#a7a2e8",
+                    "light": "#000080",
                     "highContrast": "#0000ff"
                 }
             }
@@ -105,7 +105,9 @@
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
+        "@types/js-yaml": "^3.12.0",
         "event-stream": "^4.0.1",
-        "flatmap-stream": "0.0.1-security"
+        "flatmap-stream": "0.0.1-security",
+        "js-yaml": "^3.13.0"
     }
 }

@@ -10,6 +10,34 @@ class CodeQualityView {
         this.script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.js'));
         this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
     }
+    show_web_view_split(validations, manual, editor) {
+        if (this.panel === undefined && manual) {
+            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true });
+            this.panel.onDidDispose((e) => { this.panel = undefined; });
+            this.panel.webview.onDidReceiveMessage(message => {
+                switch (message.command) {
+                    case 'scroll':
+                        if (message.start && message.end && editor !== undefined) {
+                            let doc = editor.document;
+                            let pos1 = doc.positionAt(message.start);
+                            let pos2 = doc.positionAt(message.end);
+                            let rng = new vscode.Range(pos1, pos2);
+                            if (editor.document.validateRange(rng)) {
+                                editor.revealRange(rng);
+                                editor.selection = new vscode.Selection(pos1, pos2);
+                            }
+                        }
+                        break;
+                }
+            }, undefined);
+        }
+        if (this.panel !== undefined) {
+            this.panel.webview.html = this.get_html_split(validations);
+            if (!this.panel.visible) {
+                this.panel.reveal(vscode.ViewColumn.Beside);
+            }
+        }
+    }
     show_web_view(validations, manual, editor) {
         if (this.panel === undefined && manual) {
             this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true });
@@ -38,6 +66,26 @@ class CodeQualityView {
             if (!this.panel.visible) {
                 this.panel.reveal(vscode.ViewColumn.Beside);
             }
+        }
+    }
+    get_html_split(validations) {
+        let result = "<html><head>";
+        let summary_data = {};
+        result += "</head>";
+        result += "<body>";
+        result += this.get_script();
+        result += this.get_style();
+        result += '<div class="used" id="validation">Non-compliant</div>';
+        let index = 0;
+        let header_drawn = false;
+        for (let validation of validations.validations.sort(this.sort_validation_split)) {
+            if (validation.markers.length === 0 && !header_drawn) {
+                result += '<div class="unused">Compliant</div>';
+                header_drawn = true;
+            }
+            // TODO:
+            let div_class = header_drawn ? "compliant" : validation.severity;
+            result += `<div class="${div_class} tooltip" onclick="show_summary('$)`;
         }
     }
     get_html(validations) {

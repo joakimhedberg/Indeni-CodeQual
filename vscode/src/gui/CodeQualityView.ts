@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CodeValidations } from '../code-quality/code-validation';
 import { CodeValidation } from '../code-quality/code-quality-base/CodeValidation';
 import * as path from 'path';
+import { SplitScriptValidationCollection } from '../code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
 
 // View for the code validations. Uses VS Code WebView which might not be optimal. Still gives a pretty nice result though.
 export class CodeQualityView {
@@ -13,6 +14,36 @@ export class CodeQualityView {
         this.resource_path = resource_path;
         this.script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.js'));
         this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
+    }
+
+    public show_web_view_split(validations : SplitScriptValidationCollection, manual : boolean, editor : vscode.TextEditor) {
+        if (this.panel === undefined && manual) {
+            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true });
+            this.panel.onDidDispose((e : void) => { this.panel = undefined; });
+            this.panel.webview.onDidReceiveMessage(message => {
+                switch (message.command) {
+                    case 'scroll':
+                        if (message.start && message.end && editor !== undefined) {
+                            let doc = editor.document;
+                            let pos1 = doc.positionAt(message.start);
+                            let pos2 = doc.positionAt(message.end);
+                            let rng = new vscode.Range(pos1, pos2);
+                            if (editor.document.validateRange(rng)) {
+                                editor.revealRange(rng);
+                                editor.selection = new vscode.Selection(pos1, pos2);
+                            }
+                        }
+                        break;
+                }
+            }, undefined);
+        }
+
+        if (this.panel !== undefined) {
+            this.panel.webview.html = this.get_html_split(validations);
+            if (!this.panel.visible) {
+                this.panel.reveal(vscode.ViewColumn.Beside);
+            }
+        }
     }
 
     public show_web_view(validations : CodeValidations, manual : boolean, editor : vscode.TextEditor) {
@@ -47,6 +78,28 @@ export class CodeQualityView {
             {
                 this.panel.reveal(vscode.ViewColumn.Beside);
             }
+        }
+    }
+
+    get_html_split(validations : SplitScriptValidationCollection) : string {
+        let result : string = "<html><head>";
+        let summary_data : { [id : number] : string } = {};
+        result += "</head>";
+        result += "<body>";
+        result += this.get_script();
+        result += this.get_style();
+        result += '<div class="used" id="validation">Non-compliant</div>';
+        let index : number = 0;
+        let header_drawn : boolean = false;
+        
+        for (let validation of validations.validations.sort(this.sort_validation_split)) {
+            if (validation.markers.length === 0 && !header_drawn) {
+                result += '<div class="unused">Compliant</div>';
+                header_drawn = true;
+            }
+            // TODO:
+            let div_class = header_drawn? "compliant" : validation.severity;
+            result += `<div class="${div_class} tooltip" onclick="show_summary('$)`
         }
     }
 
