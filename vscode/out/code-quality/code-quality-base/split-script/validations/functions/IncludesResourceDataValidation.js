@@ -7,7 +7,6 @@ const SplitScriptIndSection_1 = require("../../sections/SplitScriptIndSection");
 class IncludesResourceDataValidation extends SplitScriptValidationBase_1.SplitScriptValidationBase {
     constructor(title, resource_metrics) {
         super(title, CodeValidation_1.FunctionSeverity.error);
-        this.markers = [];
         this.resource_metrics = resource_metrics;
     }
     get_markers(script) {

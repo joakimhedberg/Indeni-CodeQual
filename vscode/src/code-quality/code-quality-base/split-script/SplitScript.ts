@@ -1,4 +1,4 @@
-import { readdirSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { SplitScriptIndSection } from "./sections/SplitScriptIndSection";
 import { SplitScriptAwkSection } from "./sections/SplitScriptAwkSection";
 import { SplitScriptXmlSection } from "./sections/SplitScriptXmlSection";
@@ -31,7 +31,18 @@ export class SplitScript {
 
     public current_section : SplitScriptSectionBase | undefined = undefined;
 
-    public load(filename : string, content : string) : boolean {
+    public load(filename : string, content : string | undefined) : boolean {
+
+        if (content === undefined) {
+            try
+            {
+                content = readFileSync(filename).toString();
+            } catch (error) {
+                console.log(error);
+                return false;
+            }
+        }
+
         this.load_errors = [];
         let filename_match = filename.match(/([^\\/]+)$/g);
         if (filename_match) {

@@ -11,7 +11,6 @@ export class ValidScriptNamePrefix extends SplitScriptValidationBase {
         this.valid_prefixes = valid_prefixes;
     }
     
-    public markers: MarkerResult[] = [];
     get_markers(script: SplitScript): MarkerResult[] {
         this.markers = [];
 

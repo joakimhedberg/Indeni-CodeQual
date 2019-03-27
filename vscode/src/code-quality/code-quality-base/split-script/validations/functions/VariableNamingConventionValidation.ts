@@ -6,8 +6,6 @@ import { SplitScriptAwkSection } from "../../sections/SplitScriptAwkSection";
 import { AwkVariableOccurence } from "../../../Section";
 
 export class VariableNamingConventionValidation extends SplitScriptValidationBase {
-    public markers: MarkerResult[] = [];
-
     constructor() {
         super("Variable naming", FunctionSeverity.warning);
     }

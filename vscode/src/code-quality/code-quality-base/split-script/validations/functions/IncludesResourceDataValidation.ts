@@ -12,7 +12,6 @@ export class IncludesResourceDataValidation extends SplitScriptValidationBase {
         this.resource_metrics = resource_metrics;
     }
     
-    public markers: MarkerResult[] = [];
     get_markers(script: SplitScript): MarkerResult[] {
         this.markers = [];
 

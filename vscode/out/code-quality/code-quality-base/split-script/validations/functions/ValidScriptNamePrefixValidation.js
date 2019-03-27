@@ -7,7 +7,6 @@ const SplitScriptIndSection_1 = require("../../sections/SplitScriptIndSection");
 class ValidScriptNamePrefix extends SplitScriptValidationBase_1.SplitScriptValidationBase {
     constructor(valid_prefixes) {
         super("Valid script name", CodeValidation_1.FunctionSeverity.error);
-        this.markers = [];
         this.valid_prefixes = valid_prefixes;
     }
     get_markers(script) {

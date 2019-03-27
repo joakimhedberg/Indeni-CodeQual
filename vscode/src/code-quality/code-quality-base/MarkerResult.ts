@@ -32,10 +32,11 @@ export class MarkerResult {
 export class MarkerCollection extends vscode.Disposable {
     markers : Map<number, MarkerResult[]> = new Map();
     decoration : vscode.TextEditorDecorationType | undefined;
-
-    constructor(decoration : vscode.TextEditorDecorationType | undefined) {
+    severity : FunctionSeverity | undefined;
+    constructor(decoration : vscode.TextEditorDecorationType | undefined, severity : FunctionSeverity | undefined = undefined) {
         super(() => { this.dispose(); });
         this.decoration = decoration;
+        this.severity = severity;
     }
 
     public clear() {
@@ -45,6 +46,12 @@ export class MarkerCollection extends vscode.Disposable {
     public append(marker : MarkerResult) {
         if (marker.is_ignored) {
             return;
+        }
+
+        if (this.severity !== undefined) {
+            if (marker.severity !== this.severity) {
+                return;
+            }
         }
         let existing = this.markers.get(marker.start_pos);
         if (existing !== undefined) {

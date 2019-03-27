@@ -4,9 +4,7 @@ import { SplitScript } from "../../SplitScript";
 import { FunctionSeverity } from "../../../CodeValidation";
 import { SplitScriptAwkSection } from "../../sections/SplitScriptAwkSection";
 
-export class UndocumentedMetricsValidation extends SplitScriptValidationBase {
-    public markers: MarkerResult[] = [];
-    
+export class UndocumentedMetricsValidation extends SplitScriptValidationBase {  
     constructor() {
         super("Metric used has not been documented", FunctionSeverity.error);
     }

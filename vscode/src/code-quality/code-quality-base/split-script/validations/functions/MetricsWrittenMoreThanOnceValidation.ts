@@ -5,8 +5,6 @@ import { FunctionSeverity } from "../../../CodeValidation";
 import { SplitScriptAwkSection } from "../../sections/SplitScriptAwkSection";
 
 export class MetricsWrittenMoreThanOnceValidation extends SplitScriptValidationBase {
-    public markers: MarkerResult[] = [];
-    
     constructor() {
         super("Metric written more than once", FunctionSeverity.error);
     }

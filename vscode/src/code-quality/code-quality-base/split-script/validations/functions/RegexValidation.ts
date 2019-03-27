@@ -21,7 +21,6 @@ export class RegexValidation extends SplitScriptValidationBase {
         this.match_regex = match_regex;
     }
 
-    public markers: MarkerResult[] = [];
     get_markers(script: SplitScript) : MarkerResult[] {
         this.markers = [];
         if (script.current_section === undefined) {

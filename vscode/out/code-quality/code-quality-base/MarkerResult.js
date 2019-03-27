@@ -21,10 +21,11 @@ class MarkerResult {
 }
 exports.MarkerResult = MarkerResult;
 class MarkerCollection extends vscode.Disposable {
-    constructor(decoration) {
+    constructor(decoration, severity = undefined) {
         super(() => { this.dispose(); });
         this.markers = new Map();
         this.decoration = decoration;
+        this.severity = severity;
     }
     clear() {
         this.markers.clear();
@@ -32,6 +33,11 @@ class MarkerCollection extends vscode.Disposable {
     append(marker) {
         if (marker.is_ignored) {
             return;
+        }
+        if (this.severity !== undefined) {
+            if (marker.severity !== this.severity) {
+                return;
+            }
         }
         let existing = this.markers.get(marker.start_pos);
         if (existing !== undefined) {

@@ -25,6 +25,15 @@ class SplitScript {
         this.current_section = undefined;
     }
     load(filename, content) {
+        if (content === undefined) {
+            try {
+                content = fs_1.readFileSync(filename).toString();
+            }
+            catch (error) {
+                console.log(error);
+                return false;
+            }
+        }
         this.load_errors = [];
         let filename_match = filename.match(/([^\\/]+)$/g);
         if (filename_match) {

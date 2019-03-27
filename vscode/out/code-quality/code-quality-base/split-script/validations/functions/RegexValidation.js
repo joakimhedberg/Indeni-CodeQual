@@ -8,7 +8,6 @@ class RegexValidation extends SplitScriptValidationBase_1.SplitScriptValidationB
         this.ignore_comments = true;
         this.ignore_regexp = false;
         this.ignore_quoted = true;
-        this.markers = [];
         this.tooltip = tooltip;
         this.sections = sections;
         this.content_type = content_type;

@@ -221,6 +221,7 @@ function updateDecorations(document, manual = false) {
                     break;
             }
         }
+        quality_view.show_web_view_split(split_validations, manual, editor);
     }
     warning_collection.apply(editor);
     error_collection.apply(editor);

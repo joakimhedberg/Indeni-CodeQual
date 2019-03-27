@@ -5,8 +5,6 @@ import { FunctionSeverity } from "../../../CodeValidation";
 import { SplitScriptIndSection } from "../../sections/SplitScriptIndSection";
 
 export class UnusedMetricsValidation extends SplitScriptValidationBase {
-    public markers: MarkerResult[] = [];
-
     constructor() {
         super("Metric has been documented but is not used", FunctionSeverity.error);
     }

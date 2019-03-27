@@ -7,7 +7,6 @@ const SplitScriptIndSection_1 = require("../../sections/SplitScriptIndSection");
 class UnusedMetricsValidation extends SplitScriptValidationBase_1.SplitScriptValidationBase {
     constructor() {
         super("Metric has been documented but is not used", CodeValidation_1.FunctionSeverity.error);
-        this.markers = [];
     }
     get_markers(script) {
         this.markers = [];

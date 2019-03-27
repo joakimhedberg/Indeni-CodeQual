@@ -259,6 +259,8 @@ function updateDecorations(document : vscode.TextDocument | undefined, manual : 
                     break;
             }
         }
+
+        quality_view.show_web_view_split(split_validations, manual, editor);
     }
 
     warning_collection.apply(editor);

@@ -7,7 +7,6 @@ const SplitScriptAwkSection_1 = require("../../sections/SplitScriptAwkSection");
 class UndocumentedMetricsValidation extends SplitScriptValidationBase_1.SplitScriptValidationBase {
     constructor() {
         super("Metric used has not been documented", CodeValidation_1.FunctionSeverity.error);
-        this.markers = [];
     }
     get_markers(script) {
         this.markers = [];

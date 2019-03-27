@@ -7,7 +7,6 @@ const Section_1 = require("../../../Section");
 class VariableNamingConventionValidation extends SplitScriptValidationBase_1.SplitScriptValidationBase {
     constructor() {
         super("Variable naming", CodeValidation_1.FunctionSeverity.warning);
-        this.markers = [];
     }
     get_markers(script) {
         this.markers = [];

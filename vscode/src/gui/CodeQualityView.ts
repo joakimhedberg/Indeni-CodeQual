@@ -3,6 +3,7 @@ import { CodeValidations } from '../code-quality/code-validation';
 import { CodeValidation } from '../code-quality/code-quality-base/CodeValidation';
 import * as path from 'path';
 import { SplitScriptValidationCollection } from '../code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
+import { SplitScriptValidationBase } from '../code-quality/code-quality-base/split-script/validations/functions/SplitScriptValidationBase';
 
 // View for the code validations. Uses VS Code WebView which might not be optimal. Still gives a pretty nice result though.
 export class CodeQualityView {
@@ -97,10 +98,24 @@ export class CodeQualityView {
                 result += '<div class="unused">Compliant</div>';
                 header_drawn = true;
             }
-            // TODO:
-            let div_class = header_drawn? "compliant" : validation.severity;
-            result += `<div class="${div_class} tooltip" onclick="show_summary('$)`
+            
+            let div_class = header_drawn? "compliant" : validation.severity + " tooltip";
+            result += `<div class="${div_class}" onclick="show_summary('${index}');">${validation.title}<span class="validation_result">(${validation.get_filtered_markers().length})</span><span class="tooltiptext">${validation.tooltip_from_context()}</div>`;
+            
+            let summary = validation.get_summary();
+            if (summary.length > 0) {
+                summary_data[index] = validation.get_summary();
+            }
+            index++;
         }
+
+        result += '<div id="summary_parent">';
+        for (let data in summary_data) {
+            result += `<div id="summary_${data}" class="summary">Summary<br/><pre>${summary_data[data]}</pre></div>`;
+        }
+        result += '</div>';
+
+        return result + "</body></html>";
     }
 
     get_html(validations : CodeValidations) : string {
@@ -138,6 +153,15 @@ export class CodeQualityView {
 
     sort_validation(a : CodeValidation, b : CodeValidation) : number {
         let result = a.applied_markers.length > b.applied_markers.length? -1: a.applied_markers.length < b.applied_markers.length? 1: 0; 
+        if (result === 0) {
+            result = a.severity > b.severity? 1: a.severity === b.severity? 0: -1;
+        }
+
+        return result;
+    }
+
+    sort_validation_split(a : SplitScriptValidationBase, b : SplitScriptValidationBase) : number {
+        let result = a.markers.length > b.markers.length? -1: a.markers.length < b.markers.length? 1: 0; 
         if (result === 0) {
             result = a.severity > b.severity? 1: a.severity === b.severity? 0: -1;
         }
