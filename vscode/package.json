@@ -2,7 +2,7 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
@@ -65,7 +65,7 @@
                 "id": "extension.warningBorderColor",
                 "description": "Border color for warnings",
                 "defaults": {
-                    "light": "#a4a244",
+                    "light": "#fffb00",
                     "dark": "#ffff00",
                     "highContrast": "#ffff00"
                 }
@@ -74,7 +74,7 @@
                 "id": "extension.errorBorderColor",
                 "description": "Border color for errors",
                 "defaults": {
-                    "dark": "#f1bebf",
+                    "dark": "#ff0004",
                     "light": "#a60004",
                     "highContrast": "#ff0d13"
                 }
@@ -83,7 +83,7 @@
                 "id": "extension.informationBorderColor",
                 "description": "Border color for information",
                 "defaults": {
-                    "dark": "#a7a2e8",
+                    "dark": "#1100ff",
                     "light": "#000080",
                     "highContrast": "#0000ff"
                 }

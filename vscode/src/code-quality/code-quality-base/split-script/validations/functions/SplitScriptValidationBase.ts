@@ -7,6 +7,7 @@ export abstract class SplitScriptValidationBase
     public title : string;
     public severity : FunctionSeverity;
     public markers : MarkerResult[] = [];
+    public id : number | undefined = undefined;
     constructor(title : string, severity : FunctionSeverity) {
         this.title = title;
         this.severity = severity;
@@ -60,7 +61,9 @@ export abstract class SplitScriptValidationBase
     public tooltip_from_context() : string {
         let tooltip_map : { [id : string] : boolean } = {};
 
-        for (let marker of this.markers) {
+        for (let marker of this.markers.filter((element, index, array) => {
+            return !element.is_ignored;
+        })) {
             tooltip_map[marker.tooltip] = true;
         }
         let result : string[] = [];

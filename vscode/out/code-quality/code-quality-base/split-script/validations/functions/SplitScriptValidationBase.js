@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class SplitScriptValidationBase {
     constructor(title, severity) {
         this.markers = [];
+        this.id = undefined;
         this.title = title;
         this.severity = severity;
     }
@@ -42,7 +43,9 @@ class SplitScriptValidationBase {
     }
     tooltip_from_context() {
         let tooltip_map = {};
-        for (let marker of this.markers) {
+        for (let marker of this.markers.filter((element, index, array) => {
+            return !element.is_ignored;
+        })) {
             tooltip_map[marker.tooltip] = true;
         }
         let result = [];

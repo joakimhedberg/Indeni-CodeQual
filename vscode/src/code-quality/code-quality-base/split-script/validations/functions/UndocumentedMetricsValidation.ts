@@ -28,7 +28,6 @@ export class UndocumentedMetricsValidation extends SplitScriptValidationBase {
             let awk_section = script.current_section as SplitScriptAwkSection;
             let used_metrics = awk_section.get_metrics();
             let documented_metrics = script.header_section.get_documented_metrics();
-
             for (let used of used_metrics) {
                 let found = false;
                 for (let documented of documented_metrics) {
@@ -38,7 +37,9 @@ export class UndocumentedMetricsValidation extends SplitScriptValidationBase {
                 }
 
                 if (!found) {
-                    this.markers.push(new MarkerResult(used[0], used[0] + used[1].length, "This metric has not been documented in the comments section", this.severity, true, used[1]));
+                    let result = new MarkerResult(used[0], used[0] + used[1].length, "This metric has not been documented in the comments section", this.severity, true, used[1]);
+                    result.ignore_quoted = false;
+                    this.markers.push(result);
                 }
             }
         }

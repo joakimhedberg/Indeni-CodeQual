@@ -2,11 +2,13 @@
 
 ## [Upcoming release]
 Various bugfixes reported @ github
-A bug where the web view shows "null" at the top of the page
+
+## [0.2.1]
+Finishing touches on the split scripts
+New web view, it no longer shows null at the top
 
 ## [0.2.0]
 Added support for the new script map structure
-
 
 ## [0.1.6]
 Added ignore functionality to comments

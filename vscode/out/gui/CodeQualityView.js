@@ -9,6 +9,8 @@ class CodeQualityView {
         this.resource_path = resource_path;
         this.script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.js'));
         this.style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.css'));
+        this.split_style_uri = vscode.Uri.file(path.join(this.resource_path, 'webview_split.css'));
+        this.split_script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview_split.js'));
     }
     show_web_view_split(validations, manual, editor) {
         if (this.panel === undefined && manual) {
@@ -32,9 +34,25 @@ class CodeQualityView {
             }, undefined);
         }
         if (this.panel !== undefined) {
-            this.panel.webview.html = this.get_html_split(validations);
+            //this.panel.webview.html = this.get_html_split(validations);
+            this.panel.webview.html = this.get_split_html();
             if (!this.panel.visible) {
                 this.panel.reveal(vscode.ViewColumn.Beside);
+            }
+            this.panel.webview.postMessage({ clean: true });
+            for (let validation of validations.validations) {
+                let validation_data = {};
+                validation_data['id'] = validation.id;
+                validation_data['title'] = validation.title;
+                validation_data['severity'] = validation.severity;
+                validation_data['tooltip'] = validation.tooltip_from_context();
+                validation_data['markers'] = validation.get_filtered_markers();
+                if (validation_data.markers.length <= 0) {
+                    this.panel.webview.postMessage({ append_compliant: validation_data });
+                }
+                else {
+                    this.panel.webview.postMessage({ append_noncompliant: validation_data });
+                }
             }
         }
     }
@@ -147,6 +165,14 @@ class CodeQualityView {
     }
     get_style() {
         return `<link rel="stylesheet" href="${this.style_uri.with({ scheme: 'vscode-resource' })}"/>`;
+    }
+    get_split_html() {
+        return `<html>
+        <head>
+            <script src="${this.split_script_uri.with({ scheme: 'vscode-resource' })}"></script>
+            <link rel="stylesheet" href="${this.split_style_uri.with({ scheme: 'vscode-resource' })}"/>
+        </head>
+        </html>`;
     }
 }
 exports.CodeQualityView = CodeQualityView;

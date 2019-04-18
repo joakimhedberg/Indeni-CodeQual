@@ -54,16 +54,18 @@ export class SplitScriptValidationCollection {
         this.validations.push(space_before_example);
 
         //let trailing_whitespace = new CodeValidationRegex("Trailing white-space", "Trailing white space serves no purpose and should be removed.", FunctionSeverity.error, ["awk", "yaml"], /([ \t]+)$/gm);
-        this.validations.push(new RegexValidation("Trailing white-space", "Trailing white space serves no purpose and should be removed.", FunctionSeverity.error, /([ \t]+)$/gm, [], ["awk", "yaml"]));
+        let trailing_whitespace = new RegexValidation("Trailing white-space", "Trailing white space serves no purpose and should be removed.", FunctionSeverity.error, /([ \t]+)$/gm, [], ["awk", "yaml"]);
+        trailing_whitespace.ignore_quoted = false;
+        this.validations.push(trailing_whitespace);
 
         //let writedebug_exists = new CodeValidationRegex("writeDebug()", "writeDebug() (or debug()) are great for troubleshooting, but code with that function should never reach customers.", FunctionSeverity.error, ["awk"], /(writeDebug\(.+\)|debug\(.+\))/gm);
         this.validations.push(new RegexValidation("writeDebug()", "writeDebug() (or debug()) are great for troubleshooting, but code with that function should never reach customers.", FunctionSeverity.error, /(writeDebug\(.+\)|debug\(.+\))/gm, [], ["awk"]));
         
         //let empty_begin_section = new CodeValidationRegex("Empty BEGIN", "Empty BEGIN sections serves no purpose and should be disposed of.", FunctionSeverity.warning, ["awk"], /(BEGIN {\s*})/g);
-        this.validations.push(new RegexValidation("Empty BEGIN", "Empty BEGIN sections serves no purpose and should be disposed of.", FunctionSeverity.warning, /(BEGIN {\s*})/g, [], ["awk"]));
+        this.validations.push(new RegexValidation("Empty BEGIN", "Empty BEGIN sections serves no purpose and should be disposed of.", FunctionSeverity.warning, /(BEGIN\s+{\s*})/g, [], ["awk"]));
         
         //let empty_end_section = new CodeValidationRegex("Empty END", "Empty END sections serves no purpose and should be disposed of.", FunctionSeverity.warning, ["awk"], /(END {\s*})/g);
-        this.validations.push(new RegexValidation("Empty END", "Empty END sections serves no purpose and should be disposed of.", FunctionSeverity.warning, /(END {\s*})/g, [], ["awk"]));
+        this.validations.push(new RegexValidation("Empty END", "Empty END sections serves no purpose and should be disposed of.", FunctionSeverity.warning, /(END\s+{\s*})/g, [], ["awk"]));
         
         //let generic_space_before_example_and_after = new CodeValidationRegex("Space <3", "Space in certain places makes the code look nicer.", FunctionSeverity.information, ["awk"], /(if\()|(\){)|}else|else{/g);
         this.validations.push(new RegexValidation("Space <3", "Space in certain places makes the code look nicer.", FunctionSeverity.information,  /(if\()|(\){)|}else|else{/g, [], ["awk"]));
@@ -72,7 +74,10 @@ export class SplitScriptValidationCollection {
         this.validations.push(new RegexValidation("Column variable manipulation", "Changing column values (ie. $0, $1) could easily lead to unexpected behaviors.\nIt is highly recommended to instead save the column value to a variable and change that.", FunctionSeverity.warning, /g{0,1}sub.+?(\$[0-9])+/g, [], ["awk"]));
 
         //let tilde_without_space = new CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, ["awk"], /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm);
-        this.validations.push(new RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm, [], ["awk"]));
+        // TODO: Need to look this over
+        let tilde_without_space = new RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm, [], ["awk"]);
+        tilde_without_space.ignore_regexp = true;
+        this.validations.push(tilde_without_space);
 
         //let tilde_without_regexp_notation = new CodeValidationRegex("Tilde without regexp notation", "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).", FunctionSeverity.warning, ["awk"], /(~\s+[^/])/gm);
         this.validations.push(new RegexValidation("Tilde without regexp notation", "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).", FunctionSeverity.warning, /(~\s+[^/])/gm, [], ["awk"]));
@@ -88,6 +93,12 @@ export class SplitScriptValidationCollection {
         this.validations.push(new IncludesResourceDataValidation("Resource data validation", INDENI_RESOURCE_METRICS));
         this.validations.push(new RegexValidation("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", FunctionSeverity.error, /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [], ['awk']));
         this.validations.push(new VariableNamingConventionValidation());
+
+
+        let index = 0;
+        for (let validation of this.validations) {
+            validation.id = index++;
+        }
     }
 
     apply(script : SplitScript) : MarkerResult[] {

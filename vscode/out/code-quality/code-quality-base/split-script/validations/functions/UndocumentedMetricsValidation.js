@@ -31,7 +31,9 @@ class UndocumentedMetricsValidation extends SplitScriptValidationBase_1.SplitScr
                     }
                 }
                 if (!found) {
-                    this.markers.push(new MarkerResult_1.MarkerResult(used[0], used[0] + used[1].length, "This metric has not been documented in the comments section", this.severity, true, used[1]));
+                    let result = new MarkerResult_1.MarkerResult(used[0], used[0] + used[1].length, "This metric has not been documented in the comments section", this.severity, true, used[1]);
+                    result.ignore_quoted = false;
+                    this.markers.push(result);
                 }
             }
         }
