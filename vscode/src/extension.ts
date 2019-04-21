@@ -6,6 +6,8 @@ import { get_sections } from "./code-quality/sections";
 import { CodeValidations } from './code-quality/code-validation';
 import { MarkerCollection } from './code-quality/code-quality-base/MarkerResult';
 import * as path from 'path';
+import * as fs from "fs";
+
 import { CodeQualityView } from './gui/CodeQualityView';
 import { SplitScript } from './code-quality/code-quality-base/split-script/SplitScript';
 import { SplitScriptValidationCollection } from './code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
@@ -126,10 +128,29 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    let temporary_test_command = vscode.commands.registerCommand('extension.revealTestCommand', () => 
+    {
+        let editor = vscode.window.activeTextEditor;
+        if (editor !== undefined)
+        {
+            let filename = path.dirname(editor.document.fileName);
+            let test_folder = filename.replace("parsers/src", "parsers/test").replace("parsers\\src", "parsers\\test") + "blabla";
+            if (fs.existsSync(test_folder))
+            {
+                vscode.window.showInformationMessage(test_folder);
+            }
+            else
+            {
+                vscode.window.showWarningMessage("'" + test_folder + "' does not seem to exist");
+            }
+        }
+    });
+
     context.subscriptions.push(trigger_clear_command);
     context.subscriptions.push(trigger_update_command);
     context.subscriptions.push(enable_disable_live_command);
     context.subscriptions.push(set_language_command);
+    context.subscriptions.push(temporary_test_command);
 }
 
 function text_document_changed(change : vscode.TextDocumentChangeEvent) {

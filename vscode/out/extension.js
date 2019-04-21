@@ -7,6 +7,7 @@ const sections_1 = require("./code-quality/sections");
 const code_validation_1 = require("./code-quality/code-validation");
 const MarkerResult_1 = require("./code-quality/code-quality-base/MarkerResult");
 const path = require("path");
+const fs = require("fs");
 const CodeQualityView_1 = require("./gui/CodeQualityView");
 const SplitScript_1 = require("./code-quality/code-quality-base/split-script/SplitScript");
 const SplitScriptValidationCollection_1 = require("./code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection");
@@ -109,10 +110,24 @@ function activate(context) {
             }
         }
     });
+    let temporary_test_command = vscode.commands.registerCommand('extension.revealTestCommand', () => {
+        let editor = vscode.window.activeTextEditor;
+        if (editor !== undefined) {
+            let filename = path.dirname(editor.document.fileName);
+            let test_folder = filename.replace("parsers/src", "parsers/test").replace("parsers\\src", "parsers\\test") + "blabla";
+            if (fs.existsSync(test_folder)) {
+                vscode.window.showInformationMessage(test_folder);
+            }
+            else {
+                vscode.window.showWarningMessage("'" + test_folder + "' does not seem to exist");
+            }
+        }
+    });
     context.subscriptions.push(trigger_clear_command);
     context.subscriptions.push(trigger_update_command);
     context.subscriptions.push(enable_disable_live_command);
     context.subscriptions.push(set_language_command);
+    context.subscriptions.push(temporary_test_command);
 }
 exports.activate = activate;
 function text_document_changed(change) {

@@ -34,6 +34,10 @@
             {
                 "command": "extension.setLanguage",
                 "title": "Indeni code quality: Set syntax highlight(awk/yaml)"
+            },
+            {
+                "command": "extension.revealTestCommand",
+                "title": "Indeni code quality: Open test folder"
             }
         ],
         "keybindings": [
