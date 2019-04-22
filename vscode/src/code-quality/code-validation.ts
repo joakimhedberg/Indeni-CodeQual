@@ -3,7 +3,7 @@ import { MarkerResult } from "./code-quality-base/MarkerResult";
 import { Sections, AwkSection, AwkVariableOccurence } from "./code-quality-base/Section";
 import { SpecialCase } from "./code-quality-base/SpecialCase";
 
-const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
+const indeni_script_name_prefixes = ["impctl", "chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 
 export class CodeValidations {
