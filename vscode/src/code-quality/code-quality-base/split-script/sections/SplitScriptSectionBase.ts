@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 
 export abstract class SplitScriptSectionBase
 {
-    protected filename : string;
+    public filename : string;
     public section_identifier : string;
     private _content : string  | undefined;
     public content_type : string;

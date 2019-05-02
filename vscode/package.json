@@ -20,6 +20,14 @@
     "contributes": {
         "commands": [
             {
+                "command": "extension.commandRunnerParseOnly",
+                "title" : "Command runner: Parse only"
+            },
+            {
+                "command": "extension.commandRunnerTest",
+                "title": "Command runner: Run test"
+            },
+            {
                 "command": "extension.triggerUpdate",
                 "title": "Indeni code quality: Perform code quality"
             },
@@ -37,7 +45,7 @@
             },
             {
                 "command": "extension.revealTestCommand",
-                "title": "Indeni code quality: Open test folder"
+                "title": "Indeni code quality: Open corresponding test/script folder"
             }
         ],
         "keybindings": [
@@ -92,7 +100,18 @@
                     "highContrast": "#0000ff"
                 }
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Indeni-codequal settings",
+            "properties": {
+                "indeni.commandRunnerPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command runner path"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -102,16 +121,16 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.21",
-        "tslint": "^5.8.0",
+        "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.25",
-        "@types/mocha": "^2.2.42"
+        "tslint": "^5.8.0",
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.33"
     },
     "dependencies": {
         "@types/js-yaml": "^3.12.0",
         "event-stream": "^4.0.1",
         "flatmap-stream": "0.0.1-security",
-        "js-yaml": "^3.13.0"
+        "js-yaml": "^3.13.1"
     }
 }

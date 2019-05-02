@@ -6,6 +6,7 @@ const SplitScriptAwkSection_1 = require("./sections/SplitScriptAwkSection");
 const SplitScriptXmlSection_1 = require("./sections/SplitScriptXmlSection");
 const SplitScriptJsonSection_1 = require("./sections/SplitScriptJsonSection");
 const path_1 = require("path");
+const CommandRunner_1 = require("../../../command-runner/CommandRunner");
 class SplitScript {
     constructor() {
         // Current open filename
@@ -104,6 +105,24 @@ class SplitScript {
     }
     get is_valid_script() {
         return this.header_section !== undefined;
+    }
+    command_runner_test() {
+        if (this.header_section === undefined) {
+            return;
+        }
+        let command_runner = new CommandRunner_1.CommandRunner();
+        command_runner.RunTests(this.header_section.filename, (result) => {
+            console.log(result);
+        });
+    }
+    command_runner_parse() {
+        if (this.header_section === undefined) {
+            return;
+        }
+        let command_runner = new CommandRunner_1.CommandRunner();
+        command_runner.RunParseOnly(this.header_section.filename, (result) => {
+            // TODO
+        });
     }
 }
 exports.SplitScript = SplitScript;

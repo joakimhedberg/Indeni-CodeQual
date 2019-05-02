@@ -12,6 +12,8 @@ import { CodeQualityView } from './gui/CodeQualityView';
 import { SplitScript } from './code-quality/code-quality-base/split-script/SplitScript';
 import { SplitScriptValidationCollection } from './code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
 import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
+import { DOC_WRITE_DOUBLE_METRIC, DOC_WRITE_COMPLEX_METRIC_STRING, DOC_WRITE_COMPLEX_METRIC_ARRAY, DOC_WRITE_DEBUG } from './resources/hover_documentation/write_functions';
+import { CommandRunner } from './command-runner/CommandRunner';
 
 let error_collection : MarkerCollection;
 let warning_collection : MarkerCollection;
@@ -83,7 +85,6 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     debug_collection = new MarkerCollection(debug_decoration_type);
-
     vscode.window.onDidChangeActiveTextEditor(text_editor_changed);
     vscode.workspace.onDidChangeTextDocument(text_document_changed);
     let trigger_update_command = vscode.commands.registerCommand('extension.triggerUpdate', () => {
@@ -92,6 +93,33 @@ export function activate(context: vscode.ExtensionContext) {
             updateDecorations(editor.document, true); 
         }
     });
+
+    vscode.languages.registerHoverProvider('awk', {
+        provideHover(document, position, token) {
+          let range = document.getWordRangeAtPosition(position);
+          let text = document.getText(range);
+          if (text.startsWith('writeDoubleMetric')) {
+            return {
+                contents: DOC_WRITE_DOUBLE_METRIC
+              };
+          } else if (text.startsWith("writeComplexMetricString")) {
+              return {
+                contents: DOC_WRITE_COMPLEX_METRIC_STRING
+              };
+          }
+          else if (text.startsWith("writeComplexMetricObjectArray")) {
+            return {
+              contents: DOC_WRITE_COMPLEX_METRIC_ARRAY
+            };
+        }
+            else if (text.startsWith("writeDebug")) {
+                return {
+                contents: DOC_WRITE_DEBUG
+                };
+            }
+          
+        }
+      });
 
     let set_language_command = vscode.commands.registerCommand('extension.setLanguage', () => {
         var editor = vscode.window.activeTextEditor;
@@ -106,6 +134,10 @@ export function activate(context: vscode.ExtensionContext) {
             clearDecorations(editor);
         }
     });
+
+    let commandrunner_test_command = vscode.commands.registerCommand('extension.commandRunnerTest', commandrunner_test_command_method);
+
+    let commandrunner_parseonly_command = vscode.commands.registerCommand('extension.commandRunnerParseOnly', commandrunner_parseonly_command_method);
 
     let enable_disable_live_command = vscode.commands.registerCommand('extension.toggleLive', () => {
         live_update = !live_update;
@@ -128,20 +160,40 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    let temporary_test_command = vscode.commands.registerCommand('extension.revealTestCommand', () => 
+    let go_to_command = vscode.commands.registerCommand('extension.revealTestCommand', () => 
     {
         let editor = vscode.window.activeTextEditor;
         if (editor !== undefined)
         {
             let filename = path.dirname(editor.document.fileName);
-            let test_folder = filename.replace("parsers/src", "parsers/test").replace("parsers\\src", "parsers\\test") + "blabla";
-            if (fs.existsSync(test_folder))
+            let dest_folder = undefined;
+            if (filename.includes("parsers/src") || filename.includes("parsers\\src")) {
+                dest_folder = find_test_root(filename.replace("parsers/src", "parsers/test").replace("parsers\\src", "parsers\\test"));
+            }
+            else if (filename.includes("parsers/test") || filename.includes("parsers\\test")) {
+                let root = find_test_root(filename);
+                if (root !== undefined) {
+                    dest_folder = root.replace("parsers/test", "parsers/src").replace("parsers\\test", "parsers\\src");
+                }
+            } else {
+                return;
+            }
+
+            if (dest_folder !== undefined && fs.existsSync(dest_folder))
             {
-                vscode.window.showInformationMessage(test_folder);
+                let uri = vscode.Uri.file(dest_folder);
+                vscode.window.showOpenDialog({ "defaultUri": uri }).then((value) => {
+                    if (value !== undefined) 
+                    {
+                        vscode.workspace.openTextDocument(value[0].fsPath).then(doc => {
+                            vscode.window.showTextDocument(doc);
+                        });
+                    }
+                });
             }
             else
             {
-                vscode.window.showWarningMessage("'" + test_folder + "' does not seem to exist");
+                vscode.window.showWarningMessage("'" + dest_folder + "' does not seem to exist");
             }
         }
     });
@@ -150,7 +202,64 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(trigger_update_command);
     context.subscriptions.push(enable_disable_live_command);
     context.subscriptions.push(set_language_command);
-    context.subscriptions.push(temporary_test_command);
+    context.subscriptions.push(go_to_command);
+    context.subscriptions.push(commandrunner_test_command);
+    context.subscriptions.push(commandrunner_parseonly_command);
+}
+
+function commandrunner_test_command_method() {
+    var editor = vscode.window.activeTextEditor;
+    if (editor !== undefined)
+    {
+        let script = new SplitScript();
+        let editor = vscode.window.activeTextEditor;
+        if (editor === undefined) {
+            return;
+        }
+
+        if (script.load(editor.document.fileName, undefined))
+        {
+            if (script.is_valid_script)
+            {
+                script.command_runner_test();
+            }
+        }
+    }
+}
+
+function commandrunner_parseonly_command_method() {
+    var editor = vscode.window.activeTextEditor;
+    if (editor !== undefined)
+    {
+        let script = new SplitScript();
+        let editor = vscode.window.activeTextEditor;
+        if (editor === undefined) {
+            return;
+        }
+
+        if (script.load(editor.document.fileName, undefined))
+        {
+            if (script.is_valid_script)
+            {
+                script.command_runner_parse();
+            }
+        }
+    }
+}
+
+function find_test_root(filepath : string, level : number = 0) : string | undefined {
+    
+    let test_json = path.join(filepath, 'test.json');
+    if (fs.existsSync(test_json)) {
+        return filepath;
+    }
+
+    filepath = path.resolve(filepath, '..');
+    if (fs.existsSync(path.join(filepath, 'test.json'))) {
+        return filepath;
+    }
+
+    return undefined;
 }
 
 function text_document_changed(change : vscode.TextDocumentChangeEvent) {

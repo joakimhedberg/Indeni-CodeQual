@@ -5,6 +5,8 @@ import { SplitScriptXmlSection } from "./sections/SplitScriptXmlSection";
 import { SplitScriptJsonSection } from "./sections/SplitScriptJsonSection";
 import { sep } from "path";
 import { SplitScriptSectionBase } from "./sections/SplitScriptSectionBase";
+import { CommandRunner } from "../../../command-runner/CommandRunner";
+import { ResultMetric } from "../../../command-runner/results/ResultMetric";
 
 export class SplitScript {
     // Current open filename
@@ -114,5 +116,28 @@ export class SplitScript {
     
     get is_valid_script() {
         return this.header_section !== undefined;
+    }
+
+    public command_runner_test() {
+        if (this.header_section === undefined) {
+            return;
+        }
+
+        let command_runner = new CommandRunner();
+        command_runner.RunTests(this.header_section.filename, (result) => {
+            console.log(result);
+        });
+
+    }
+
+    public command_runner_parse() {
+        if (this.header_section === undefined) {
+            return;
+        }
+
+        let command_runner = new CommandRunner();
+        command_runner.RunParseOnly(this.header_section.filename, (result) => {
+            // TODO
+        });
     }
 }
