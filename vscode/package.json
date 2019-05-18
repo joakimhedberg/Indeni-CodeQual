@@ -2,7 +2,7 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.2.1",
+    "version": "0.2.4",
     "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
@@ -20,8 +20,17 @@
     "contributes": {
         "commands": [
             {
+                "command": "extension.commandRunnerTestCreate",
+                "title": "Command runner: Create test"
+
+            },
+            {
+                "command": "extension.commandRunnerFullCommand",
+                "title": "Command runner: Full command"
+            },
+            {
                 "command": "extension.commandRunnerParseOnly",
-                "title" : "Command runner: Parse only"
+                "title": "Command runner: Parse only"
             },
             {
                 "command": "extension.commandRunnerTest",
@@ -109,6 +118,16 @@
                     "type": "string",
                     "default": "",
                     "description": "Command runner path"
+                },
+                "indeni.commandRunnerUser": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command runner user"
+                },
+                "indeni.commandRunnerPassword": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command runner password"
                 }
             }
         }

@@ -28,7 +28,7 @@ class ValidScriptNamePrefix extends SplitScriptValidationBase_1.SplitScriptValid
                 if (this.valid_prefixes.indexOf(script_name_split[0]) === -1) {
                     this.markers.push(new MarkerResult_1.MarkerResult(script_name[0], script_name[0] + script_name_split[0].length, "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + this.valid_prefixes.join(", "), this.severity, true, script_name_split[0]));
                 }
-                let error_characters = /([^a-z\-])/gm;
+                let error_characters = /([^a-z\-0-9])/gm;
                 let match;
                 while (match = error_characters.exec(script_name[1])) {
                     this.markers.push(new MarkerResult_1.MarkerResult(script_name[0] + match.index, script_name[0] + match.index + match[1].length, "A script name should consist of letters(a-z) and dashes(-)", this.severity, true, match[1]));

@@ -58,7 +58,7 @@ class CodeQualityView {
     }
     show_web_view(validations, manual, editor) {
         if (this.panel === undefined && manual) {
-            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true });
+            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true });
             this.panel.onDidDispose((e) => { this.panel = undefined; });
             this.panel.webview.onDidReceiveMessage(message => {
                 switch (message.command) {

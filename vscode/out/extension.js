@@ -119,8 +119,10 @@ function activate(context) {
             clearDecorations(editor);
         }
     });
-    let commandrunner_test_command = vscode.commands.registerCommand('extension.commandRunnerTest', commandrunner_test_command_method);
-    let commandrunner_parseonly_command = vscode.commands.registerCommand('extension.commandRunnerParseOnly', commandrunner_parseonly_command_method);
+    let commandrunner_test_command = vscode.commands.registerCommand('extension.commandRunnerTest', () => { commandrunner_test_command_method(context); });
+    let commandrunner_test_create_command = vscode.commands.registerCommand('extension.commandRunnerTestCreate', () => { command_runner__test_create_command_method(context); });
+    let commandrunner_parseonly_command = vscode.commands.registerCommand('extension.commandRunnerParseOnly', () => { commandrunner_parseonly_command_method(context); });
+    let commandrunner_full_command = vscode.commands.registerCommand('extension.commandRunnerFullCommand', () => { command_runner_full_command_method(context); });
     let enable_disable_live_command = vscode.commands.registerCommand('extension.toggleLive', () => {
         live_update = !live_update;
         var editor = vscode.window.activeTextEditor;
@@ -178,10 +180,12 @@ function activate(context) {
     context.subscriptions.push(go_to_command);
     context.subscriptions.push(commandrunner_test_command);
     context.subscriptions.push(commandrunner_parseonly_command);
+    context.subscriptions.push(commandrunner_full_command);
+    context.subscriptions.push(commandrunner_test_create_command);
 }
 exports.activate = activate;
-function commandrunner_test_command_method() {
-    var editor = vscode.window.activeTextEditor;
+function command_runner__test_create_command_method(context) {
+    let editor = vscode.window.activeTextEditor;
     if (editor !== undefined) {
         let script = new SplitScript_1.SplitScript();
         let editor = vscode.window.activeTextEditor;
@@ -190,12 +194,12 @@ function commandrunner_test_command_method() {
         }
         if (script.load(editor.document.fileName, undefined)) {
             if (script.is_valid_script) {
-                script.command_runner_test();
+                script.command_runner_test_create(context);
             }
         }
     }
 }
-function commandrunner_parseonly_command_method() {
+function commandrunner_test_command_method(context) {
     var editor = vscode.window.activeTextEditor;
     if (editor !== undefined) {
         let script = new SplitScript_1.SplitScript();
@@ -205,7 +209,37 @@ function commandrunner_parseonly_command_method() {
         }
         if (script.load(editor.document.fileName, undefined)) {
             if (script.is_valid_script) {
-                script.command_runner_parse();
+                script.command_runner_test(context);
+            }
+        }
+    }
+}
+function command_runner_full_command_method(context) {
+    var editor = vscode.window.activeTextEditor;
+    if (editor !== undefined) {
+        let script = new SplitScript_1.SplitScript();
+        let editor = vscode.window.activeTextEditor;
+        if (editor === undefined) {
+            return;
+        }
+        if (script.load(editor.document.fileName, undefined)) {
+            if (script.is_valid_script) {
+                script.command_runner_full_command(context);
+            }
+        }
+    }
+}
+function commandrunner_parseonly_command_method(context) {
+    var editor = vscode.window.activeTextEditor;
+    if (editor !== undefined) {
+        let script = new SplitScript_1.SplitScript();
+        let editor = vscode.window.activeTextEditor;
+        if (editor === undefined) {
+            return;
+        }
+        if (script.load(editor.document.fileName, undefined)) {
+            if (script.is_valid_script) {
+                script.command_runner_parse(context, script.script_test_folder);
             }
         }
     }

@@ -13,6 +13,7 @@ export class CodeQualityView {
     private style_uri : vscode.Uri;
     private split_script_uri : vscode.Uri;
     private split_style_uri : vscode.Uri;
+
     constructor(resource_path : string) {
         this.resource_path = resource_path;
         this.script_uri = vscode.Uri.file(path.join(this.resource_path, 'webview.js'));
@@ -72,7 +73,7 @@ export class CodeQualityView {
 
     public show_web_view(validations : CodeValidations, manual : boolean, editor : vscode.TextEditor) {
         if (this.panel === undefined && manual) {
-            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true } );
+            this.panel = vscode.window.createWebviewPanel("codeQualityView", "Indeni code quality result", vscode.ViewColumn.Beside, { enableScripts: true, retainContextWhenHidden: true } );
             this.panel.onDidDispose((e : void) => { this.panel = undefined; });
             this.panel.webview.onDidReceiveMessage(message => {
                 switch (message.command) {

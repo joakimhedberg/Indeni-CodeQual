@@ -27,7 +27,7 @@ export abstract class SplitScriptSectionBase
             {
                 this._content = readFileSync(this.filename).toString();
             } catch (error) {
-                console.log(error);
+                console.error(error);
             }
         }
 

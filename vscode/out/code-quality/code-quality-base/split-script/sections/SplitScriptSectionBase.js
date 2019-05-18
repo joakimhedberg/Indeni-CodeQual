@@ -17,7 +17,7 @@ class SplitScriptSectionBase {
                 this._content = fs_1.readFileSync(this.filename).toString();
             }
             catch (error) {
-                console.log(error);
+                console.error(error);
             }
         }
         if (this._content) {

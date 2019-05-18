@@ -37,7 +37,7 @@ export class ValidScriptNamePrefix extends SplitScriptValidationBase {
                     this.markers.push(new MarkerResult(script_name[0], script_name[0] + script_name_split[0].length, "Prefixes are important, not only to distinguish which type of device the script is executed on, but also to avoid script name collisions.\nValid prefixes: " + this.valid_prefixes.join(", "), this.severity, true, script_name_split[0]));
                 }
 
-                let error_characters = /([^a-z\-])/gm;
+                let error_characters = /([^a-z\-0-9])/gm;
 
                 let match;
                 while (match = error_characters.exec(script_name[1])) {
