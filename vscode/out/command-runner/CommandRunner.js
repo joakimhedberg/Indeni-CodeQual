@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
 const child = require("child_process");
@@ -80,21 +72,19 @@ class CommandRunner {
             callback(new CommandRunnerParseOnlyResult_1.CommandRunnerParseOnlyResult(input_filename, filename, stdout));
         });
     }
-    CreateTestCase(script_filename, case_name, input_filename) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.verify_command_runner_path || this.commandrunner_uri === undefined) {
-                return new Promise(reject => new Error('No command runner path defined'));
+    CreateTestCase(script_filename, case_name, input_filename, callback) {
+        if (!this.verify_command_runner_path || this.commandrunner_uri === undefined) {
+            return new Promise(reject => new Error('No command runner path defined'));
+        }
+        let command = this.escape_filename(this.commandrunner_uri.fsPath) + " test create " + this.escape_filename(script_filename) + " " + case_name + " " + this.escape_filename(input_filename);
+        child.exec(command, (error, stdout, stderr) => {
+            if (error !== null) {
+                console.error(error);
             }
-            let command = this.escape_filename(this.commandrunner_uri.fsPath) + " test create " + this.escape_filename(script_filename) + " " + case_name + " " + this.escape_filename(input_filename);
-            child.exec(command, (error, stdout, stderr) => {
-                if (error !== null) {
-                    console.error(error);
-                }
-                if (stderr !== '') {
-                    console.error(stderr);
-                }
-                return new Promise(resolve => new CommandRunnerTestCreateResult_1.CommandRunnerTestCreateResult(stdout));
-            });
+            if (stderr !== '') {
+                console.error(stderr);
+            }
+            callback(new CommandRunnerTestCreateResult_1.CommandRunnerTestCreateResult(stdout));
         });
     }
     RunTests(filename, selected_case, callback) {

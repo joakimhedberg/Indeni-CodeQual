@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const SplitScriptIndSection_1 = require("./sections/SplitScriptIndSection");
@@ -148,24 +140,23 @@ class SplitScript {
         return SplitScriptTestCases_1.SplitScriptTestCases.get(test_file);
     }
     command_runner_test_create(context) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.header_section === undefined) {
-                return;
-            }
-            let test_cases = this.get_test_cases();
-            if (test_cases === undefined) {
-                return;
-            }
-            if (test_cases.length <= 0) {
-                return;
-            }
-            const items = test_cases.map(item => {
-                return {
-                    label: item.name
-                };
-            });
-            items.unshift({ label: 'New case' });
-            let value = yield vscode.window.showQuickPick(items, { 'canPickMany': false, 'placeHolder': 'Pick test case' });
+        if (this.header_section === undefined) {
+            return;
+        }
+        let test_cases = this.get_test_cases();
+        if (test_cases === undefined) {
+            return;
+        }
+        if (test_cases.length <= 0) {
+            return;
+        }
+        const items = test_cases.map(item => {
+            return {
+                label: item.name
+            };
+        });
+        items.unshift({ label: 'New case' });
+        vscode.window.showQuickPick(items, { 'canPickMany': false, 'placeHolder': 'Pick test case' }).then(value => {
             if (value === undefined) {
                 return;
             }
@@ -199,11 +190,10 @@ class SplitScript {
         });
     }
     use_script_input(test_case_name, test_case_input_data_path) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let options = [];
-            options.push({ label: 'Yes' });
-            options.push({ label: 'No' });
-            let value = yield vscode.window.showQuickPick(options, { placeHolder: 'Do you wish to use the existing input file for test case ' + test_case_name + '?' });
+        let options = [];
+        options.push({ label: 'Yes' });
+        options.push({ label: 'No' });
+        vscode.window.showQuickPick(options, { placeHolder: 'Do you wish to use the existing input file for test case ' + test_case_name + '?' }).then(value => {
             if (value === undefined) {
                 return;
             }
@@ -228,8 +218,7 @@ class SplitScript {
         });
     }
     get_input_file(test_case_name) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let value = yield vscode.window.showOpenDialog({ canSelectFolders: false, canSelectMany: false, openLabel: 'Open test case input file' });
+        vscode.window.showOpenDialog({ canSelectFolders: false, canSelectMany: false, openLabel: 'Open test case input file' }).then(value => {
             if (value === undefined) {
                 return;
             }
@@ -240,13 +229,12 @@ class SplitScript {
         });
     }
     create_test_case(test_case_name, input_data_path) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.header_section === undefined) {
-                return;
-            }
-            let script_filename = this.header_section.filename;
-            let cr = new CommandRunner_1.CommandRunner();
-            let result = yield cr.CreateTestCase(script_filename, test_case_name, input_data_path);
+        if (this.header_section === undefined) {
+            return;
+        }
+        let script_filename = this.header_section.filename;
+        let cr = new CommandRunner_1.CommandRunner();
+        cr.CreateTestCase(script_filename, test_case_name, input_data_path, result => {
             if (result === undefined) {
                 vscode.window.showErrorMessage('Unable to create test case');
                 return;
@@ -256,16 +244,16 @@ class SplitScript {
                 return;
             }
             vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
-            /*, (result : CommandRunnerTestCreateResult) => {
-            
-                if (result.success) {
-                    vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
-                }
-                else {
-                    vscode.window.showErrorMessage('Unable to create test case');
-                }
-            });*/
         });
+        /*, (result : CommandRunnerTestCreateResult) => {
+        
+            if (result.success) {
+                vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
+            }
+            else {
+                vscode.window.showErrorMessage('Unable to create test case');
+            }
+        });*/
     }
     get_test_case(callback) {
         vscode.window.showInputBox({ placeHolder: 'Test case name' }).then((value) => {

@@ -90,7 +90,7 @@ export class CommandRunner {
         });
     }
 
-    public async CreateTestCase(script_filename : string, case_name : string, input_filename : string) {
+    public CreateTestCase(script_filename : string, case_name : string, input_filename : string, callback : ((result : CommandRunnerTestCreateResult) => void)) {
         if (!this.verify_command_runner_path || this.commandrunner_uri === undefined) {
             return new Promise<CommandRunnerTestCreateResult>(reject => new Error('No command runner path defined'));
         }
@@ -104,7 +104,7 @@ export class CommandRunner {
             if (stderr !== '') {
                 console.error(stderr);
             }
-            return new Promise<CommandRunnerTestCreateResult>(resolve => new CommandRunnerTestCreateResult(stdout));
+            callback(new CommandRunnerTestCreateResult(stdout));
         });
     }
 
