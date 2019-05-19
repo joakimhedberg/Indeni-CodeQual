@@ -2,7 +2,6 @@ import { SplitScriptValidationBase } from "./SplitScriptValidationBase";
 import { MarkerResult } from "../../../MarkerResult";
 import { SplitScript } from "../../SplitScript";
 import { FunctionSeverity } from "../../../CodeValidation";
-import { SplitScriptAwkSection } from "../../sections/SplitScriptAwkSection";
 import { SplitScriptSectionBase } from "../../sections/SplitScriptSectionBase";
 
 export class UndocumentedMetricsValidation extends SplitScriptValidationBase {  

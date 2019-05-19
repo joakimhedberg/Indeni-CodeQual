@@ -119,6 +119,11 @@
                     "default": "",
                     "description": "Command runner path(bash script or .bat file)"
                 },
+                "indeni.ruleRunnerPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Rule runner path(bash script or .bat file)"
+                },
                 "indeni.commandRunnerUser": {
                     "type": "string",
                     "default": "",
