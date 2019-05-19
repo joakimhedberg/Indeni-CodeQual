@@ -12,48 +12,56 @@ const vscode = require("vscode");
 const child = require("child_process");
 const RuleRunnerCompileResult_1 = require("./results/RuleRunnerCompileResult");
 class RuleRunner {
-    RuleRunner() {
+    constructor() {
         this.rulerunner_path = vscode.workspace.getConfiguration().get('indeni.ruleRunnerPath');
     }
     Compile(script_filename) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.rulerunner_path === undefined) {
-                return undefined;
-            }
             let items = [];
             items.push({ label: 'No input' });
             items.push({ label: 'Select input' });
             let input_selection = yield vscode.window.showQuickPick(items, { placeHolder: 'Input file' });
             if (input_selection === undefined) {
-                return undefined;
+                return Promise.reject('No input option selection');
             }
             let input_filepath = undefined;
             if (input_selection.label === 'Select input') {
                 let result = yield vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, openLabel: 'Select input file', canSelectMany: false });
                 if (result === undefined) {
-                    return undefined;
+                    return Promise.reject('No file selected');
                 }
                 input_filepath = result[0].fsPath;
             }
-            let command = 'compile';
+            let command = 'compile ' + this.escape_filename(script_filename);
             if (input_filepath !== undefined) {
                 command += ' --input ' + this.escape_filename(input_filepath);
             }
-            let data = this.Run(command);
+            let data = yield this.Run(command);
             if (data === undefined) {
-                return undefined;
+                return Promise.reject('No rule runner data received');
             }
-            return new RuleRunnerCompileResult_1.RuleRunnerCompileResult(data);
+            console.log(data);
+            return Promise.resolve(new RuleRunnerCompileResult_1.RuleRunnerCompileResult(data));
         });
     }
     Run(parameters) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.rulerunner_path === undefined) {
-                return undefined;
+                return Promise.reject('No rule runner path defined');
             }
             let path = this.escape_filename(this.rulerunner_path);
-            let process_data = child.execSync(path + ' ' + parameters, undefined);
-            return process_data;
+            let command = path + ' ' + parameters;
+            return new Promise((resolve, reject) => {
+                console.log(command);
+                child.exec(command, (error, stdout, stderr) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    console.log(stdout.trim());
+                    resolve(stdout.trim());
+                });
+            });
         });
     }
     escape_filename(filename) {

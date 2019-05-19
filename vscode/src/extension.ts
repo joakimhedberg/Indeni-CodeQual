@@ -13,6 +13,8 @@ import { SplitScript } from './code-quality/code-quality-base/split-script/Split
 import { SplitScriptValidationCollection } from './code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
 import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
 import { DOC_WRITE_DOUBLE_METRIC, DOC_WRITE_COMPLEX_METRIC_STRING, DOC_WRITE_COMPLEX_METRIC_ARRAY, DOC_WRITE_DEBUG } from './resources/hover_documentation/write_functions';
+import { IndeniRule } from './code-quality/code-quality-base/rule/IndeniRule';
+import { RuleInputBuilder } from './code-quality/rule-runner/results/RuleInputBuilder';
 
 let error_collection : MarkerCollection;
 let warning_collection : MarkerCollection;
@@ -134,6 +136,58 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    let rule_runner_create_input_command = vscode.commands.registerCommand('extension.createRuleRunnerInput', () => 
+    {
+        let default_uri : vscode.Uri | undefined = undefined;
+        if (vscode.window.activeTextEditor !== undefined) {
+            default_uri = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
+        }
+
+        vscode.window.showOpenDialog({ canSelectFiles:true, canSelectFolders: false, canSelectMany: false, openLabel: 'Open output test file', defaultUri: default_uri }).then(value => {
+            if (value === undefined) {
+                console.log('No value returned');
+                return;
+            }
+
+            let filename = value[0].fsPath;
+            let input_builder = new RuleInputBuilder();
+            let result = input_builder.from_time_series_output(filename);
+            if (result !== undefined) {
+                console.log(result);
+                vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
+                    if (vscode.window.activeTextEditor !== undefined) {
+                        vscode.window.showTextDocument(onfulfilled);
+                    }
+                }, onrejected => {
+                    console.log(onrejected);
+                });
+            }
+        });
+    });
+    let run_rulerunner_compile_command = vscode.commands.registerCommand('extension.triggerRuleRunnerCompile', () => {
+        var editor = vscode.window.activeTextEditor;
+        if (editor !== undefined) {
+            let rule = new IndeniRule(editor.document.fileName);
+            
+            try {
+                rule.RuleRunnerCompile().then(value => {
+                if (value !== undefined) {
+                    if (value.has_error) {
+                        vscode.window.showErrorMessage('Rule runner failed: ' + value.error_data);
+                    }
+                    else {
+                        vscode.window.showInformationMessage('Rule runner completed successfully');
+                    }
+                } else {
+                    vscode.window.showErrorMessage('Rule runner failed to execute');
+                }
+            });
+        } catch (error) {
+            vscode.window.showErrorMessage(error);
+        }
+        }
+    });
+
     let commandrunner_test_command = vscode.commands.registerCommand('extension.commandRunnerTest', () => { commandrunner_test_command_method(context); });
     let commandrunner_test_create_command = vscode.commands.registerCommand('extension.commandRunnerTestCreate', () => { command_runner__test_create_command_method(context); });
 
@@ -208,6 +262,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(commandrunner_parseonly_command);
     context.subscriptions.push(commandrunner_full_command);
     context.subscriptions.push(commandrunner_test_create_command);
+    context.subscriptions.push(run_rulerunner_compile_command);
+    context.subscriptions.push(rule_runner_create_input_command);
 }
 
 function command_runner__test_create_command_method(context : vscode.ExtensionContext) {

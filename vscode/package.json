@@ -22,7 +22,6 @@
             {
                 "command": "extension.commandRunnerTestCreate",
                 "title": "Command runner: Create test"
-
             },
             {
                 "command": "extension.commandRunnerFullCommand",
@@ -55,6 +54,14 @@
             {
                 "command": "extension.revealTestCommand",
                 "title": "Indeni code quality: Open corresponding test/script folder"
+            },
+            {
+                "command": "extension.triggerRuleRunnerCompile",
+                "title": "Rule runner: Compile"
+            },
+            {
+                "command": "extension.createRuleRunnerInput",
+                "title": "Rule runner: Create TS input"
             }
         ],
         "keybindings": [
@@ -153,6 +160,7 @@
     },
     "dependencies": {
         "@types/js-yaml": "^3.12.0",
+        "@types/yaml": "^1.0.2",
         "event-stream": "^4.0.1",
         "flatmap-stream": "0.0.1-security",
         "js-yaml": "^3.13.1"

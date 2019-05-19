@@ -13,6 +13,8 @@ const SplitScript_1 = require("./code-quality/code-quality-base/split-script/Spl
 const SplitScriptValidationCollection_1 = require("./code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection");
 const CodeValidation_1 = require("./code-quality/code-quality-base/CodeValidation");
 const write_functions_1 = require("./resources/hover_documentation/write_functions");
+const IndeniRule_1 = require("./code-quality/code-quality-base/rule/IndeniRule");
+const RuleInputBuilder_1 = require("./code-quality/rule-runner/results/RuleInputBuilder");
 let error_collection;
 let warning_collection;
 let information_collection;
@@ -119,6 +121,55 @@ function activate(context) {
             clearDecorations(editor);
         }
     });
+    let rule_runner_create_input_command = vscode.commands.registerCommand('extension.createRuleRunnerInput', () => {
+        let default_uri = undefined;
+        if (vscode.window.activeTextEditor !== undefined) {
+            default_uri = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
+        }
+        vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, openLabel: 'Open output test file', defaultUri: default_uri }).then(value => {
+            if (value === undefined) {
+                console.log('No value returned');
+                return;
+            }
+            let filename = value[0].fsPath;
+            let input_builder = new RuleInputBuilder_1.RuleInputBuilder();
+            let result = input_builder.from_time_series_output(filename);
+            if (result !== undefined) {
+                console.log(result);
+                vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
+                    if (vscode.window.activeTextEditor !== undefined) {
+                        vscode.window.showTextDocument(onfulfilled);
+                    }
+                }, onrejected => {
+                    console.log(onrejected);
+                });
+            }
+        });
+    });
+    let run_rulerunner_compile_command = vscode.commands.registerCommand('extension.triggerRuleRunnerCompile', () => {
+        var editor = vscode.window.activeTextEditor;
+        if (editor !== undefined) {
+            let rule = new IndeniRule_1.IndeniRule(editor.document.fileName);
+            try {
+                rule.RuleRunnerCompile().then(value => {
+                    if (value !== undefined) {
+                        if (value.has_error) {
+                            vscode.window.showErrorMessage('Rule runner failed: ' + value.error_data);
+                        }
+                        else {
+                            vscode.window.showInformationMessage('Rule runner completed successfully');
+                        }
+                    }
+                    else {
+                        vscode.window.showErrorMessage('Rule runner failed to execute');
+                    }
+                });
+            }
+            catch (error) {
+                vscode.window.showErrorMessage(error);
+            }
+        }
+    });
     let commandrunner_test_command = vscode.commands.registerCommand('extension.commandRunnerTest', () => { commandrunner_test_command_method(context); });
     let commandrunner_test_create_command = vscode.commands.registerCommand('extension.commandRunnerTestCreate', () => { command_runner__test_create_command_method(context); });
     let commandrunner_parseonly_command = vscode.commands.registerCommand('extension.commandRunnerParseOnly', () => { commandrunner_parseonly_command_method(context); });
@@ -182,6 +233,8 @@ function activate(context) {
     context.subscriptions.push(commandrunner_parseonly_command);
     context.subscriptions.push(commandrunner_full_command);
     context.subscriptions.push(commandrunner_test_create_command);
+    context.subscriptions.push(run_rulerunner_compile_command);
+    context.subscriptions.push(rule_runner_create_input_command);
 }
 exports.activate = activate;
 function command_runner__test_create_command_method(context) {
