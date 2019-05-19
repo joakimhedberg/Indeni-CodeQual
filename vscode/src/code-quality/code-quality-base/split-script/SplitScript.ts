@@ -159,159 +159,25 @@ export class SplitScript {
         return SplitScriptTestCases.get(test_file);
     }
 
-    public command_runner_test_create(context : vscode.ExtensionContext) {
-        if (this.header_section === undefined) {
-            return;
-        }
+    public async command_runner_test_create(context : vscode.ExtensionContext) {
+        let command_runner = new CommandRunner();
 
-        let test_cases = this.get_test_cases();
-        if (test_cases === undefined) {
-            return;
-        }
-
-        if (test_cases.length <= 0) {
-            return;
-        }
-
-        const items = <vscode.QuickPickItem[]>test_cases.map(
-            item => {
-                return {
-                    label: item.name
-                };
-            });
-            items.unshift({ label: 'New case' });
-        
-        vscode.window.showQuickPick(items, { 'canPickMany': false, 'placeHolder': 'Pick test case' }).then(value => {
-            if (value === undefined) {
-                return;
-            }
-    
-            if (value.label !== 'New case') {
-                this.get_test_case_name();
-                return;
-            }
-            else {
-                this.get_test_case((value : string | undefined) => {
-                if (value === undefined) {
-                    return;
+        try {
+            let result = await command_runner.CreateTestCaseAsync(this);
+            let fail = true;
+            if (result !== undefined) {
+                if (result.success) {
+                    vscode.window.showInformationMessage(`Test case '${result.test_case}' created for script '${result.script_name}'`);
+                    fail = false;
                 }
-                    if (test_cases === undefined) {
-                        return;
-                    }
+            }
     
-                    let test_case = test_cases.filter((tc : SplitScriptTestCase) => {
-                        return tc.name === value;
-                    });
-                    let selected_case = test_case[0];
-                    if (selected_case.name === undefined) {
-                        this.get_test_case_name();
-                        return;
-                    }
-    
-                    if (selected_case.input_data_path === undefined) {
-                        this.get_input_file(selected_case.name);
-                        return;
-                    }
-    
-                    this.use_script_input(value, selected_case.input_data_path);
-                });
+            if (fail) {
+                vscode.window.showErrorMessage('Test case creation failed');
             }
-        });      
-    }
-
-    private use_script_input(test_case_name : string, test_case_input_data_path : string) {
-        let options : vscode.QuickPickItem[] = [];
-        options.push({ label: 'Yes' });
-        options.push({ label: 'No' });
-        
-        vscode.window.showQuickPick(options, { placeHolder: 'Do you wish to use the existing input file for test case ' + test_case_name + '?' }).then(value => {
-            if (value === undefined) {
-                return;
-            }
-
-            if (value.label === 'No') {
-                this.get_input_file(test_case_name);
-            } else {
-                this.create_test_case(test_case_name, test_case_input_data_path);
-        }}
-        );
-    }
-
-    private get_test_case_name() {
-        vscode.window.showInputBox({ placeHolder: 'Select test case name' }).then((value : string | undefined) => {
-            if (value !== undefined) {
-                value = value.trim();
-                if (value.match(/ /)) {
-                    vscode.window.showErrorMessage('Test case should not contain spaces');
-                    return;
-                }
-
-                this.get_input_file(value);
-            }
-        });
-    }
-    
-    private get_input_file(test_case_name : string) {
-        
-        vscode.window.showOpenDialog({ canSelectFolders: false, canSelectMany: false, openLabel: 'Open test case input file' }).then(value => {
-            if (value === undefined) {
-                return;
-            }
-            if (value.length < 1) {
-                return;
-            }
-
-            this.create_test_case(test_case_name, value[0].fsPath);
-        });
-    }
-
-    private create_test_case(test_case_name : string, input_data_path : string) {
-        if (this.header_section === undefined) {
-            return;
+        } catch (e) {
+            vscode.window.showErrorMessage(e);
         }
-        let script_filename = this.header_section.filename;
-        let cr = new CommandRunner();
-        cr.CreateTestCase(script_filename, test_case_name, input_data_path, result => { 
-        
-        if (result === undefined){
-            vscode.window.showErrorMessage('Unable to create test case');
-            return;
-        }
-        
-        if (!result.success)
-        {
-            vscode.window.showErrorMessage('Unable to create test case');
-            return;
-        }
-
-        vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
-    });
-        /*, (result : CommandRunnerTestCreateResult) => {
-        
-            if (result.success) {
-                vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
-            }
-            else {
-                vscode.window.showErrorMessage('Unable to create test case');
-            }
-        });*/
-    }
-
-
-    private get_test_case(callback : (value : string | undefined) => void)  {
-        vscode.window.showInputBox({ placeHolder: 'Test case name' }).then((value : string | undefined) => {
-            if (value === undefined) {
-                callback(undefined);
-            }
-            else {
-                let match = /[a-z]{0,}[\-]?[a-z]{0,}/gm;
-                if (value.match(match)) {
-                    callback(value);
-                }
-
-                callback(value);
-            }
-        });
     }
 
     public command_runner_test(context : vscode.ExtensionContext) {

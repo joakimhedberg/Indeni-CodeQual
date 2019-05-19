@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = require("fs");
 const SplitScriptIndSection_1 = require("./sections/SplitScriptIndSection");
@@ -140,132 +148,23 @@ class SplitScript {
         return SplitScriptTestCases_1.SplitScriptTestCases.get(test_file);
     }
     command_runner_test_create(context) {
-        if (this.header_section === undefined) {
-            return;
-        }
-        let test_cases = this.get_test_cases();
-        if (test_cases === undefined) {
-            return;
-        }
-        if (test_cases.length <= 0) {
-            return;
-        }
-        const items = test_cases.map(item => {
-            return {
-                label: item.name
-            };
-        });
-        items.unshift({ label: 'New case' });
-        vscode.window.showQuickPick(items, { 'canPickMany': false, 'placeHolder': 'Pick test case' }).then(value => {
-            if (value === undefined) {
-                return;
-            }
-            if (value.label !== 'New case') {
-                this.get_test_case_name();
-                return;
-            }
-            else {
-                this.get_test_case((value) => {
-                    if (value === undefined) {
-                        return;
+        return __awaiter(this, void 0, void 0, function* () {
+            let command_runner = new CommandRunner_1.CommandRunner();
+            try {
+                let result = yield command_runner.CreateTestCaseAsync(this);
+                let fail = true;
+                if (result !== undefined) {
+                    if (result.success) {
+                        vscode.window.showInformationMessage(`Test case '${result.test_case}' created for script '${result.script_name}'`);
+                        fail = false;
                     }
-                    if (test_cases === undefined) {
-                        return;
-                    }
-                    let test_case = test_cases.filter((tc) => {
-                        return tc.name === value;
-                    });
-                    let selected_case = test_case[0];
-                    if (selected_case.name === undefined) {
-                        this.get_test_case_name();
-                        return;
-                    }
-                    if (selected_case.input_data_path === undefined) {
-                        this.get_input_file(selected_case.name);
-                        return;
-                    }
-                    this.use_script_input(value, selected_case.input_data_path);
-                });
-            }
-        });
-    }
-    use_script_input(test_case_name, test_case_input_data_path) {
-        let options = [];
-        options.push({ label: 'Yes' });
-        options.push({ label: 'No' });
-        vscode.window.showQuickPick(options, { placeHolder: 'Do you wish to use the existing input file for test case ' + test_case_name + '?' }).then(value => {
-            if (value === undefined) {
-                return;
-            }
-            if (value.label === 'No') {
-                this.get_input_file(test_case_name);
-            }
-            else {
-                this.create_test_case(test_case_name, test_case_input_data_path);
-            }
-        });
-    }
-    get_test_case_name() {
-        vscode.window.showInputBox({ placeHolder: 'Select test case name' }).then((value) => {
-            if (value !== undefined) {
-                value = value.trim();
-                if (value.match(/ /)) {
-                    vscode.window.showErrorMessage('Test case should not contain spaces');
-                    return;
                 }
-                this.get_input_file(value);
-            }
-        });
-    }
-    get_input_file(test_case_name) {
-        vscode.window.showOpenDialog({ canSelectFolders: false, canSelectMany: false, openLabel: 'Open test case input file' }).then(value => {
-            if (value === undefined) {
-                return;
-            }
-            if (value.length < 1) {
-                return;
-            }
-            this.create_test_case(test_case_name, value[0].fsPath);
-        });
-    }
-    create_test_case(test_case_name, input_data_path) {
-        if (this.header_section === undefined) {
-            return;
-        }
-        let script_filename = this.header_section.filename;
-        let cr = new CommandRunner_1.CommandRunner();
-        cr.CreateTestCase(script_filename, test_case_name, input_data_path, result => {
-            if (result === undefined) {
-                vscode.window.showErrorMessage('Unable to create test case');
-                return;
-            }
-            if (!result.success) {
-                vscode.window.showErrorMessage('Unable to create test case');
-                return;
-            }
-            vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
-        });
-        /*, (result : CommandRunnerTestCreateResult) => {
-        
-            if (result.success) {
-                vscode.window.showInformationMessage(`Created test case '${result.test_case}' for command '${result.script_name}'`);
-            }
-            else {
-                vscode.window.showErrorMessage('Unable to create test case');
-            }
-        });*/
-    }
-    get_test_case(callback) {
-        vscode.window.showInputBox({ placeHolder: 'Test case name' }).then((value) => {
-            if (value === undefined) {
-                callback(undefined);
-            }
-            else {
-                let match = /[a-z]{0,}[\-]?[a-z]{0,}/gm;
-                if (value.match(match)) {
-                    callback(value);
+                if (fail) {
+                    vscode.window.showErrorMessage('Test case creation failed');
                 }
-                callback(value);
+            }
+            catch (e) {
+                vscode.window.showErrorMessage(e);
             }
         });
     }

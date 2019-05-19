@@ -9,6 +9,7 @@ import { ValidScriptNamePrefix } from "./functions/ValidScriptNamePrefixValidati
 import { IncludesResourceDataValidation } from "./functions/IncludesResourceDataValidation";
 import { VariableNamingConventionValidation } from "./functions/VariableNamingConventionValidation";
 import { IsInComparison } from "../sections/SplitScriptSectionBase";
+import { YamlFourSpacesIndentaionValidation } from "./functions/YamlFourSpacesIndentationValidation";
 
 
 const INDENI_SCRIPT_NAME_PREFIXES = [
@@ -93,7 +94,7 @@ export class SplitScriptValidationCollection {
         this.validations.push(new IncludesResourceDataValidation("Resource data validation", INDENI_RESOURCE_METRICS));
         this.validations.push(new RegexValidation("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", FunctionSeverity.error, /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [], ['awk']));
         this.validations.push(new VariableNamingConventionValidation());
-
+        this.validations.push(new YamlFourSpacesIndentaionValidation());
 
         let index = 0;
         for (let validation of this.validations) {

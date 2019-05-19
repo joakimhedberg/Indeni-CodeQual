@@ -80,7 +80,7 @@ export class VariableNamingConventionValidation extends SplitScriptValidationBas
     }
 
     verify_variable_spelling(varname : string) : boolean {
-        let match = varname.match("^[a-z0-9_]*");
+        let match = varname.match(/[a-z0-9_]+|FS|\$[a-z0-9_]+/g);
         if (match === null) {
             return false;
         }

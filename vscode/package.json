@@ -117,17 +117,17 @@
                 "indeni.commandRunnerPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Command runner path"
+                    "description": "Command runner path(bash script or .bat file)"
                 },
                 "indeni.commandRunnerUser": {
                     "type": "string",
                     "default": "",
-                    "description": "Command runner user"
+                    "description": "Command runner user(for ssh sessions)"
                 },
                 "indeni.commandRunnerPassword": {
                     "type": "string",
                     "default": "",
-                    "description": "Command runner password"
+                    "description": "Command runner password(for ssh sessions)"
                 }
             }
         }
