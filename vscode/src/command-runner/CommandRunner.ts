@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { CommandRunnerParseOnlyResult } from './results/CommandRunnerParseOnlyResult';
 import { CommandRunnerTestRunResult } from './results/CommandRunnerTestRunResult';
 import { CommandRunnerTestCreateResult } from './results/CommandRunnerTestCreateResult';
+import { SplitScript } from '../code-quality/code-quality-base/split-script/SplitScript';
 
 export class CommandRunner {
     public errors : string[] = [];
@@ -88,6 +89,26 @@ export class CommandRunner {
             callback(new CommandRunnerParseOnlyResult(input_filename, filename, stdout));
 
         });
+    }
+
+    public async CreateTestCaseAsync(split_script : SplitScript) : Promise<CommandRunnerTestCreateResult> {
+        let case_name = await vscode.window.showInputBox({ placeHolder: 'New test case name' });
+        if (case_name === undefined) {
+            return Promise.reject('No case name selected');
+        }
+
+        let test_cases = split_script.get_test_cases();
+        if (test_cases !== undefined) {
+            const items = <vscode.QuickPickItem[]>test_cases.map(
+                item => 
+                {
+                    return {
+                        label: item.name
+                    };
+                });
+                items.unshift({ label: 'Browse...' });
+        }
+        
     }
 
     public CreateTestCase(script_filename : string, case_name : string, input_filename : string, callback : ((result : CommandRunnerTestCreateResult) => void)) {

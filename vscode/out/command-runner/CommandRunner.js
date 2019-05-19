@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
 const child = require("child_process");
@@ -70,6 +78,23 @@ class CommandRunner {
                 console.error(stderr);
             }
             callback(new CommandRunnerParseOnlyResult_1.CommandRunnerParseOnlyResult(input_filename, filename, stdout));
+        });
+    }
+    CreateTestCaseAsync(split_script) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let case_name = yield vscode.window.showInputBox({ placeHolder: 'New test case name' });
+            if (case_name === undefined) {
+                return Promise.reject('No case name selected');
+            }
+            let test_cases = split_script.get_test_cases();
+            if (test_cases !== undefined) {
+                const items = test_cases.map(item => {
+                    return {
+                        label: item.name
+                    };
+                });
+                items.unshift({ label: 'Browse...' });
+            }
         });
     }
     CreateTestCase(script_filename, case_name, input_filename, callback) {
