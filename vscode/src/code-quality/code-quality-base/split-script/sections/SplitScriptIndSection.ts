@@ -1,6 +1,9 @@
 import { SplitScriptSectionBase } from "./SplitScriptSectionBase";
 import yaml = require('js-yaml');
 export class SplitScriptIndSection extends SplitScriptSectionBase {
+    public get_metrics(): [number, string][] {
+        return this.get_documented_metrics();
+    }
 
     public yaml_header : any;
     constructor(filename : string, content : string | undefined = undefined) {

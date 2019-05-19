@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const SplitScriptSectionBase_1 = require("./SplitScriptSectionBase");
 const yaml = require("js-yaml");
 class SplitScriptIndSection extends SplitScriptSectionBase_1.SplitScriptSectionBase {
+    get_metrics() {
+        return this.get_documented_metrics();
+    }
     constructor(filename, content = undefined) {
         super(filename, 'ind', 'yaml', content);
         let header_content = this.content;

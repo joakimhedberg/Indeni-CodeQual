@@ -35,6 +35,7 @@ class SplitScript {
         this.awk_sections = [];
         this.xml_sections = [];
         this.json_sections = [];
+        this.sections = [];
         this.load_errors = [];
         this.current_section = undefined;
     }
@@ -107,13 +108,19 @@ class SplitScript {
             this.header_section = new SplitScriptIndSection_1.SplitScriptIndSection(filename);
         }
         else if (filename.endsWith('.awk')) {
-            this.awk_sections.push(new SplitScriptAwkSection_1.SplitScriptAwkSection(filename));
+            let section = new SplitScriptAwkSection_1.SplitScriptAwkSection(filename);
+            this.awk_sections.push(section);
+            this.sections.push(section);
         }
         else if (filename.endsWith('.json.yaml')) {
-            this.json_sections.push(new SplitScriptJsonSection_1.SplitScriptJsonSection(filename));
+            let section = new SplitScriptJsonSection_1.SplitScriptJsonSection(filename);
+            this.json_sections.push(section);
+            this.sections.push(section);
         }
         else if (filename.endsWith('.xml.yaml')) {
-            this.xml_sections.push(new SplitScriptXmlSection_1.SplitScriptXmlSection(filename));
+            let section = new SplitScriptXmlSection_1.SplitScriptXmlSection(filename);
+            this.xml_sections.push(section);
+            this.sections.push(section);
         }
     }
     get is_valid_script() {

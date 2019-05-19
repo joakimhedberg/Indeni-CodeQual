@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const SplitScriptSectionBase_1 = require("./SplitScriptSectionBase");
-class SplitScriptXmlSection extends SplitScriptSectionBase_1.SplitScriptSectionBase {
+const SplitScriptYamlSectionBase_1 = require("./SplitScriptYamlSectionBase");
+class SplitScriptXmlSection extends SplitScriptYamlSectionBase_1.SplitScriptYamlSectionBase {
     constructor(filename, content = undefined) {
         super(filename, 'xml', 'yaml', content);
     }

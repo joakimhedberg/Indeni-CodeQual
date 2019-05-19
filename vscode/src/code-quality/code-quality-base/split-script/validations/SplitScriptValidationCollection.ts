@@ -9,8 +9,6 @@ import { ValidScriptNamePrefix } from "./functions/ValidScriptNamePrefixValidati
 import { IncludesResourceDataValidation } from "./functions/IncludesResourceDataValidation";
 import { VariableNamingConventionValidation } from "./functions/VariableNamingConventionValidation";
 import { IsInComparison } from "../sections/SplitScriptSectionBase";
-import { YamlFourSpacesIndentaionValidation } from "./functions/YamlFourSpacesIndentationValidation";
-
 
 const INDENI_SCRIPT_NAME_PREFIXES = [
     "bluecoat", 
@@ -92,9 +90,12 @@ export class SplitScriptValidationCollection {
         comma_without_space.ignore_regexp = true;
         this.validations.push(comma_without_space);
         this.validations.push(new IncludesResourceDataValidation("Resource data validation", INDENI_RESOURCE_METRICS));
-        this.validations.push(new RegexValidation("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", FunctionSeverity.error, /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [], ['awk']));
+        let equals_sign_validation = new RegexValidation("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", FunctionSeverity.error, /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [], ['awk']);
+        equals_sign_validation.ignore_regexp = true;
+        equals_sign_validation.ignore_comments = true;
+        equals_sign_validation.ignore_quoted = true;
+        this.validations.push(equals_sign_validation);
         this.validations.push(new VariableNamingConventionValidation());
-        this.validations.push(new YamlFourSpacesIndentaionValidation());
 
         let index = 0;
         for (let validation of this.validations) {

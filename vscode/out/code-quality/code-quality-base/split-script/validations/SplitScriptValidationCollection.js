@@ -8,7 +8,6 @@ const ValidScriptNamePrefixValidation_1 = require("./functions/ValidScriptNamePr
 const IncludesResourceDataValidation_1 = require("./functions/IncludesResourceDataValidation");
 const VariableNamingConventionValidation_1 = require("./functions/VariableNamingConventionValidation");
 const SplitScriptSectionBase_1 = require("../sections/SplitScriptSectionBase");
-const YamlFourSpacesIndentationValidation_1 = require("./functions/YamlFourSpacesIndentationValidation");
 const INDENI_SCRIPT_NAME_PREFIXES = [
     "bluecoat",
     "cas",
@@ -72,9 +71,12 @@ class SplitScriptValidationCollection {
         comma_without_space.ignore_regexp = true;
         this.validations.push(comma_without_space);
         this.validations.push(new IncludesResourceDataValidation_1.IncludesResourceDataValidation("Resource data validation", INDENI_RESOURCE_METRICS));
-        this.validations.push(new RegexValidation_1.RegexValidation("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [], ['awk']));
+        let equals_sign_validation = new RegexValidation_1.RegexValidation("Equals sign without space", "The equals sign and other comparison operators should be followed by a space.\nExceptions to this are regexp and bash scripts.", CodeValidation_1.FunctionSeverity.error, /([^ =!<>~\n]{1}([=!<>~]{1,2})[^ \n]{1})|(([^ =!<>~\n]{1})([=!<>~]{1,2}))|(([=!<>~]{1,2})[^ =!<>~\n]{1})/gm, [], ['awk']);
+        equals_sign_validation.ignore_regexp = true;
+        equals_sign_validation.ignore_comments = true;
+        equals_sign_validation.ignore_quoted = true;
+        this.validations.push(equals_sign_validation);
         this.validations.push(new VariableNamingConventionValidation_1.VariableNamingConventionValidation());
-        this.validations.push(new YamlFourSpacesIndentationValidation_1.YamlFourSpacesIndentaionValidation());
         let index = 0;
         for (let validation of this.validations) {
             validation.id = index++;

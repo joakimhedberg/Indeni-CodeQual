@@ -3,6 +3,7 @@ import { MarkerResult } from "../../../MarkerResult";
 import { SplitScript } from "../../SplitScript";
 import { FunctionSeverity } from "../../../CodeValidation";
 import { SplitScriptAwkSection } from "../../sections/SplitScriptAwkSection";
+import { SplitScriptSectionBase } from "../../sections/SplitScriptSectionBase";
 
 export class UndocumentedMetricsValidation extends SplitScriptValidationBase {  
     constructor() {
@@ -20,13 +21,13 @@ export class UndocumentedMetricsValidation extends SplitScriptValidationBase {
             return this.markers;
         }
 
-        if (script.current_section.content_type !== "awk") {
+        /*if (script.current_section.content_type !== "awk") {
             return this.markers;
-        }
+        }*/
 
-        if (script.current_section instanceof SplitScriptAwkSection) {
-            let awk_section = script.current_section as SplitScriptAwkSection;
-            let used_metrics = awk_section.get_metrics();
+        if (script.current_section instanceof SplitScriptSectionBase) {
+            let section = script.current_section as SplitScriptSectionBase;
+            let used_metrics = section.get_metrics();
             let documented_metrics = script.header_section.get_documented_metrics();
             for (let used of used_metrics) {
                 let found = false;

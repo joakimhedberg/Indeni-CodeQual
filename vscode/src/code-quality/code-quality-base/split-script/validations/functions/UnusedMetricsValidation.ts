@@ -29,8 +29,8 @@ export class UnusedMetricsValidation extends SplitScriptValidationBase {
             let documented_metrics = header_section.get_documented_metrics();
             let used_metrics : [number, string][] = [];
 
-            for (let awk of script.awk_sections) {
-                for (let used of awk.get_metrics()) {
+            for (let section of script.sections) {
+                for (let used of section.get_metrics()) {
                     used_metrics.push(used);
                 }
             }

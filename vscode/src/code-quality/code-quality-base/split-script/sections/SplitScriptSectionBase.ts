@@ -54,6 +54,8 @@ export abstract class SplitScriptSectionBase
         return this._content;
     }
 
+    public abstract get_metrics() : [number, string][];
+
     public is_in_comment(start_pos : number, end_pos : number, comparison : IsInComparison) : boolean {
         return this.is_in_list(this.comment_lines, start_pos, end_pos, comparison);
     }

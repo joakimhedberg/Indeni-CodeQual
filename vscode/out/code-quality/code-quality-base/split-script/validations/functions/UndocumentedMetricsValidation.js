@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const SplitScriptValidationBase_1 = require("./SplitScriptValidationBase");
 const MarkerResult_1 = require("../../../MarkerResult");
 const CodeValidation_1 = require("../../../CodeValidation");
-const SplitScriptAwkSection_1 = require("../../sections/SplitScriptAwkSection");
+const SplitScriptSectionBase_1 = require("../../sections/SplitScriptSectionBase");
 class UndocumentedMetricsValidation extends SplitScriptValidationBase_1.SplitScriptValidationBase {
     constructor() {
         super("Metric used has not been documented", CodeValidation_1.FunctionSeverity.error);
@@ -16,12 +16,12 @@ class UndocumentedMetricsValidation extends SplitScriptValidationBase_1.SplitScr
         if (!script.current_section || !script.header_section) {
             return this.markers;
         }
-        if (script.current_section.content_type !== "awk") {
+        /*if (script.current_section.content_type !== "awk") {
             return this.markers;
-        }
-        if (script.current_section instanceof SplitScriptAwkSection_1.SplitScriptAwkSection) {
-            let awk_section = script.current_section;
-            let used_metrics = awk_section.get_metrics();
+        }*/
+        if (script.current_section instanceof SplitScriptSectionBase_1.SplitScriptSectionBase) {
+            let section = script.current_section;
+            let used_metrics = section.get_metrics();
             let documented_metrics = script.header_section.get_documented_metrics();
             for (let used of used_metrics) {
                 let found = false;

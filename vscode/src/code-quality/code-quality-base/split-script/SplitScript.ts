@@ -33,6 +33,7 @@ export class SplitScript {
     public awk_sections : SplitScriptAwkSection[] = [];
     public xml_sections : SplitScriptXmlSection[] = [];
     public json_sections : SplitScriptJsonSection[] = [];
+    public sections : SplitScriptSectionBase[] = [];
 
     public load_errors : string[] = [];
 
@@ -111,11 +112,17 @@ export class SplitScript {
         if (filename.endsWith('.ind.yaml')) {
             this.header_section = new SplitScriptIndSection(filename);
         } else if (filename.endsWith('.awk')) {
-            this.awk_sections.push(new SplitScriptAwkSection(filename));
+            let section = new SplitScriptAwkSection(filename);
+            this.awk_sections.push(section);
+            this.sections.push(section);
         } else if (filename.endsWith('.json.yaml')) {
-            this.json_sections.push(new SplitScriptJsonSection(filename));
+            let section = new SplitScriptJsonSection(filename);
+            this.json_sections.push(section);
+            this.sections.push(section);
         } else if (filename.endsWith('.xml.yaml')) {
-            this.xml_sections.push(new SplitScriptXmlSection(filename));
+            let section = new SplitScriptXmlSection(filename);
+            this.xml_sections.push(section);
+            this.sections.push(section);
         }
     }
     
