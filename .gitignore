@@ -1,5 +1,4 @@
 *.vsix
 vscode/.DS_Store
-vscode/.vscode
 node_modules/
 bitbucket-chrome-extension.zip

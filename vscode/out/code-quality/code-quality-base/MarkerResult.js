@@ -7,7 +7,9 @@ const vscode = require("vscode");
 class MarkerResult {
     constructor(start_pos, end_pos, tooltip, severity, offset_handled, offending_text) {
         this.code_validation = undefined; // Parent validation of the check
-        this.ignore_comments = false;
+        this.ignore_comments = true;
+        this.ignore_quoted = true;
+        this.ignore_regexp = false;
         this.is_ignored = false;
         this.start_pos = start_pos;
         this.end_pos = end_pos;
@@ -19,19 +21,28 @@ class MarkerResult {
 }
 exports.MarkerResult = MarkerResult;
 class MarkerCollection extends vscode.Disposable {
-    constructor(decoration) {
+    constructor(decoration, severity = undefined) {
         super(() => { this.dispose(); });
         this.markers = new Map();
         this.decoration = decoration;
+        this.severity = severity;
     }
     clear() {
         this.markers.clear();
     }
     append(marker) {
+        if (marker.is_ignored) {
+            return;
+        }
+        if (this.severity !== undefined) {
+            if (marker.severity !== this.severity) {
+                return;
+            }
+        }
         let existing = this.markers.get(marker.start_pos);
         if (existing !== undefined) {
             for (let exists of existing) {
-                if (exists.end_pos === marker.end_pos) {
+                if (exists.end_pos === marker.end_pos && exists.tooltip === marker.tooltip) {
                     return false;
                 }
             }

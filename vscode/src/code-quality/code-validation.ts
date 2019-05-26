@@ -3,7 +3,7 @@ import { MarkerResult } from "./code-quality-base/MarkerResult";
 import { Sections, AwkSection, AwkVariableOccurence } from "./code-quality-base/Section";
 import { SpecialCase } from "./code-quality-base/SpecialCase";
 
-const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
+const indeni_script_name_prefixes = ["alteon", "api", "bluecoat", "cas", "chkp", "cpembedded", "cphaprob", "cplic", "cpmds", "cpprod", "cpstat", "f5", "fireeye", "fortigate", "fortios", "freebsd", "fwmultik", "get", "gigamon", "imp", "imperva", "indeni", "ios", "iosxe", "ipso", "junos", "linux", "lsb", "md5sum", "netobj", "nexus", "panos", "proxysg", "radware", "rest", "sgos", "srx", "ssh", "unix", "vpn"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 
 export class CodeValidations {
@@ -46,6 +46,7 @@ export class CodeValidations {
         this.reset();
         for (let sect of sections.all) {
             let marks = sect.get_marks(this, sections);
+
             for (let mark of marks) {
                 if (mark.ignore_comments && sections.script !== null)
                 {

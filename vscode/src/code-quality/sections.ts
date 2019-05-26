@@ -39,6 +39,7 @@ export function get_sections(content : string) : Sections {
     return result;
 }
 
+
 function get_section(apply : string[], regex_result : RegExpExecArray | null) {
     if (regex_result !== null) {
         return new Section(regex_result.index, regex_result[0], apply);

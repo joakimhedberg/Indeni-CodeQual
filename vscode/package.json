@@ -2,7 +2,7 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.1.6",
+    "version": "0.2.4",
     "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
@@ -20,6 +20,22 @@
     "contributes": {
         "commands": [
             {
+                "command": "extension.commandRunnerTestCreate",
+                "title": "Command runner: Create test"
+            },
+            {
+                "command": "extension.commandRunnerFullCommand",
+                "title": "Command runner: Full command"
+            },
+            {
+                "command": "extension.commandRunnerParseOnly",
+                "title": "Command runner: Parse only"
+            },
+            {
+                "command": "extension.commandRunnerTest",
+                "title": "Command runner: Run test"
+            },
+            {
                 "command": "extension.triggerUpdate",
                 "title": "Indeni code quality: Perform code quality"
             },
@@ -34,6 +50,18 @@
             {
                 "command": "extension.setLanguage",
                 "title": "Indeni code quality: Set syntax highlight(awk/yaml)"
+            },
+            {
+                "command": "extension.revealTestCommand",
+                "title": "Indeni code quality: Open corresponding test/script folder"
+            },
+            {
+                "command": "extension.triggerRuleRunnerCompile",
+                "title": "Rule runner: Compile"
+            },
+            {
+                "command": "extension.createRuleRunnerInput",
+                "title": "Rule runner: Create TS input"
             }
         ],
         "keybindings": [
@@ -65,8 +93,8 @@
                 "id": "extension.warningBorderColor",
                 "description": "Border color for warnings",
                 "defaults": {
-                    "dark": "#a4a244",
-                    "light": "#ffff00",
+                    "light": "#fffb00",
+                    "dark": "#ffff00",
                     "highContrast": "#ffff00"
                 }
             },
@@ -74,8 +102,8 @@
                 "id": "extension.errorBorderColor",
                 "description": "Border color for errors",
                 "defaults": {
-                    "dark": "#a60004",
-                    "light": "#f1bebf",
+                    "dark": "#ff0004",
+                    "light": "#a60004",
                     "highContrast": "#ff0d13"
                 }
             },
@@ -83,12 +111,38 @@
                 "id": "extension.informationBorderColor",
                 "description": "Border color for information",
                 "defaults": {
-                    "dark": "#000080",
-                    "light": "#a7a2e8",
+                    "dark": "#1100ff",
+                    "light": "#000080",
                     "highContrast": "#0000ff"
                 }
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Indeni-codequal settings",
+            "properties": {
+                "indeni.commandRunnerPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command runner path(bash script or .bat file)"
+                },
+                "indeni.ruleRunnerPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Rule runner path(bash script or .bat file)"
+                },
+                "indeni.commandRunnerUser": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command runner user(for ssh sessions)"
+                },
+                "indeni.commandRunnerPassword": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Command runner password(for ssh sessions)"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -98,14 +152,17 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "@types/node": "^8.10.48",
+        "tslint": "^5.16.0",
         "typescript": "^2.6.1",
-        "vscode": "^1.1.21",
-        "tslint": "^5.8.0",
-        "@types/node": "^8.10.25",
-        "@types/mocha": "^2.2.42"
+        "vscode": "^1.1.34"
     },
     "dependencies": {
+        "@types/js-yaml": "^3.12.1",
+        "@types/yaml": "^1.0.2",
         "event-stream": "^4.0.1",
-        "flatmap-stream": "0.0.1-security"
+        "flatmap-stream": "0.0.1-security",
+        "js-yaml": "^3.13.1"
     }
 }

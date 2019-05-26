@@ -4,7 +4,7 @@ const CodeValidation_1 = require("./code-quality-base/CodeValidation");
 const MarkerResult_1 = require("./code-quality-base/MarkerResult");
 const Section_1 = require("./code-quality-base/Section");
 const SpecialCase_1 = require("./code-quality-base/SpecialCase");
-const indeni_script_name_prefixes = ["chkp", "f5", "panos", "nexus", "radware", "junos", "ios", "fortios", "cpembedded", "bluecoat", "linux", "unix", "gigamon"];
+const indeni_script_name_prefixes = ["alteon", "api", "bluecoat", "cas", "chkp", "cpembedded", "cphaprob", "cplic", "cpmds", "cpprod", "cpstat", "f5", "fireeye", "fortigate", "fortios", "freebsd", "fwmultik", "get", "gigamon", "imp", "imperva", "indeni", "ios", "iosxe", "ipso", "junos", "linux", "lsb", "md5sum", "netobj", "nexus", "panos", "proxysg", "radware", "rest", "sgos", "srx", "ssh", "unix", "vpn"];
 const resource_metrics = ["cpu-usage", "memory-usage"];
 class CodeValidations {
     constructor() {
