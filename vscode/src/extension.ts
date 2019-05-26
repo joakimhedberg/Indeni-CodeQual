@@ -12,9 +12,10 @@ import { CodeQualityView } from './gui/CodeQualityView';
 import { SplitScript } from './code-quality/code-quality-base/split-script/SplitScript';
 import { SplitScriptValidationCollection } from './code-quality/code-quality-base/split-script/validations/SplitScriptValidationCollection';
 import { FunctionSeverity } from './code-quality/code-quality-base/CodeValidation';
-import { DOC_WRITE_DOUBLE_METRIC, DOC_WRITE_COMPLEX_METRIC_STRING, DOC_WRITE_COMPLEX_METRIC_ARRAY, DOC_WRITE_DEBUG } from './resources/hover_documentation/write_functions';
+import { DOC_WRITE_DOUBLE_METRIC, DOC_WRITE_COMPLEX_METRIC_STRING, DOC_WRITE_COMPLEX_METRIC_ARRAY, DOC_WRITE_DEBUG, DOC_WRITE_TAG } from './resources/hover_documentation/write_functions';
 import { IndeniRule } from './code-quality/code-quality-base/rule/IndeniRule';
 import { RuleInputBuilder } from './code-quality/rule-runner/results/RuleInputBuilder';
+import { CommandRunnerResultView } from './gui/CommandRunnerResultView';
 
 let error_collection : MarkerCollection;
 let warning_collection : MarkerCollection;
@@ -97,28 +98,31 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.languages.registerHoverProvider('awk', {
         provideHover(document, position, token) {
-          let range = document.getWordRangeAtPosition(position);
-          let text = document.getText(range);
-          if (text.startsWith('writeDoubleMetric')) {
-            return {
-                contents: DOC_WRITE_DOUBLE_METRIC
-              };
-          } else if (text.startsWith("writeComplexMetricString")) {
-              return {
-                contents: DOC_WRITE_COMPLEX_METRIC_STRING
-              };
-          }
-          else if (text.startsWith("writeComplexMetricObjectArray")) {
-            return {
-              contents: DOC_WRITE_COMPLEX_METRIC_ARRAY
-            };
-        }
-            else if (text.startsWith("writeDebug")) {
+            let range = document.getWordRangeAtPosition(position);
+            let text = document.getText(range);
+            if (text.startsWith('writeDoubleMetric')) {
                 return {
-                contents: DOC_WRITE_DEBUG
+                        contents: DOC_WRITE_DOUBLE_METRIC
+                };
+            } else if (text.startsWith("writeComplexMetricString")) {
+                return {
+                        contents: DOC_WRITE_COMPLEX_METRIC_STRING
                 };
             }
-          
+            else if (text.startsWith("writeComplexMetricObjectArray")) {
+                return {
+                        contents: DOC_WRITE_COMPLEX_METRIC_ARRAY
+                };
+            }
+            else if (text.startsWith("writeDebug")) {
+                return {
+                    contents: DOC_WRITE_DEBUG
+                };
+            } else if (text.startsWith("writeTag")) {
+                return {
+                    contents: DOC_WRITE_TAG
+                }
+            }
         }
       });
 
@@ -151,17 +155,21 @@ export function activate(context: vscode.ExtensionContext) {
 
             let filename = value[0].fsPath;
             let input_builder = new RuleInputBuilder();
-            let result = input_builder.from_time_series_output(filename);
-            if (result !== undefined) {
-                console.log(result);
-                vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
-                    if (vscode.window.activeTextEditor !== undefined) {
-                        vscode.window.showTextDocument(onfulfilled);
-                    }
-                }, onrejected => {
-                    console.log(onrejected);
-                });
-            }
+            input_builder.from_time_series_output(filename).then(result => {
+
+                if (result !== undefined) {
+                    console.log(result);
+                    vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
+                        if (vscode.window.activeTextEditor !== undefined) {
+                            vscode.window.showTextDocument(onfulfilled);
+                        }
+                    }, onrejected => {
+                        console.log(onrejected);
+                    });
+                }
+            }).catch(err => {
+                console.error(err);
+            });
         });
     });
     let run_rulerunner_compile_command = vscode.commands.registerCommand('extension.triggerRuleRunnerCompile', () => {
@@ -172,12 +180,15 @@ export function activate(context: vscode.ExtensionContext) {
             try {
                 rule.RuleRunnerCompile().then(value => {
                 if (value !== undefined) {
+                    console.log(value);
                     if (value.has_error) {
                         vscode.window.showErrorMessage('Rule runner failed: ' + value.error_data);
                     }
                     else {
                         vscode.window.showInformationMessage('Rule runner completed successfully');
                     }
+                    let view = new CommandRunnerResultView(context.extensionPath);
+                    view.show_rulerunner_result(value);
                 } else {
                     vscode.window.showErrorMessage('Rule runner failed to execute');
                 }

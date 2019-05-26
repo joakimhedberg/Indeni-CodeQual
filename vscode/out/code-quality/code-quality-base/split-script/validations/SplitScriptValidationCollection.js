@@ -9,23 +9,46 @@ const IncludesResourceDataValidation_1 = require("./functions/IncludesResourceDa
 const VariableNamingConventionValidation_1 = require("./functions/VariableNamingConventionValidation");
 const SplitScriptSectionBase_1 = require("../sections/SplitScriptSectionBase");
 const INDENI_SCRIPT_NAME_PREFIXES = [
+    "alteon",
+    "api",
     "bluecoat",
     "cas",
-    "cpembedded",
     "chkp",
+    "cpembedded",
+    "cphaprob",
+    "cplic",
+    "cpmds",
+    "cpprod",
+    "cpstat",
     "f5",
     "fireeye",
+    "fortigate",
     "fortios",
+    "freebsd",
+    "fwmultik",
+    "get",
     "gigamon",
+    "imp",
     "imperva",
     "indeni",
     "ios",
+    "iosxe",
+    "ipso",
     "junos",
     "linux",
+    "lsb",
+    "md5sum",
+    "netobj",
     "nexus",
     "panos",
+    "proxysg",
     "radware",
-    "unix"
+    "rest",
+    "sgos",
+    "srx",
+    "ssh",
+    "unix",
+    "vpn"
 ];
 const INDENI_RESOURCE_METRICS = [
     "cpu-usage",
@@ -58,7 +81,8 @@ class SplitScriptValidationCollection {
         this.validations.push(new RegexValidation_1.RegexValidation("Column variable manipulation", "Changing column values (ie. $0, $1) could easily lead to unexpected behaviors.\nIt is highly recommended to instead save the column value to a variable and change that.", CodeValidation_1.FunctionSeverity.warning, /g{0,1}sub.+?(\$[0-9])+/g, [], ["awk"]));
         //let tilde_without_space = new CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, ["awk"], /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm);
         // TODO: Need to look this over
-        let tilde_without_space = new RegexValidation_1.RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", CodeValidation_1.FunctionSeverity.error, /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm, [], ["awk"]);
+        //let tilde_without_space = new RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm, [], ["awk"]);
+        let tilde_without_space = new RegexValidation_1.RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", CodeValidation_1.FunctionSeverity.error, /([^ \n]~[^ \n]|~[^ \n])/gm, [], ["awk"]);
         tilde_without_space.ignore_regexp = true;
         this.validations.push(tilde_without_space);
         //let tilde_without_regexp_notation = new CodeValidationRegex("Tilde without regexp notation", "Tilde signs should be followed by a regex enclosed in a traditional regex notation (ie. /regexp/).", FunctionSeverity.warning, ["awk"], /(~\s+[^/])/gm);

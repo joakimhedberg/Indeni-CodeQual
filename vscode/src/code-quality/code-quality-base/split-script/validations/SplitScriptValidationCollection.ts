@@ -11,24 +11,46 @@ import { VariableNamingConventionValidation } from "./functions/VariableNamingCo
 import { IsInComparison } from "../sections/SplitScriptSectionBase";
 
 const INDENI_SCRIPT_NAME_PREFIXES = [
-    "bluecoat", 
+    "alteon",
+    "api",
+    "bluecoat",
     "cas",
-    "cpembedded", 
-    "chkp", 
-    "f5", 
+    "chkp",
+    "cpembedded",
+    "cphaprob",
+    "cplic",
+    "cpmds",
+    "cpprod",
+    "cpstat",
+    "f5",
     "fireeye",
-    "fortios", 
-    "gigamon", 
+    "fortigate",
+    "fortios",
+    "freebsd",
+    "fwmultik",
+    "get",
+    "gigamon",
+    "imp",
     "imperva",
     "indeni",
     "ios",
-    "junos", 
-    "linux", 
-    "nexus", 
-    "panos", 
-    "radware", 
-    "unix"
-];
+    "iosxe",
+    "ipso",
+    "junos",
+    "linux",
+    "lsb",
+    "md5sum",
+    "netobj",
+    "nexus",
+    "panos",
+    "proxysg",
+    "radware",
+    "rest",
+    "sgos",
+    "srx",
+    "ssh",
+    "unix",
+    "vpn"];
 
 const INDENI_RESOURCE_METRICS = [
     "cpu-usage",
@@ -74,7 +96,8 @@ export class SplitScriptValidationCollection {
 
         //let tilde_without_space = new CodeValidationRegex("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, ["awk"], /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm);
         // TODO: Need to look this over
-        let tilde_without_space = new RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm, [], ["awk"]);
+        //let tilde_without_space = new RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, /([^ \n]~[^ \n]|[^ \n]~|~[^ \n])/gm, [], ["awk"]);
+        let tilde_without_space = new RegexValidation("Tilde without space", "Tilde signs should be followed by space.\nExceptions to this are regexp.", FunctionSeverity.error, /([^ \n]~[^ \n]|~[^ \n])/gm, [], ["awk"]);
         tilde_without_space.ignore_regexp = true;
         this.validations.push(tilde_without_space);
 

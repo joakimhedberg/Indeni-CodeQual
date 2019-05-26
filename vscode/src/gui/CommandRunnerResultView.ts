@@ -2,6 +2,7 @@ import { CommandRunnerParseOnlyResult } from "../command-runner/results/CommandR
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { CommandRunnerTestRunResult } from "../command-runner/results/CommandRunnerTestRunResult";
+import { RuleRunnerCompileResult } from "../code-quality/rule-runner/results/RuleRunnerCompileResult";
 
 export class CommandRunnerResultView {
     private resource_path : string;
@@ -9,13 +10,14 @@ export class CommandRunnerResultView {
     private style_parser_uri : vscode.Uri;
     private script_test_uri : vscode.Uri;
     private script_parser_uri : vscode.Uri;
-
+    private script_rulerunner_result_uri : vscode.Uri;
     public constructor(resource_path : string) {
         resource_path = path.join(resource_path, 'resources');
         this.resource_path = resource_path;
         this.style_parser_uri = vscode.Uri.file(path.join(this.resource_path, 'crunner_parser.css'));
         this.script_parser_uri = vscode.Uri.file(path.join(this.resource_path, 'crunner_parser.js'));
         this.script_test_uri = vscode.Uri.file(path.join(this.resource_path, 'crunner_test.js'));
+        this.script_rulerunner_result_uri = vscode.Uri.file(path.join(this.resource_path, 'rulerunner_result.js'));
     }
 
     private get_panel() : vscode.WebviewPanel {
@@ -32,6 +34,12 @@ export class CommandRunnerResultView {
         }
 
         return this.panel;
+    }
+
+    public show_rulerunner_result(result : RuleRunnerCompileResult) {
+        let panel = this.get_panel();
+        panel.webview.html = this.get_parser_html(this.script_rulerunner_result_uri);
+        panel.webview.postMessage({ present_rulerunner_result : result });
     }
 
     public show_test_result(result : CommandRunnerTestRunResult) {

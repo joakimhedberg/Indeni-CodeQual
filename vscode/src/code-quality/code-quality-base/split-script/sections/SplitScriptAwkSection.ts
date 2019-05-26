@@ -65,11 +65,14 @@ export class SplitScriptAwkSection extends SplitScriptSectionBase {
         */
 
 
-        let regex_assigned = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        //let regex_assigned = /^[^#][\s]*(.+)[^!=<>]=[^=~]|^.*\(([^ ]*)[^!=<>]=[^=~]/gm; // Find variable assignments, Example: test_var = 23
+        let regex_assigned = /([a-z0-9A-Z_]+)(?=\s?\=)/gm;
         //let regex_assigned = /\s?([a-zA-Z\_0-9]+)(\s?|\[.*\]\s?)(?=[^=!<>,]=[^=])/gm;
         let regex_assigned_delete = /^[^#][\s]*delete ([^\s]+)/gm; // Found variable deletion, Example: delete test_var
-        let regex_assigned_incdec_suffix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: test++, test--
-        let regex_assigned_incdec_prefix = /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: ++test, --test
+        //let regex_assigned_incdec_prefix = /^[^#][\s]*([^\s\[\]\(\)]+)(?=[\+]{2}|[\-]{2})/gm; // Find incremental and decremental variables, Examples: ++test, --test
+        //let regex_assigned_incdec_suffix= /^[^#][\s].*([\+]{2}|[\-]{2})([^\(\)\[\]\s]+)/gm; // Find incremental and decremental variables, Examples: test++, test--
+        let regex_assigned_incdec_prefix = /[^\+\-](\+{2}|\-{2})([a-z_0-9A-Z]+)/gm;
+        let regex_assigned_incdec_suffix = /([a-z_0-9A-Z]+)(\+{2}|\-{2})[^\+\-]/gm;
 
         let match;
         let result : [string, number, AwkVariableOccurence][] = [];

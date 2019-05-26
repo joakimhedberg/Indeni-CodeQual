@@ -10,6 +10,7 @@ class CommandRunnerResultView {
         this.style_parser_uri = vscode.Uri.file(path.join(this.resource_path, 'crunner_parser.css'));
         this.script_parser_uri = vscode.Uri.file(path.join(this.resource_path, 'crunner_parser.js'));
         this.script_test_uri = vscode.Uri.file(path.join(this.resource_path, 'crunner_test.js'));
+        this.script_rulerunner_result_uri = vscode.Uri.file(path.join(this.resource_path, 'rulerunner_result.js'));
     }
     get_panel() {
         if (this.panel === undefined) {
@@ -22,6 +23,11 @@ class CommandRunnerResultView {
             }
         }
         return this.panel;
+    }
+    show_rulerunner_result(result) {
+        let panel = this.get_panel();
+        panel.webview.html = this.get_parser_html(this.script_rulerunner_result_uri);
+        panel.webview.postMessage({ present_rulerunner_result: result });
     }
     show_test_result(result) {
         let panel = this.get_panel();

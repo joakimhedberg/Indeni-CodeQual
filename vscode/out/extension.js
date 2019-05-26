@@ -15,6 +15,7 @@ const CodeValidation_1 = require("./code-quality/code-quality-base/CodeValidatio
 const write_functions_1 = require("./resources/hover_documentation/write_functions");
 const IndeniRule_1 = require("./code-quality/code-quality-base/rule/IndeniRule");
 const RuleInputBuilder_1 = require("./code-quality/rule-runner/results/RuleInputBuilder");
+const CommandRunnerResultView_1 = require("./gui/CommandRunnerResultView");
 let error_collection;
 let warning_collection;
 let information_collection;
@@ -107,6 +108,11 @@ function activate(context) {
                     contents: write_functions_1.DOC_WRITE_DEBUG
                 };
             }
+            else if (text.startsWith("writeTag")) {
+                return {
+                    contents: write_functions_1.DOC_WRITE_TAG
+                };
+            }
         }
     });
     let set_language_command = vscode.commands.registerCommand('extension.setLanguage', () => {
@@ -133,17 +139,20 @@ function activate(context) {
             }
             let filename = value[0].fsPath;
             let input_builder = new RuleInputBuilder_1.RuleInputBuilder();
-            let result = input_builder.from_time_series_output(filename);
-            if (result !== undefined) {
-                console.log(result);
-                vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
-                    if (vscode.window.activeTextEditor !== undefined) {
-                        vscode.window.showTextDocument(onfulfilled);
-                    }
-                }, onrejected => {
-                    console.log(onrejected);
-                });
-            }
+            input_builder.from_time_series_output(filename).then(result => {
+                if (result !== undefined) {
+                    console.log(result);
+                    vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
+                        if (vscode.window.activeTextEditor !== undefined) {
+                            vscode.window.showTextDocument(onfulfilled);
+                        }
+                    }, onrejected => {
+                        console.log(onrejected);
+                    });
+                }
+            }).catch(err => {
+                console.error(err);
+            });
         });
     });
     let run_rulerunner_compile_command = vscode.commands.registerCommand('extension.triggerRuleRunnerCompile', () => {
@@ -153,12 +162,15 @@ function activate(context) {
             try {
                 rule.RuleRunnerCompile().then(value => {
                     if (value !== undefined) {
+                        console.log(value);
                         if (value.has_error) {
                             vscode.window.showErrorMessage('Rule runner failed: ' + value.error_data);
                         }
                         else {
                             vscode.window.showInformationMessage('Rule runner completed successfully');
                         }
+                        let view = new CommandRunnerResultView_1.CommandRunnerResultView(context.extensionPath);
+                        view.show_rulerunner_result(value);
                     }
                     else {
                         vscode.window.showErrorMessage('Rule runner failed to execute');

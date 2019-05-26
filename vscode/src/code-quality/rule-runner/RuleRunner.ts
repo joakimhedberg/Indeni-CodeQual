@@ -39,7 +39,6 @@ export class RuleRunner {
             return Promise.reject('No rule runner data received');
         }
 
-        console.log(data);
         return Promise.resolve(new RuleRunnerCompileResult(data));
     }
 
@@ -51,16 +50,19 @@ export class RuleRunner {
         let path = this.escape_filename(this.rulerunner_path);
         let command = path + ' ' + parameters;
         return new Promise((resolve, reject) => {
-            console.log(command);
             child.exec(command, (error, stdout, stderr) => {
                 if (error) {
                     reject(error);
                     return;
                 }
-                console.log(stdout.trim());
-                resolve(stdout.trim());
+                let result = stdout.trim();
+                resolve(result);
+                return;
             });
+
+            reject('No result found');
         });
+
     }
 
     private escape_filename(filename : string) : string {

@@ -52,7 +52,6 @@ class CommandRunner {
             this.commandrunner_password = '';
         }
         let command = this.escape_filename(this.commandrunner_uri.fsPath) + ` full-command --ssh ${this.commandrunner_user},${this.commandrunner_password} --basic-authentication ${this.commandrunner_user},${this.commandrunner_password} ` + this.escape_filename(input_filename) + " " + ip_address;
-        console.log(command);
         child.exec(command, (error, stdout, stderr) => {
             if (error !== null) {
                 console.error(error);

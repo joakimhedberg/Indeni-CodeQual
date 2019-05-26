@@ -40,4 +40,8 @@ export const DOC_WRITE_COMPLEX_METRIC_ARRAY = [
 export const DOC_WRITE_DEBUG = [
     "Writes a string to the debug output for the AWK parser. The debug output is only visible when the command runner, or the indeni-collector (in a live system) is run under debug mode."
 ];
+
+export const DOC_WRITE_TAG = [
+    "Write a tag to be associated with a device. Tags can only be written in an interrogation script. These tags are used by monitoring scripts (as well as some interrogation scripts) in the \"requires\" section."
+];
             

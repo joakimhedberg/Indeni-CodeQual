@@ -54,5 +54,13 @@
 			"writeDebug(\"${1:string}\")"
 		],
 		"description": "Write debug message"
+	},
+	"Write tag": {
+		"scope": "awk",
+		"prefix": "write",
+		"body": [
+			"writeTag(\"${1:name}\", ${2:value})"
+		],
+		"description": "Write tag"
 	}
 }

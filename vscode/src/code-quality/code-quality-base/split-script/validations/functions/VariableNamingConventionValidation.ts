@@ -52,6 +52,7 @@ export class VariableNamingConventionValidation extends SplitScriptValidationBas
                 for (let startpos of item[1]) {
                     let marker = new MarkerResult(startpos, startpos + item[0].length, "Most people uses snake case (ie. my_variable) in the repository. This is a suggestion for you to do the same.", this.severity, true, item[0]);
                     marker.ignore_quoted = true;
+                    marker.ignore_regexp = true;
                     this.markers.push(marker);
                 }
             }

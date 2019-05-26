@@ -1,36 +1,88 @@
 import * as fs from 'fs';
 
 export class RuleInputBuilder {
-    public from_time_series_output(filename : string) : string | undefined {
-        let data = fs.readFileSync(filename, { encoding: 'utf-8' });
+    public async from_time_series_output(filename : string) : Promise<string | undefined> {
+        return new Promise<string | undefined>((resolve, reject) => {
+            let data = fs.readFileSync(filename, { encoding: 'utf-8'} );
+
+            try {
+                let json = JSON.parse(data);
+
+                if (json['type'] !== 'monitoring') {
+                    reject('This only works with monitoring output');
+                    return;
+                }
+
+                let output_data : string[] = [];
+                output_data.push('devices:');
+                output_data.push(this.get_indent(1) + 'device-a:');
+                output_data.push(this.get_indent(2) + 'metrics:');
+                for (let res of json['result']) {
+                    this.push_metric(output_data, res);                   
+                }
         
-        let json = JSON.parse(data);
+                resolve(output_data.join('\n'));
 
-        if (json['type'] !== 'monitoring') {
-            return undefined;
-        }
-
-        let output_data : string[] = [];
-        output_data.push('devices:');
-        output_data.push(this.get_indent(1) + 'device-a:');
-        output_data.push(this.get_indent(2) + 'metrics:');
-        for (let res of json['result']) {
-            if (res['type'] !== 'ts') {
-                continue;
+            } catch (error) {
+                reject(error);
+                return;
             }
-            output_data.push(this.get_indent(3) + '-');
-            output_data.push(this.get_indent(4) + 'type: ' + res['type']);
-            output_data.push(this.get_indent(4) + 'name: ' + res['tags']['im.name']);
-            output_data.push(this.get_indent(4) + 'tags:');
-            for (let tag in res['tags']) {
-                if (tag !== 'im.name') {
-                    output_data.push(this.get_indent(5) + tag + ': ' + res['tags'][tag]);
+        });
+
+        
+    }
+
+    private push_metric(arr : string[], res : any) {
+        if (res['type'] === 'ts') {
+            this.push_timeseries_metric(arr, res);
+        }
+        else if (res['type'] === 'snapshot') {
+            this.push_snapshot_metric(arr, res);
+        }
+    }
+
+    private push_snapshot_metric(arr : string[], res : any) {
+        arr.push(this.get_indent(3) + '-');
+        arr.push(this.get_indent(4) + 'type: snapshot');
+        arr.push(this.get_indent(4) + 'name: ' + res['tags']['im.name']);
+        arr.push(this.get_indent(4) + 'tags:');
+        for (let tag in res['tags']) {
+            if (tag !== 'im.name') {
+                arr.push(this.get_indent(5) + tag + ': ' + res['tags'][tag]);
+            }
+        }
+        
+        arr.push(this.get_indent(4) + 'data:');
+        arr.push(this.get_indent(5) + 'most-recent:');
+        if (Array.isArray(res['value'])) {
+            arr.push(this.get_indent(6) + 'multi:');
+            for (let item of res['value']) {
+                arr.push(this.get_indent(7) + '-');
+                for (let key in item) {
+                    arr.push(this.get_indent(8) + key + ': ' + item[key]);
                 }
             }
-            output_data.push(this.get_indent(4) + 'data: [' + Number(res['value']).toFixed(1) + ']');
         }
+        else {
+            arr.push(this.get_indent(6) + 'single:');
+            console.log(res['value']);
+            for (let key in res['value']) {
+                arr.push(this.get_indent(7) + key + ': ' + res['value'][key]);
+            }
+        }
+    }
 
-        return output_data.join('\n');
+    private push_timeseries_metric(arr : string[], res : any) {
+        arr.push(this.get_indent(3) + '-');
+        arr.push(this.get_indent(4) + 'type: ts');
+        arr.push(this.get_indent(4) + 'name: ' + res['tags']['im.name']);
+        arr.push(this.get_indent(4) + 'tags:');
+        for (let tag in res['tags']) {
+            if (tag !== 'im.name') {
+                arr.push(this.get_indent(5) + tag + ': ' + res['tags'][tag]);
+            }
+        }
+        arr.push(this.get_indent(4) + 'data: [' + res['value'] + ']');
     }
 
     private get_indent(indent : number) : string {

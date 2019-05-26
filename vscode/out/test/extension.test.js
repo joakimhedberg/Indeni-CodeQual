@@ -75,7 +75,7 @@ suite('Split script tests', function () {
                 information_collection.append(marker);
             }
             assert.equal(error_collection.markers.size, 25);
-            assert.equal(warning_collection.markers.size, 14);
+            assert.equal(warning_collection.markers.size, 10);
             assert.equal(information_collection.markers.size, 0);
         }
     });
