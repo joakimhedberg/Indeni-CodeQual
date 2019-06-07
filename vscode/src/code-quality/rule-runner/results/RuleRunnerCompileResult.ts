@@ -49,13 +49,9 @@ export class RuleRunnerCompileResult extends CommandRunnerResultBase {
                     this.device_status[device_name] = true;
                 } else if (/Issue/.test(status)) {
                     let issue_regexp = new RegExp(`Evaluation of device '${device_name}':.*?\\nAlert[\\s=]+(.*?)([0-9]{4}\-[0-9]{2}\-[0-9]{2}|\Z)`, 'gs');
-                    console.log(issue_regexp.source);
                     let issue_match = issue_regexp.exec(this.raw_data_stripped);
                     if (issue_match) {
                         this.device_status[device_name] = new RuleRunnerCompileIssueResult(issue_match[1].trim());
-                    }
-                    else {
-                        console.log('No issue match');
                     }
                 }
             }

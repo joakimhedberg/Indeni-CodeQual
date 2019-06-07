@@ -67,7 +67,6 @@ class RuleInputBuilder {
         }
         else {
             arr.push(this.get_indent(6) + 'single:');
-            console.log(res['value']);
             for (let key in res['value']) {
                 arr.push(this.get_indent(7) + key + ': ' + res['value'][key]);
             }

@@ -9,6 +9,7 @@ Added tooltips for write*Metric snippets
 Added support for command-runner integration
 Added support for rule-runner integration
 Various bugfixes/improvements
+New shortcut CTRL+I S toggles script/test folder for easier access
 
 ## [0.2.1]
 Finishing touches on the split scripts

@@ -27,10 +27,12 @@ let quality_view : CodeQualityView;
 const quality_functions : CodeValidations = new CodeValidations();
 
 let split_validations : SplitScriptValidationCollection = new SplitScriptValidationCollection();
+let command_runner_statusbar_item : vscode.StatusBarItem;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    command_runner_statusbar_item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     quality_view = new CodeQualityView(path.join(context.extensionPath, 'resources'));
     let error_decoration_type = vscode.window.createTextEditorDecorationType({
         fontWeight: 'bold',
@@ -121,7 +123,7 @@ export function activate(context: vscode.ExtensionContext) {
             } else if (text.startsWith("writeTag")) {
                 return {
                     contents: DOC_WRITE_TAG
-                }
+                };
             }
         }
       });
@@ -149,7 +151,6 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.window.showOpenDialog({ canSelectFiles:true, canSelectFolders: false, canSelectMany: false, openLabel: 'Open output test file', defaultUri: default_uri }).then(value => {
             if (value === undefined) {
-                console.log('No value returned');
                 return;
             }
 
@@ -158,13 +159,11 @@ export function activate(context: vscode.ExtensionContext) {
             input_builder.from_time_series_output(filename).then(result => {
 
                 if (result !== undefined) {
-                    console.log(result);
                     vscode.workspace.openTextDocument({ content: result, language: 'yaml' }).then(onfulfilled => {
                         if (vscode.window.activeTextEditor !== undefined) {
                             vscode.window.showTextDocument(onfulfilled);
                         }
                     }, onrejected => {
-                        console.log(onrejected);
                     });
                 }
             }).catch(err => {
@@ -172,30 +171,40 @@ export function activate(context: vscode.ExtensionContext) {
             });
         });
     });
+
     let run_rulerunner_compile_command = vscode.commands.registerCommand('extension.triggerRuleRunnerCompile', () => {
         var editor = vscode.window.activeTextEditor;
+        command_runner_statusbar_item.show();
+        command_runner_statusbar_item.text = "Rule runner: Running";
+        
+        command_runner_statusbar_item.tooltip = "";
         if (editor !== undefined) {
             let rule = new IndeniRule(editor.document.fileName);
             
-            try {
-                rule.RuleRunnerCompile().then(value => {
-                if (value !== undefined) {
-                    console.log(value);
-                    if (value.has_error) {
-                        vscode.window.showErrorMessage('Rule runner failed: ' + value.error_data);
-                    }
-                    else {
-                        vscode.window.showInformationMessage('Rule runner completed successfully');
-                    }
-                    let view = new CommandRunnerResultView(context.extensionPath);
-                    view.show_rulerunner_result(value);
-                } else {
-                    vscode.window.showErrorMessage('Rule runner failed to execute');
+            rule.RuleRunnerCompile().then(value => {
+            if (value !== undefined) {
+                if (value.has_error) {
+                    command_runner_statusbar_item.text = 'Rule Runner: Failed';
+                    command_runner_statusbar_item.tooltip = value.error_data;
                 }
-            });
-        } catch (error) {
-            vscode.window.showErrorMessage(error);
-        }
+                else {
+                    command_runner_statusbar_item.text = 'Rule runner: Success';
+                    vscode.window.showInformationMessage('Rule runner: Success');
+                    command_runner_statusbar_item.tooltip = "Rule compiled successfully";
+                }
+                let view = new CommandRunnerResultView(context.extensionPath);
+                view.show_rulerunner_result(value);
+            } else {
+                vscode.window.showErrorMessage('Rule runner: Failed');
+                command_runner_statusbar_item.text = 'Rule runner: Failed';
+            }
+
+            }).catch((error => {
+                vscode.window.showErrorMessage(error);
+                command_runner_statusbar_item.text = "Rule runner: Failed";
+                command_runner_statusbar_item.tooltip = error;
+
+            }));
         }
     });
 
@@ -233,13 +242,16 @@ export function activate(context: vscode.ExtensionContext) {
         {
             let filename = path.dirname(editor.document.fileName);
             let dest_folder = undefined;
+            let is_test = false;
             if (filename.includes("parsers/src") || filename.includes("parsers\\src")) {
                 dest_folder = find_test_root(filename.replace("parsers/src", "parsers/test").replace("parsers\\src", "parsers\\test"));
+                is_test = true;
             }
             else if (filename.includes("parsers/test") || filename.includes("parsers\\test")) {
                 let root = find_test_root(filename);
                 if (root !== undefined) {
                     dest_folder = root.replace("parsers/test", "parsers/src").replace("parsers\\test", "parsers\\src");
+                    is_test = false;
                 }
             } else {
                 return;
@@ -247,6 +259,22 @@ export function activate(context: vscode.ExtensionContext) {
 
             if (dest_folder !== undefined && fs.existsSync(dest_folder))
             {
+                let new_dest = path.resolve(dest_folder, 'test.json');
+                if (!is_test) {
+                    new_dest = fs.readdirSync(dest_folder).find(o => o.endsWith('.ind.yaml')) || '';
+                    new_dest = path.resolve(dest_folder, new_dest);
+                }
+
+
+                if (fs.existsSync(new_dest)) {
+                    vscode.workspace.openTextDocument(new_dest).then((res => 
+                        {
+                            vscode.window.showTextDocument(res);
+
+                        }));
+                    return;
+                }
+
                 let uri = vscode.Uri.file(dest_folder);
                 vscode.window.showOpenDialog({ "defaultUri": uri }).then((value) => {
                     if (value !== undefined) 
@@ -262,6 +290,8 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showWarningMessage("'" + dest_folder + "' does not seem to exist");
             }
         }
+
+        vscode.commands.executeCommand('workbench.files.action.showActiveFileInExplorer');
     });
 
     context.subscriptions.push(trigger_clear_command);

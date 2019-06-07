@@ -80,6 +80,10 @@
             {
                 "key": "ctrl+i l",
                 "command": "extension.setLanguage"
+            },
+            {
+                "key": "ctrl+i s",
+                "command": "extension.revealTestCommand"
             }
         ],
         "snippets": [
