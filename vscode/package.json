@@ -2,7 +2,7 @@
     "name": "indeni-codequal",
     "displayName": "indeni_codequal",
     "description": "Indeni code quality checker",
-    "version": "0.2.4",
+    "version": "0.2.7",
     "publisher": "hedberg-jonsson-parker",
     "engines": {
         "vscode": "^1.29.0"
@@ -61,7 +61,7 @@
             },
             {
                 "command": "extension.createRuleRunnerInput",
-                "title": "Rule runner: Create TS input"
+                "title": "Rule runner: Create rule-runner input from parser output.json"
             }
         ],
         "keybindings": [
@@ -157,8 +157,8 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.48",
-        "tslint": "^5.16.0",
+        "@types/node": "^8.10.49",
+        "tslint": "^5.17.0",
         "typescript": "^2.6.1",
         "vscode": "^1.1.34"
     },

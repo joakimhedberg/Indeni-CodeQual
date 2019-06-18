@@ -186,10 +186,10 @@ export function activate(context: vscode.ExtensionContext) {
                 if (value.has_error) {
                     command_runner_statusbar_item.text = 'Rule Runner: Failed';
                     command_runner_statusbar_item.tooltip = value.error_data;
-                }
-                else {
-                    command_runner_statusbar_item.text = 'Rule runner: Success';
+                    console.log(value.error_data);
+                } else {
                     vscode.window.showInformationMessage('Rule runner: Success');
+                    command_runner_statusbar_item.text = 'Rule runner: Success';
                     command_runner_statusbar_item.tooltip = "Rule compiled successfully";
                 }
                 let view = new CommandRunnerResultView(context.extensionPath);
@@ -203,7 +203,7 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showErrorMessage(error);
                 command_runner_statusbar_item.text = "Rule runner: Failed";
                 command_runner_statusbar_item.tooltip = error;
-
+                console.log(error);
             }));
         }
     });

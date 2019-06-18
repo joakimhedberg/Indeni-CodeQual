@@ -5,13 +5,13 @@ import { RuleRunnerCompileResult } from './results/RuleRunnerCompileResult';
 
 export class RuleRunner {
     private rulerunner_path : string | undefined;
-    public RuleRunner() {
+    public constructor() {
         this.rulerunner_path = vscode.workspace.getConfiguration().get('indeni.ruleRunnerPath');
     }
 
     public async Compile(script_filename : string) {
         if (this.rulerunner_path === undefined) {
-            return Promise.reject('No rule runner path defined');
+            return Promise.reject('No rule runner path defined: ' + this.rulerunner_path);
         }
 
         let items : vscode.QuickPickItem[] = [];
@@ -34,7 +34,7 @@ export class RuleRunner {
             input_filepath = result[0].fsPath;
         }
 
-        let command = 'compile';
+        let command = 'compile ' + this.escape_filename(script_filename);
         if (input_filepath !== undefined) {
             command += ' --input ' + this.escape_filename(input_filepath); 
         }
@@ -44,10 +44,37 @@ export class RuleRunner {
             return Promise.reject('No data was returned from rule runner');
         }
 
-        return new RuleRunnerCompileResult(data);
+        return new RuleRunnerCompileResult(data.toString());
     }
 
-    private async Run(parameters : string) {
+    private async Run(command : string) : Promise<string> {
+
+        if (this.rulerunner_path === undefined) {
+            return Promise.reject('No rulerunner filename specified');
+        }
+
+        command = this.escape_filename(this.rulerunner_path) + ' ' + command;
+        console.log('Running command: ' + command);
+        return new Promise<string>(
+            (resolve, reject) => {
+                child.exec(command, (error, stdout, stderr) => {
+                    if (error !== null) {
+                        reject(error);
+                        return;
+                    }
+                    if (stderr !== '') {
+                        reject(stderr);
+                        return;
+                    }
+
+                    resolve(stdout);
+                }
+                );
+            }
+        );
+    }
+
+    /*private async Run(parameters : string) : Promise<string | undefined> {
         if (this.rulerunner_path === undefined) {
             return undefined;
         }
@@ -56,7 +83,7 @@ export class RuleRunner {
 
         let process_data = child.execSync(path + ' ' + parameters, undefined);
         return process_data;
-    }
+    }*/
 
     private escape_filename(filename : string) : string {
         if (process.platform === 'win32') {

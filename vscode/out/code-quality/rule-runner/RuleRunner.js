@@ -12,13 +12,13 @@ const vscode = require("vscode");
 const child = require("child_process");
 const RuleRunnerCompileResult_1 = require("./results/RuleRunnerCompileResult");
 class RuleRunner {
-    RuleRunner() {
+    constructor() {
         this.rulerunner_path = vscode.workspace.getConfiguration().get('indeni.ruleRunnerPath');
     }
     Compile(script_filename) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.rulerunner_path === undefined) {
-                return Promise.reject('No rule runner path defined');
+                return Promise.reject('No rule runner path defined: ' + this.rulerunner_path);
             }
             let items = [];
             items.push({ label: 'No input' });
@@ -35,7 +35,7 @@ class RuleRunner {
                 }
                 input_filepath = result[0].fsPath;
             }
-            let command = 'compile';
+            let command = 'compile ' + this.escape_filename(script_filename);
             if (input_filepath !== undefined) {
                 command += ' --input ' + this.escape_filename(input_filepath);
             }
@@ -43,19 +43,41 @@ class RuleRunner {
             if (data === undefined) {
                 return Promise.reject('No data was returned from rule runner');
             }
-            return new RuleRunnerCompileResult_1.RuleRunnerCompileResult(data);
+            return new RuleRunnerCompileResult_1.RuleRunnerCompileResult(data.toString());
         });
     }
-    Run(parameters) {
+    Run(command) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.rulerunner_path === undefined) {
-                return undefined;
+                return Promise.reject('No rulerunner filename specified');
             }
-            let path = this.escape_filename(this.rulerunner_path);
-            let process_data = child.execSync(path + ' ' + parameters, undefined);
-            return process_data;
+            command = this.escape_filename(this.rulerunner_path) + ' ' + command;
+            console.log('Running command: ' + command);
+            return new Promise((resolve, reject) => {
+                child.exec(command, (error, stdout, stderr) => {
+                    if (error !== null) {
+                        reject(error);
+                        return;
+                    }
+                    if (stderr !== '') {
+                        reject(stderr);
+                        return;
+                    }
+                    resolve(stdout);
+                });
+            });
         });
     }
+    /*private async Run(parameters : string) : Promise<string | undefined> {
+        if (this.rulerunner_path === undefined) {
+            return undefined;
+        }
+
+        let path = this.escape_filename(this.rulerunner_path);
+
+        let process_data = child.execSync(path + ' ' + parameters, undefined);
+        return process_data;
+    }*/
     escape_filename(filename) {
         if (process.platform === 'win32') {
             return "\"" + filename + "\"";

@@ -8,6 +8,11 @@ export class RuleRunnerCompileResult extends CommandRunnerResultBase {
     public constructor(data : string) {
         super(data);
 
+        if (data === '') {
+            this.has_error = true;
+            this.error_data = 'No data received from rule runner';
+            return;
+        }
         this.parse_items();
     }
 

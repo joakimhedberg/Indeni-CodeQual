@@ -166,10 +166,11 @@ function activate(context) {
                     if (value.has_error) {
                         command_runner_statusbar_item.text = 'Rule Runner: Failed';
                         command_runner_statusbar_item.tooltip = value.error_data;
+                        console.log(value.error_data);
                     }
                     else {
-                        command_runner_statusbar_item.text = 'Rule runner: Success';
                         vscode.window.showInformationMessage('Rule runner: Success');
+                        command_runner_statusbar_item.text = 'Rule runner: Success';
                         command_runner_statusbar_item.tooltip = "Rule compiled successfully";
                     }
                     let view = new CommandRunnerResultView_1.CommandRunnerResultView(context.extensionPath);
@@ -183,6 +184,7 @@ function activate(context) {
                 vscode.window.showErrorMessage(error);
                 command_runner_statusbar_item.text = "Rule runner: Failed";
                 command_runner_statusbar_item.tooltip = error;
+                console.log(error);
             }));
         }
     });

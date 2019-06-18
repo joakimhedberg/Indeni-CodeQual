@@ -5,6 +5,9 @@ var main_div;
 var result_header_table;
 var devices_table;
 
+var error_output_pre;
+var error_output_div;
+
 var raw_output_div;
 var raw_output_pre;
 var rulerunner_result = undefined;
@@ -14,6 +17,13 @@ window.onload = function() {
     main_div.id = 'main_div';
     raw_output_div = document.createElement('div');
     raw_output_pre = document.createElement('pre');
+
+    error_output_div = document.createElement('div');
+    error_output_div.id = 'error_output_div';
+    error_output_pre = document.createElement('pre');
+    
+    error_output_div.appendChild(error_output_pre);
+
     raw_output_div.appendChild(raw_output_pre);
     result_header_table = document.createElement('table');
     result_header_table.createTHead();
@@ -27,6 +37,7 @@ window.onload = function() {
     devices_table.createTBody();
 
     window.document.body.appendChild(main_div);
+    main_div.appendChild(error_output_div);
     window.document.body.appendChild(raw_output_div);
 
     window.addEventListener('message', post_rulerunner_result_listener);
@@ -48,8 +59,15 @@ function post_rulerunner_result_listener(event) {
 function load_result() {
     result_header_table.tBodies[0].innerHTML = '';
     raw_output_pre.innerHTML = '';
+    error_output_pre.innerHTML = '';
+    error_output_div.style.visibility = 'hidden';
+
     devices_table.tBodies[0].innerHTML = '';
     if (rulerunner_result !== undefined) {
+        if (rulerunner_result.has_error) {
+            error_output_pre.innerHTML = rulerunner_result.error_data;
+            error_output_div.style.visibility = 'visible';
+        }
         for (let item of rulerunner_result.items) {
             let row = result_header_table.tBodies[0].insertRow();
             let cell1 = row.insertCell();

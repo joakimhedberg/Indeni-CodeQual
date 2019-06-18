@@ -8,6 +8,11 @@ class RuleRunnerCompileResult extends CommandRunnerResultBase_1.CommandRunnerRes
         this.has_error = false;
         this.error_data = "";
         this.device_status = {};
+        if (data === '') {
+            this.has_error = true;
+            this.error_data = 'No data received from rule runner';
+            return;
+        }
         this.parse_items();
     }
     parse_items() {
