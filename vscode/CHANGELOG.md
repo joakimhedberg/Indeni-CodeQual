@@ -3,12 +3,22 @@
 ## [Upcoming release]
 Various bugfixes reported @ github
 
+## [0.2.7]
+Fixed a broken dependency
+
+## [0.2.6]
+Additional bug fixes in the rule runner support
+
+## [0.2.5]
+Bug fix, rule runner support
+
 ## [0.2.4]
 Added new logic for write*Metric snippets
 Added tooltips for write*Metric snippets
 Added support for command-runner integration
 Added support for rule-runner integration
 Various bugfixes/improvements
+New shortcut CTRL+I S toggles script/test folder for easier access
 
 ## [0.2.1]
 Finishing touches on the split scripts

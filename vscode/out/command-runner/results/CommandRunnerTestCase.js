@@ -75,7 +75,6 @@ class CommandRunnerTestCase {
             let match = this.find_closest_match(expected, got_metrics);
             if (match !== undefined) {
                 delta_metrics.push(ResultMetricDelta_1.ResultMetricDelta.get(expected, match));
-                console.log(delta_metrics[delta_metrics.length - 1]);
                 expected_metrics.splice(i);
                 i--;
             }
