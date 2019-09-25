@@ -3,6 +3,19 @@
 ## [Upcoming release]
 Various bugfixes reported @ github
 
+## [0.3.1]
+Support for python parser
+Support for --inject-tags in command-runner. Only tested on Windows so far
+
+## [0.3.0]
+New github page
+
+## [0.2.9]
+Added the option to run command-runner verbose. * Experimental
+
+## [0.2.8]
+Fixed a bug where the command-runner failed to run
+
 ## [0.2.7]
 Fixed a broken dependency
 

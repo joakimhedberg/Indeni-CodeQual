@@ -52,7 +52,7 @@ class RuleRunner {
                 return Promise.reject('No rulerunner filename specified');
             }
             command = this.escape_filename(this.rulerunner_path) + ' ' + command;
-            console.log('Running command: ' + command);
+            //console.log('Running command: ' + command);
             return new Promise((resolve, reject) => {
                 child.exec(command, (error, stdout, stderr) => {
                     if (error !== null) {

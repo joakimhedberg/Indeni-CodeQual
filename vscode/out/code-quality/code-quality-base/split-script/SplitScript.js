@@ -20,6 +20,7 @@ const fs = require("fs");
 const CommandRunnerResultView_1 = require("../../../gui/CommandRunnerResultView");
 const vscode = require("vscode");
 const SplitScriptTestCases_1 = require("./test_cases/SplitScriptTestCases");
+const SplitScriptPythonSection_1 = require("./sections/SplitScriptPythonSection");
 class SplitScript {
     constructor() {
         // Current open filename
@@ -34,6 +35,7 @@ class SplitScript {
         this.path = '';
         this.awk_sections = [];
         this.xml_sections = [];
+        this.python_sections = [];
         this.json_sections = [];
         this.sections = [];
         this.load_errors = [];
@@ -98,6 +100,9 @@ class SplitScript {
         else if (this.current_filename.toLowerCase().endsWith('.xml.yaml')) {
             this.current_section = new SplitScriptXmlSection_1.SplitScriptXmlSection(this.current_filename, content);
         }
+        else if (this.current_filename.toLowerCase().endsWith('.py')) {
+            this.current_section = new SplitScriptPythonSection_1.SplitScriptPythonSection(this.current_filename, content);
+        }
         else {
             return false;
         }
@@ -120,6 +125,11 @@ class SplitScript {
         else if (filename.endsWith('.xml.yaml')) {
             let section = new SplitScriptXmlSection_1.SplitScriptXmlSection(filename);
             this.xml_sections.push(section);
+            this.sections.push(section);
+        }
+        else if (filename.endsWith('.py')) {
+            let section = new SplitScriptPythonSection_1.SplitScriptPythonSection(filename);
+            this.python_sections.push(section);
             this.sections.push(section);
         }
     }
@@ -179,6 +189,7 @@ class SplitScript {
         if (this.header_section === undefined) {
             return;
         }
+        //console.log('Getting test cases');
         let test_cases = this.get_test_cases();
         if (test_cases !== undefined) {
             if (test_cases.length > 0) {

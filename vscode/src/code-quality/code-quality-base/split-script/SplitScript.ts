@@ -12,6 +12,7 @@ import { CommandRunnerResultView } from "../../../gui/CommandRunnerResultView";
 import * as vscode from 'vscode';
 import { SplitScriptTestCases } from "./test_cases/SplitScriptTestCases";
 import { SplitScriptTestCase } from "./test_cases/SplitScriptTestCase";
+import { SplitScriptPythonSection } from "./sections/SplitScriptPythonSection";
 
 export class SplitScript {
     // Current open filename
@@ -32,6 +33,7 @@ export class SplitScript {
     public header_section : SplitScriptIndSection | undefined;
     public awk_sections : SplitScriptAwkSection[] = [];
     public xml_sections : SplitScriptXmlSection[] = [];
+    public python_sections : SplitScriptPythonSection[] = [];
     public json_sections : SplitScriptJsonSection[] = [];
     public sections : SplitScriptSectionBase[] = [];
 
@@ -100,6 +102,8 @@ export class SplitScript {
             this.current_section = new SplitScriptJsonSection(this.current_filename, content);
         } else if (this.current_filename.toLowerCase().endsWith('.xml.yaml')) {
             this.current_section = new SplitScriptXmlSection(this.current_filename, content);
+        } else if (this.current_filename.toLowerCase().endsWith('.py')) {
+            this.current_section = new SplitScriptPythonSection(this.current_filename, content);
         }
         else {
             return false;
@@ -122,6 +126,10 @@ export class SplitScript {
         } else if (filename.endsWith('.xml.yaml')) {
             let section = new SplitScriptXmlSection(filename);
             this.xml_sections.push(section);
+            this.sections.push(section);
+        } else if (filename.endsWith('.py')) {
+            let section = new SplitScriptPythonSection(filename);
+            this.python_sections.push(section);
             this.sections.push(section);
         }
     }
@@ -162,7 +170,6 @@ export class SplitScript {
         if (!fs.existsSync(test_file)) {
             return undefined;
         }
-
         return SplitScriptTestCases.get(test_file);
     }
 
@@ -191,7 +198,10 @@ export class SplitScript {
         if (this.header_section === undefined) {
             return;
         }
+
+        //console.log('Getting test cases');
         let test_cases = this.get_test_cases();
+        
         if (test_cases !== undefined) {
             if (test_cases.length > 0) {
                 const items = <vscode.QuickPickItem[]>test_cases.map(

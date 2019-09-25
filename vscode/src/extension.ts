@@ -128,7 +128,39 @@ export function activate(context: vscode.ExtensionContext) {
         }
       });
 
-    let set_language_command = vscode.commands.registerCommand('extension.setLanguage', () => {
+
+      let set_commandrunner_verbose_command = vscode.commands.registerCommand('extension.setCommandRunnerVerbose', () => {
+        //this.commandrunner_path = vscode.workspace.getConfiguration().get('indeni.commandRunnerPath');
+        let verbose = vscode.workspace.getConfiguration();
+        let verbose_value = verbose.get('indeni.commandRunnerVerbose');
+
+        let description_on = '';
+        let description_off = '';
+        if (verbose_value === true) {
+            description_on = 'Current value';
+        }
+        else {
+            description_off = 'Current value';
+        }
+        let items : vscode.QuickPickItem[] = [];
+        items.push({ label: 'On', description: description_on });
+        items.push({ label: 'Off', description: description_off });
+
+        vscode.window.showQuickPick(items, { placeHolder: verbose_value === true? 'On': 'Off' }).then((value) => {
+            if (value !== undefined) {
+                switch (value.label) {
+                    case 'On':
+                        verbose.update('indeni.commandRunnerVerbose', true);
+                        break;
+                    case 'Off':
+                        verbose.update('indeni.commandRunnerVerbose', false);
+                        break;
+                }
+            }
+        }, ((reason) => {}));
+      });
+
+      let set_language_command = vscode.commands.registerCommand('extension.setLanguage', () => {
         var editor = vscode.window.activeTextEditor;
         if (editor !== undefined) {
             setLanguage(editor.document);
@@ -305,6 +337,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(commandrunner_test_create_command);
     context.subscriptions.push(run_rulerunner_compile_command);
     context.subscriptions.push(rule_runner_create_input_command);
+    context.subscriptions.push(set_commandrunner_verbose_command);
 }
 
 function command_runner__test_create_command_method(context : vscode.ExtensionContext) {

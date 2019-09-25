@@ -54,7 +54,7 @@ export class RuleRunner {
         }
 
         command = this.escape_filename(this.rulerunner_path) + ' ' + command;
-        console.log('Running command: ' + command);
+        //console.log('Running command: ' + command);
         return new Promise<string>(
             (resolve, reject) => {
                 child.exec(command, (error, stdout, stderr) => {
